@@ -109,56 +109,17 @@ async function processDonation() {
   }
 
   // Show processing notification
-  showNotification("info", "Processing", "Creating secure payment order...");
+  showNotification("info", "Processing", "Preparing secure payment...");
 
   try {
-    // Create order on server - Always use localhost for testing
-    const apiUrl = "http://localhost:3000/api/create-order";
-
-    console.log("Using API URL:", apiUrl);
-    const orderResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount: amount,
-        currency: "INR",
-        donor_info: {
-          name: donorName?.value || "",
-          email: donorEmail?.value || "",
-          message: donorMessage?.value || "",
-        },
-      }),
-    });
-
-    console.log("API URL:", apiUrl);
-    console.log("Response status:", orderResponse.status);
-    console.log("Response headers:", orderResponse.headers);
-
-    if (!orderResponse.ok) {
-      const errorText = await orderResponse.text();
-      console.error("Server error response:", errorText);
-      throw new Error(
-        `Server error: ${orderResponse.status} - ${errorText.substring(0, 100)}`
-      );
-    }
-
-    const orderData = await orderResponse.json();
-
-    if (!orderData.success) {
-      throw new Error(orderData.message || "Failed to create order");
-    }
-
-    // Prepare Razorpay options with server-created order
+    // Client-side Razorpay integration (no backend required)
     const options = {
-      key: orderData.order.key_id,
-      amount: orderData.order.amount,
-      currency: orderData.order.currency,
-      order_id: orderData.order.id,
+      key: "rzp_live_McNKjjPIAKglzo", // Your live Razorpay key
+      amount: amount * 100, // Convert to paise (Razorpay expects amount in paise)
+      currency: "INR",
       name: "IITJEE.XYZ",
       description: "Donation to support free education",
-      image: "favicon.ico",
+      image: "https://www.iitjee.xyz/favicon.ico",
       prefill: {
         name: donorName?.value || "",
         email: donorEmail?.value || "",
@@ -168,7 +129,7 @@ async function processDonation() {
         color: "#3498db",
       },
       handler: function (response) {
-        handlePaymentSuccess(response, amount, orderData.order.id);
+        handlePaymentSuccess(response, amount);
       },
       modal: {
         ondismiss: function () {
@@ -199,57 +160,55 @@ async function processDonation() {
   }
 }
 
-async function handlePaymentSuccess(response, amount, orderId) {
+function handlePaymentSuccess(response, amount) {
   console.log("Payment successful:", response);
 
-  // Show processing notification
-  showNotification("info", "Verifying", "Verifying payment security...");
+  // Payment successful - no server verification needed for client-side integration
+  showNotification(
+    "success",
+    "Payment Successful!",
+    `Thank you for your generous donation of ₹${amount}! Your support helps keep education free for everyone. Transaction ID: ${response.razorpay_payment_id}`
+  );
 
+  // Clear form
+  resetDonationForm();
+
+  // Log successful donation
+  console.log("Donation processed:", {
+    payment_id: response.razorpay_payment_id,
+    amount: amount,
+    timestamp: new Date().toISOString(),
+  });
+
+  // Optional: Send donation info to your email or analytics
+  // This can be done via a simple form submission or email service
+  logDonationSuccess(response, amount);
+}
+
+// Optional function to log donation success (can be used for notifications)
+function logDonationSuccess(response, amount) {
   try {
-    // Verify payment on server - Always use localhost for testing
-    const apiUrl = "http://localhost:3000/api/verify-payment";
-    const verifyResponse = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        razorpay_order_id: orderId,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature,
-      }),
-    });
+    // You can implement email notification, analytics, or other logging here
+    const donationData = {
+      payment_id: response.razorpay_payment_id,
+      amount: amount,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+    };
 
-    const verifyData = await verifyResponse.json();
-
-    if (verifyData.success) {
-      // Payment verified successfully
-      showNotification(
-        "success",
-        "Payment Successful!",
-        `Thank you for your generous donation of ₹${amount}! Your support helps keep education free for everyone. Transaction ID: ${response.razorpay_payment_id}`
-      );
-
-      // Clear form
-      resetDonationForm();
-
-      // Log successful donation
-      console.log("Donation verified and processed:", {
-        payment_id: response.razorpay_payment_id,
-        order_id: orderId,
-        amount: amount,
-        verified: true,
+    // Example: Send to Google Analytics if available
+    if (typeof gtag !== "undefined") {
+      gtag("event", "donation", {
+        event_category: "ecommerce",
+        event_label: "donation_success",
+        value: amount,
+        transaction_id: response.razorpay_payment_id,
       });
-    } else {
-      throw new Error(verifyData.message || "Payment verification failed");
     }
+
+    console.log("Donation logged:", donationData);
   } catch (error) {
-    console.error("Payment verification error:", error);
-    showNotification(
-      "error",
-      "Verification Failed",
-      `Payment completed but verification failed. Please contact support with Transaction ID: ${response.razorpay_payment_id}`
-    );
+    console.error("Failed to log donation:", error);
   }
 }
 
