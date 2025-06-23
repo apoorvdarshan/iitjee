@@ -819,7 +819,6 @@ img {
   height: 600px;
   background: var(--paper-color);
   border: 3px dashed var(--notebook-blue);
-  border-radius: 15px 8px 12px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -828,52 +827,16 @@ img {
   font-family: "Kalam", cursive;
   font-size: 1rem;
   text-align: center;
-  transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
   transform: rotate(1deg);
 }
 
-.ad-placeholder::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(var(--primary-color-rgb, 37, 99, 235), 0.1),
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) translateY(100%) rotate(45deg);
-  }
-}
-
-.ad-placeholder:hover {
-  border-color: var(--notebook-red);
-  color: var(--notebook-red);
-  transform: rotate(-1deg) scale(1.02);
-}
-
 .ad-placeholder span {
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+  display: none;
 }
 
 .ad-size {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  display: none;
 }
 
 /* Leaderboard Ad */
@@ -888,7 +851,6 @@ img {
   height: 90px;
   background: var(--paper-color);
   border: 3px dashed var(--notebook-blue);
-  border-radius: 20px 8px 15px 12px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -897,45 +859,17 @@ img {
   font-family: "Kalam", cursive;
   font-size: 1rem;
   text-align: center;
-  transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
   gap: 0.5rem;
   transform: rotate(-0.5deg);
 }
 
-.leaderboard-ad-placeholder::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(var(--primary-color-rgb, 37, 99, 235), 0.1),
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite;
-}
-
-.leaderboard-ad-placeholder:hover {
-  border-color: var(--notebook-red);
-  color: var(--notebook-red);
-  transform: rotate(0.5deg) scale(1.02);
-}
-
 .leaderboard-ad-placeholder span {
-  font-weight: 600;
-  z-index: 1;
-  position: relative;
+  display: none;
 }
 
 .leaderboard-ad-placeholder .ad-size {
-  z-index: 1;
-  position: relative;
+  display: none;
 }
 
 /* Mobile Banner */
@@ -951,7 +885,6 @@ img {
   height: 50px;
   background: var(--paper-color);
   border: 2px dashed var(--notebook-blue);
-  border-radius: 15px 8px 12px 10px;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -960,45 +893,17 @@ img {
   font-family: "Kalam", cursive;
   font-size: 0.9rem;
   text-align: center;
-  transition: all 0.3s ease;
   position: relative;
-  overflow: hidden;
   gap: 0.5rem;
   transform: rotate(-0.5deg);
 }
 
-.mobile-ad-placeholder::before {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(var(--primary-color-rgb, 37, 99, 235), 0.1),
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: shimmer 3s infinite;
-}
-
-.mobile-ad-placeholder:hover {
-  border-color: var(--notebook-red);
-  color: var(--notebook-red);
-  transform: rotate(0.5deg) scale(1.02);
-}
-
 .mobile-ad-placeholder span {
-  font-weight: 600;
-  z-index: 1;
-  position: relative;
+  display: none;
 }
 
 .mobile-ad-placeholder .ad-size {
-  z-index: 1;
-  position: relative;
+  display: none;
 }
 
 /* Image Gallery */
