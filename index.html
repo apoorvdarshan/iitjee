@@ -115,6 +115,25 @@
         };
     </script>
     <script defer src="/_vercel/insights/script.js"></script>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-ECWRRXTV1R"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-ECWRRXTV1R");
+    </script>
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1910432677832151"
+      crossorigin="anonymous"
+    ></script>
   </head>
   <body>
     <div class="container">
@@ -172,6 +191,15 @@
             <p>
               Master mathematical concepts and formulas including calculus,
               algebra, coordinate geometry, and probability.
+            </p>
+          </article>
+
+          <article class="subject-card" onclick="navigateToSubject('donation')">
+            <div class="subject-icon"><i class="fas fa-heart"></i></div>
+            <h2>Support Us</h2>
+            <p>
+              Help us continue providing free quality education. Your donation
+              keeps this site running and accessible to all students.
             </p>
           </article>
         </main>

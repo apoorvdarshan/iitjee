@@ -36,6 +36,327 @@ function goBack() {
   window.history.back();
 }
 
+// Donation System Variables - Live Razorpay Configuration
+const RAZORPAY_CONFIG = {
+  key: "rzp_live_McNKjjPIAKglzo", // Live Razorpay Key ID
+  currency: "INR",
+  name: "IITJEE.XYZ",
+  description: "Donation to support free education",
+  image: "favicon.ico",
+  prefill: {
+    email: "",
+    contact: "",
+  },
+  theme: {
+    color: "#3498db",
+  },
+};
+
+// Donation Functions
+function initializeDonationPage() {
+  const amountButtons = document.querySelectorAll(".amount-btn");
+  const amountInput = document.getElementById("amount");
+
+  if (!amountButtons.length) return;
+
+  // Handle preset amount buttons
+  amountButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      const amount = this.getAttribute("data-amount");
+
+      // Remove active class from all buttons
+      amountButtons.forEach((btn) => btn.classList.remove("active"));
+
+      // Add active class to clicked button
+      this.classList.add("active");
+
+      // Set amount in input field
+      if (amountInput) {
+        amountInput.value = amount;
+      }
+    });
+  });
+
+  // Handle custom amount input
+  if (amountInput) {
+    amountInput.addEventListener("input", function () {
+      // Remove active class from all preset buttons when custom amount is entered
+      amountButtons.forEach((btn) => btn.classList.remove("active"));
+    });
+  }
+}
+
+async function processDonation() {
+  const amountInput = document.getElementById("amount");
+  const donorName = document.getElementById("donor-name");
+  const donorEmail = document.getElementById("donor-email");
+  const donorMessage = document.getElementById("donor-message");
+
+  if (!amountInput) {
+    showNotification("error", "Error", "Amount input not found");
+    return;
+  }
+
+  const amount = parseFloat(amountInput.value);
+
+  if (!amount || amount < 1) {
+    showNotification(
+      "error",
+      "Invalid Amount",
+      "Please enter a valid donation amount (minimum ₹1)"
+    );
+    return;
+  }
+
+  // Show processing notification
+  showNotification("info", "Processing", "Creating secure payment order...");
+
+  try {
+    // Create order on server - Always use localhost for testing
+    const apiUrl = "http://localhost:3000/api/create-order";
+
+    console.log("Using API URL:", apiUrl);
+    const orderResponse = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        amount: amount,
+        currency: "INR",
+        donor_info: {
+          name: donorName?.value || "",
+          email: donorEmail?.value || "",
+          message: donorMessage?.value || "",
+        },
+      }),
+    });
+
+    console.log("API URL:", apiUrl);
+    console.log("Response status:", orderResponse.status);
+    console.log("Response headers:", orderResponse.headers);
+
+    if (!orderResponse.ok) {
+      const errorText = await orderResponse.text();
+      console.error("Server error response:", errorText);
+      throw new Error(
+        `Server error: ${orderResponse.status} - ${errorText.substring(0, 100)}`
+      );
+    }
+
+    const orderData = await orderResponse.json();
+
+    if (!orderData.success) {
+      throw new Error(orderData.message || "Failed to create order");
+    }
+
+    // Prepare Razorpay options with server-created order
+    const options = {
+      key: orderData.order.key_id,
+      amount: orderData.order.amount,
+      currency: orderData.order.currency,
+      order_id: orderData.order.id,
+      name: "IITJEE.XYZ",
+      description: "Donation to support free education",
+      image: "favicon.ico",
+      prefill: {
+        name: donorName?.value || "",
+        email: donorEmail?.value || "",
+        contact: "",
+      },
+      theme: {
+        color: "#3498db",
+      },
+      handler: function (response) {
+        handlePaymentSuccess(response, amount, orderData.order.id);
+      },
+      modal: {
+        ondismiss: function () {
+          showNotification(
+            "info",
+            "Payment Cancelled",
+            "Payment was cancelled by user"
+          );
+        },
+      },
+    };
+
+    showNotification("info", "Processing", "Redirecting to payment gateway...");
+
+    // Initialize Razorpay
+    const rzp = new Razorpay(options);
+    rzp.on("payment.failed", function (response) {
+      handlePaymentFailure(response);
+    });
+    rzp.open();
+  } catch (error) {
+    console.error("Payment processing error:", error);
+    showNotification(
+      "error",
+      "Payment Error",
+      error.message || "Unable to process payment. Please try again."
+    );
+  }
+}
+
+async function handlePaymentSuccess(response, amount, orderId) {
+  console.log("Payment successful:", response);
+
+  // Show processing notification
+  showNotification("info", "Verifying", "Verifying payment security...");
+
+  try {
+    // Verify payment on server - Always use localhost for testing
+    const apiUrl = "http://localhost:3000/api/verify-payment";
+    const verifyResponse = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        razorpay_order_id: orderId,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature,
+      }),
+    });
+
+    const verifyData = await verifyResponse.json();
+
+    if (verifyData.success) {
+      // Payment verified successfully
+      showNotification(
+        "success",
+        "Payment Successful!",
+        `Thank you for your generous donation of ₹${amount}! Your support helps keep education free for everyone. Transaction ID: ${response.razorpay_payment_id}`
+      );
+
+      // Clear form
+      resetDonationForm();
+
+      // Log successful donation
+      console.log("Donation verified and processed:", {
+        payment_id: response.razorpay_payment_id,
+        order_id: orderId,
+        amount: amount,
+        verified: true,
+      });
+    } else {
+      throw new Error(verifyData.message || "Payment verification failed");
+    }
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    showNotification(
+      "error",
+      "Verification Failed",
+      `Payment completed but verification failed. Please contact support with Transaction ID: ${response.razorpay_payment_id}`
+    );
+  }
+}
+
+function handlePaymentFailure(response) {
+  console.error("Payment failed:", response);
+
+  let errorMessage = "Payment failed. Please try again.";
+
+  if (response.error) {
+    switch (response.error.code) {
+      case "BAD_REQUEST_ERROR":
+        errorMessage = "Invalid payment details. Please check and try again.";
+        break;
+      case "GATEWAY_ERROR":
+        errorMessage = "Payment gateway error. Please try again later.";
+        break;
+      case "NETWORK_ERROR":
+        errorMessage =
+          "Network error. Please check your connection and try again.";
+        break;
+      case "SERVER_ERROR":
+        errorMessage = "Server error. Please try again later.";
+        break;
+      default:
+        errorMessage = response.error.description || errorMessage;
+    }
+  }
+
+  showNotification("error", "Payment Failed", errorMessage);
+}
+
+function resetDonationForm() {
+  const amountInput = document.getElementById("amount");
+  const donorName = document.getElementById("donor-name");
+  const donorEmail = document.getElementById("donor-email");
+  const donorMessage = document.getElementById("donor-message");
+  const amountButtons = document.querySelectorAll(".amount-btn");
+
+  if (amountInput) amountInput.value = "";
+  if (donorName) donorName.value = "";
+  if (donorEmail) donorEmail.value = "";
+  if (donorMessage) donorMessage.value = "";
+
+  amountButtons.forEach((btn) => btn.classList.remove("active"));
+}
+
+// Notification System
+function showNotification(type, title, message) {
+  const container = document.getElementById("notification-container");
+  if (!container) {
+    console.error("Notification container not found");
+    return;
+  }
+
+  const notification = document.createElement("div");
+  notification.className = `notification ${type}`;
+
+  const iconMap = {
+    success: "fas fa-check-circle",
+    error: "fas fa-exclamation-circle",
+    info: "fas fa-info-circle",
+    warning: "fas fa-exclamation-triangle",
+  };
+
+  notification.innerHTML = `
+    <div class="notification-header">
+      <div class="notification-title">
+        <i class="${iconMap[type] || "fas fa-info-circle"}"></i>
+        ${title}
+      </div>
+      <button class="notification-close" onclick="closeNotification(this)">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="notification-message">${message}</div>
+  `;
+
+  container.appendChild(notification);
+
+  // Auto-remove after 30 seconds for non-error notifications
+  if (type !== "error") {
+    setTimeout(() => {
+      if (notification.parentNode) {
+        closeNotification(notification.querySelector(".notification-close"));
+      }
+    }, 30000);
+  }
+}
+
+function closeNotification(button) {
+  const notification = button.closest(".notification");
+  if (notification) {
+    notification.style.transform = "translateX(100%)";
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }
+}
+
+// Update Razorpay configuration (to be called when live keys are provided)
+function updateRazorpayConfig(newConfig) {
+  Object.assign(RAZORPAY_CONFIG, newConfig);
+  console.log("Razorpay configuration updated");
+}
+
 // Chapter Data - This represents the actual folder structure
 const chapterData = {
   physics: [
@@ -374,6 +695,8 @@ function initializePage() {
     loadChapters("mathematics");
   } else if (page === "gallery.html") {
     loadGallery();
+  } else if (page === "donation.html") {
+    initializeDonationPage();
   }
 }
 

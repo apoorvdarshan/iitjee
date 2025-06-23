@@ -229,41 +229,51 @@ img {
   -o-user-drag: none;
 }
 
-/* Subject Grid */
+/* Subject Grid - Updated for 4 cards */
 .subject-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
-  margin-top: 2rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .subject-card {
-  background: var(--paper-color);
-  border: 3px solid var(--notebook-blue);
-  border-radius: 25% 10% 20% 15%;
-  padding: 2.5rem;
+  background: linear-gradient(
+    135deg,
+    var(--card-bg) 0%,
+    var(--card-hover) 100%
+  );
+  border: 3px solid var(--primary-color);
+  border-radius: 20px;
+  padding: 2rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: var(--doodle-shadow);
   position: relative;
-  overflow: visible;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transform: rotate(-1deg);
+  border-style: dashed;
 }
 
-.subject-card:nth-child(1) {
-  transform: rotate(-2deg);
+.subject-card:nth-child(even) {
+  transform: rotate(1.5deg);
 }
-.subject-card:nth-child(2) {
-  transform: rotate(1deg);
-}
-.subject-card:nth-child(3) {
-  transform: rotate(-1deg);
+
+.subject-card:nth-child(3n) {
+  transform: rotate(-0.5deg);
 }
 
 .subject-card:hover {
-  transform: translateY(-8px) rotate(0deg) scale(1.05);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--notebook-red);
+  transform: scale(1.05) rotate(0deg);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(
+    135deg,
+    var(--card-hover) 0%,
+    var(--primary-color) 100%
+  );
+  color: white;
 }
 
 .subject-card::before {
@@ -309,6 +319,409 @@ img {
   font-family: "Kalam", cursive;
   font-size: 1.1rem;
   line-height: 1.6;
+}
+
+.donation-card {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+  border-color: #ff4757;
+}
+
+.donation-card:hover {
+  background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+}
+
+/* Donation Page Styles */
+.donation-layout {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.donation-content {
+  flex: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.donation-card-main {
+  background: var(--card-bg);
+  border: 3px dashed var(--primary-color);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transform: rotate(-0.5deg);
+}
+
+.donation-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.donation-heart {
+  font-size: 3rem;
+  color: #ff4757;
+  margin-bottom: 1rem;
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.1);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+.donation-header h2 {
+  font-family: "Caveat", cursive;
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.donation-header p {
+  font-family: "Kalam", cursive;
+  font-size: 1.1rem;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.donation-form {
+  margin-bottom: 2rem;
+}
+
+.amount-section {
+  margin-bottom: 2rem;
+}
+
+.amount-section h3 {
+  font-family: "Caveat", cursive;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.preset-amounts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.amount-btn {
+  background: var(--card-bg);
+  border: 2px solid var(--primary-color);
+  border-radius: 15px;
+  padding: 1rem;
+  font-family: "Kalam", cursive;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: rotate(-1deg);
+}
+
+.amount-btn:nth-child(even) {
+  transform: rotate(1deg);
+}
+
+.amount-btn:hover,
+.amount-btn.active {
+  background: var(--primary-color);
+  color: white;
+  transform: scale(1.05) rotate(0deg);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.custom-amount {
+  margin-top: 1rem;
+}
+
+.custom-amount label {
+  display: block;
+  font-family: "Kalam", cursive;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.custom-amount input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--primary-color);
+  border-radius: 15px;
+  font-family: "Kalam", cursive;
+  font-size: 1.1rem;
+  background: var(--card-bg);
+  color: var(--text-color);
+  transform: rotate(-0.5deg);
+}
+
+.custom-amount input:focus {
+  outline: none;
+  transform: rotate(0deg);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.donor-info {
+  margin-bottom: 2rem;
+}
+
+.donor-info h3 {
+  font-family: "Caveat", cursive;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-family: "Kalam", cursive;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--primary-color);
+  border-radius: 15px;
+  font-family: "Kalam", cursive;
+  font-size: 1rem;
+  background: var(--card-bg);
+  color: var(--text-color);
+  transform: rotate(-0.3deg);
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  transform: rotate(0deg);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
+
+.donate-btn {
+  width: 100%;
+  background: transparent;
+  color: #ff4757;
+  border: 3px solid #ff4757;
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  font-family: "Caveat", cursive;
+  font-size: 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  transform: rotate(-1deg);
+}
+
+.donate-btn:hover {
+  background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+  color: white;
+  transform: scale(1.02) rotate(0deg);
+}
+
+.donate-btn i {
+  margin-right: 0.5rem;
+}
+
+.donation-info {
+  background: var(--card-hover);
+  border: 2px solid var(--primary-color);
+  border-radius: 15px;
+  padding: 1.5rem;
+  transform: rotate(0.5deg);
+}
+
+.donation-info h3 {
+  font-family: "Caveat", cursive;
+  font-size: 1.8rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.donation-info ul {
+  list-style: none;
+  padding: 0;
+}
+
+.donation-info li {
+  font-family: "Kalam", cursive;
+  color: var(--text-color);
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+}
+
+.donation-info li i {
+  color: var(--primary-color);
+  margin-right: 0.8rem;
+  width: 20px;
+}
+
+/* Notification System */
+#notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  max-width: 400px;
+}
+
+.notification {
+  background: var(--card-bg);
+  border: 3px solid;
+  border-radius: 15px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+  position: relative;
+  font-family: "Kalam", cursive;
+  animation: slideIn 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+  to {
+    transform: translateX(0);
+  }
+}
+
+.notification.success {
+  border-color: #2ecc71;
+  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  color: white;
+}
+
+.notification.error {
+  border-color: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+}
+
+.notification.info {
+  border-color: #3498db;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+}
+
+.notification-title i {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.notification-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.notification-message {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Responsive Design for Donation Page */
+@media (max-width: 768px) {
+  .donation-layout {
+    flex-direction: column;
+    padding: 1rem;
+  }
+
+  .ad-left,
+  .ad-right {
+    display: none;
+  }
+
+  .preset-amounts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .donation-header h2 {
+    font-size: 2rem;
+  }
+
+  .donation-heart {
+    font-size: 2.5rem;
+  }
+
+  .subject-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .preset-amounts {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .amount-btn {
+    padding: 0.8rem;
+    font-size: 1rem;
+  }
+
+  .donation-card-main {
+    padding: 1rem;
+  }
+
+  #notification-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+  }
 }
 
 /* Chapter List */

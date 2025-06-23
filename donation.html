@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1910432677832151"
+      crossorigin="anonymous"
+    ></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Support IITJEE.XYZ - Donate to Keep Education Free</title>
+
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Support IITJEE.XYZ and help us continue providing free quality education to JEE aspirants. Every donation helps keep this platform running."
+    />
+    <meta
+      name="keywords"
+      content="donate, support, IIT JEE notes, education donation, help students, free education"
+    />
+    <meta name="author" content="IITJEE.XYZ" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.iitjee.xyz/donation.html" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta
+      property="og:title"
+      content="Support IITJEE.XYZ - Donate to Keep Education Free"
+    />
+    <meta
+      property="og:description"
+      content="Support IITJEE.XYZ and help us continue providing free quality education to JEE aspirants."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.iitjee.xyz/donation.html" />
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Kalam:wght@300;400;700&family=Caveat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <button class="back-button" onclick="goBack()">
+          <i class="fas fa-arrow-left"></i> Back
+        </button>
+        <h1>Support IITJEE.XYZ</h1>
+        <button class="theme-toggle" onclick="toggleTheme()">
+          <i class="fas fa-moon"></i>
+        </button>
+      </header>
+
+      <div class="mobile-banner">
+        <div class="mobile-ad-placeholder">
+          <span>Advertisement</span>
+          <div class="ad-size">300x50</div>
+        </div>
+      </div>
+
+      <div class="donation-layout">
+        <div class="ad-left">
+          <div class="ad-placeholder">
+            <span>Advertisement</span>
+            <div class="ad-size">160x600</div>
+          </div>
+        </div>
+
+        <main class="donation-content">
+          <div class="donation-card-main">
+            <div class="donation-header">
+              <i class="fas fa-heart donation-heart"></i>
+              <h2>Help Us Keep Education Free</h2>
+              <p>
+                Your support helps us maintain this platform and provide quality
+                education to thousands of JEE aspirants worldwide.
+              </p>
+            </div>
+
+            <div class="donation-form">
+              <div class="amount-section">
+                <h3>Choose Donation Amount</h3>
+                <div class="preset-amounts">
+                  <button class="amount-btn" data-amount="10">₹10</button>
+                  <button class="amount-btn" data-amount="50">₹50</button>
+                  <button class="amount-btn" data-amount="100">₹100</button>
+                  <button class="amount-btn" data-amount="250">₹250</button>
+                </div>
+
+                <div class="custom-amount">
+                  <label for="amount">Or enter custom amount (₹)</label>
+                  <input
+                    type="number"
+                    id="amount"
+                    placeholder="Enter amount"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div class="donor-info">
+                <h3>Donor Information (Optional)</h3>
+                <div class="form-group">
+                  <label for="donor-name">Name</label>
+                  <input type="text" id="donor-name" placeholder="Your name" />
+                </div>
+                <div class="form-group">
+                  <label for="donor-email">Email</label>
+                  <input
+                    type="email"
+                    id="donor-email"
+                    placeholder="your@email.com"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="donor-message">Message (Optional)</label>
+                  <textarea
+                    id="donor-message"
+                    placeholder="Leave a message of support..."
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+
+              <button class="donate-btn" onclick="processDonation()">
+                <i class="fas fa-heart"></i>
+                Donate Now
+              </button>
+            </div>
+
+            <div class="donation-info">
+              <h3>Why Donate?</h3>
+              <ul>
+                <li><i class="fas fa-server"></i> Server and hosting costs</li>
+                <li><i class="fas fa-cloud"></i> Content delivery network</li>
+                <li>
+                  <i class="fas fa-tools"></i> Website maintenance and updates
+                </li>
+                <li>
+                  <i class="fas fa-plus"></i> Adding new content and features
+                </li>
+                <li>
+                  <i class="fas fa-users"></i> Supporting the development team
+                </li>
+              </ul>
+            </div>
+          </div>
+        </main>
+
+        <div class="ad-right">
+          <div class="ad-placeholder">
+            <span>Advertisement</span>
+            <div class="ad-size">160x600</div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="footer">
+        <p>&copy; 2025 IITJEE.XYZ. All rights reserved.</p>
+      </footer>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Razorpay Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
