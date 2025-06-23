@@ -9,7 +9,7 @@
 config.js
 
 # Node.js
-node_modules/
+# node_modules/ - temporarily allowing node_modules to be committed
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
