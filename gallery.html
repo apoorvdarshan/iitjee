@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chapter Gallery - IIT JEE Handwritten Notes - IITJEE.XYZ</title>
+
+    <!-- SEO Meta Tags -->
+    <meta
+      name="description"
+      content="Browse handwritten notes for IIT JEE chapters. View detailed notes with diagrams, formulas, and explanations for Physics, Chemistry, and Mathematics."
+    />
+    <meta
+      name="keywords"
+      content="IIT JEE chapter notes, handwritten notes gallery, JEE preparation notes, chapter wise notes, study material"
+    />
+    <meta name="author" content="IITJEE.XYZ" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.iitjee.xyz/gallery.html" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta
+      property="og:title"
+      content="Chapter Gallery - IIT JEE Handwritten Notes"
+    />
+    <meta
+      property="og:description"
+      content="Browse handwritten notes for IIT JEE chapters with detailed explanations and diagrams."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://www.iitjee.xyz/gallery.html" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="Chapter Gallery - IIT JEE Handwritten Notes"
+    />
+    <meta
+      name="twitter:description"
+      content="Browse handwritten notes for IIT JEE chapters."
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Kalam:wght@300;400;700&family=Caveat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1 id="gallery-title">Chapter Gallery</h1>
+        <div>
+          <button class="back-button" onclick="goBack()">
+            ← Back to Chapters
+          </button>
+          <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <div class="gallery-layout">
+          <div class="ad-left">
+            <div class="ad-placeholder">
+              <span>Advertisement</span>
+              <div class="ad-size">160x600</div>
+            </div>
+          </div>
+
+          <div class="gallery-container">
+            <div class="mobile-banner">
+              <div class="mobile-ad-placeholder">
+                <span>Advertisement</span>
+                <div class="ad-size">300x50</div>
+              </div>
+            </div>
+
+            <div id="image-gallery" class="image-gallery">
+              <div class="loading">Loading images...</div>
+            </div>
+          </div>
+
+          <div class="ad-right">
+            <div class="ad-placeholder">
+              <span>Advertisement</span>
+              <div class="ad-size">160x600</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
