@@ -11,7 +11,6 @@ A beautiful, responsive website featuring handwritten notes for IIT JEE Main & A
 - **🌙 Dark/Light Mode**: Theme toggle with persistent preferences
 - **🛡️ Content Protection**: Right-click disabled, keyboard shortcuts blocked
 - **🔍 SEO Optimized**: Meta tags, structured data, sitemap included
-- **💰 Ad-Ready**: Multiple ad placements (leaderboard, skyscraper, mobile banner)
 
 ## 🛠️ Tech Stack
 
