@@ -78,7 +78,7 @@ Visit: [www.iitjee.xyz](https://www.iitjee.xyz)
   <a href="https://youtube.com/@apoorvdarshan">
     <img src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" />
   </a>
-  <a href="https://instagram.com/apoorvdarshan">
+  <a href="https://instagram.com/apoorvcode">
     <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" />
   </a>
 </p>
