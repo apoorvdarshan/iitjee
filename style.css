@@ -64,18 +64,20 @@ body {
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem 4rem;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 3rem;
-  padding-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
   border-bottom: 3px dashed var(--notebook-blue);
   position: relative;
 }
@@ -94,12 +96,12 @@ header::before {
 
 h1 {
   font-family: "Caveat", cursive;
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--notebook-blue);
   text-shadow: var(--doodle-shadow);
   position: relative;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   transform: rotate(-1deg);
 }
 
@@ -229,13 +231,13 @@ img {
   -o-user-drag: none;
 }
 
-/* Subject Grid - Updated for 4 cards */
+/* Subject Grid - 3 cards in one row */
 .subject-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
-  padding: 2rem;
-  max-width: 1200px;
+  padding: 1rem;
+  max-width: 100%;
   margin: 0 auto;
 }
 
@@ -247,7 +249,7 @@ img {
   );
   border: 3px solid var(--primary-color);
   border-radius: 20px;
-  padding: 2rem;
+  padding: 1.5rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -299,16 +301,16 @@ img {
 }
 
 .subject-icon {
-  font-size: 4.5rem;
-  margin-bottom: 1.5rem;
+  font-size: 3.5rem;
+  margin-bottom: 0.8rem;
   color: var(--notebook-blue);
   text-shadow: var(--doodle-shadow);
 }
 
 .subject-card h2 {
   font-family: "Caveat", cursive;
-  font-size: 2rem;
-  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
   color: var(--notebook-purple);
   text-shadow: var(--doodle-shadow);
   transform: rotate(-1deg);
@@ -786,14 +788,15 @@ img {
 .home-layout {
   display: flex;
   gap: 2rem;
-  margin-top: 2rem;
+  margin-top: 1rem;
   justify-content: center;
   align-items: flex-start;
+  flex: 1;
 }
 
 .home-layout .subject-grid {
   flex: 1;
-  max-width: 800px;
+  max-width: 100%;
   min-width: 300px;
   margin-top: 0;
 }
@@ -961,17 +964,17 @@ img {
 
 /* Contact Section */
 .contact-section {
-  margin-top: 4rem;
+  margin-top: 1rem;
   text-align: center;
-  padding: 2rem 0;
+  padding: 1rem 0;
   border-top: 2px solid var(--border-color);
 }
 
 .contact-section h3 {
   font-family: "Caveat", cursive;
-  font-size: 2rem;
+  font-size: 1.8rem;
   color: var(--notebook-purple);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   text-shadow: var(--doodle-shadow);
   position: relative;
   transform: rotate(-1deg);
@@ -1077,8 +1080,8 @@ img {
 
 /* Footer */
 .footer {
-  margin-top: 4rem;
-  padding: 2.5rem 0;
+  margin-top: auto;
+  padding: 1rem 0;
   text-align: center;
   border-top: 3px dashed var(--notebook-blue);
   color: var(--text-secondary);
