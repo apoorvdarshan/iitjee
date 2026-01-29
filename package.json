@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "watermark": "node watermark.js"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}

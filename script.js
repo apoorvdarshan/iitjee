@@ -360,6 +360,132 @@ function navigateToSubjectPage(subject) {
   window.location.href = `${subject}.html`;
 }
 
+// PDF Download Function
+async function downloadChapterPDF() {
+  const subject = localStorage.getItem("currentSubject");
+  const chapter = localStorage.getItem("currentChapter");
+
+  if (!subject || !chapter) {
+    alert("Error: Chapter information not found");
+    return;
+  }
+
+  const imageCount = getImageCount(subject, chapter);
+  if (imageCount === 0) {
+    alert("No images found in this chapter");
+    return;
+  }
+
+  const downloadBtn = document.getElementById("download-pdf");
+  const originalText = downloadBtn.innerHTML;
+  downloadBtn.disabled = true;
+  downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+
+  try {
+    const { jsPDF } = window.jspdf;
+
+    // Create PDF in portrait mode for handwritten notes
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 5;
+    const maxWidth = pageWidth - margin * 2;
+    const maxHeight = pageHeight - margin * 2;
+
+    let addedPages = 0;
+
+    for (let i = 1; i <= imageCount; i++) {
+      const imageNumber = String(i).padStart(4, "0");
+      const imagePath = `${subject}/${chapter}/${imageNumber}.jpg`;
+
+      // Update button with progress
+      downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${i}/${imageCount}`;
+
+      try {
+        // Load image and convert to base64
+        const result = await loadImageForPDF(imagePath);
+
+        if (result && result.dataUrl) {
+          // Calculate dimensions to fit on page while maintaining aspect ratio
+          const widthRatio = maxWidth / result.width;
+          const heightRatio = maxHeight / result.height;
+          const ratio = Math.min(widthRatio, heightRatio);
+
+          const imgWidth = result.width * ratio;
+          const imgHeight = result.height * ratio;
+
+          // Center image on page
+          const x = (pageWidth - imgWidth) / 2;
+          const y = (pageHeight - imgHeight) / 2;
+
+          if (addedPages > 0) {
+            pdf.addPage();
+          }
+
+          pdf.addImage(result.dataUrl, "JPEG", x, y, imgWidth, imgHeight);
+          addedPages++;
+        }
+      } catch (imgError) {
+        console.error(`Error loading image ${i}:`, imgError);
+      }
+    }
+
+    if (addedPages === 0) {
+      alert("Could not load any images. Please try again.");
+      return;
+    }
+
+    // Generate filename from chapter name
+    const chapterName = chapter.replace(/[^a-zA-Z0-9\s.-]/g, "").trim();
+    pdf.save(`${chapterName}.pdf`);
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    alert("Error generating PDF: " + error.message);
+  } finally {
+    downloadBtn.disabled = false;
+    downloadBtn.innerHTML = originalText;
+  }
+}
+
+// Helper function to load image for PDF
+function loadImageForPDF(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+
+    img.onload = function () {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        resolve({
+          dataUrl: dataUrl,
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        });
+      } catch (e) {
+        reject(e);
+      }
+    };
+
+    img.onerror = function() {
+      reject(new Error("Failed to load image: " + src));
+    };
+
+    // Add cache-busting and load
+    img.src = src + "?t=" + Date.now();
+  });
+}
+
 // Initialize page based on current location
 function initializePage() {
   initializeTheme();

@@ -219,6 +219,45 @@ h3 {
   font-size: 1.2rem;
 }
 
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.download-btn {
+  background: var(--surface-color);
+  color: var(--notebook-green);
+  border: 3px solid var(--notebook-green);
+  padding: 0.8rem 1.5rem;
+  border-radius: 15px 25px 15px 25px;
+  font-size: 1.1rem;
+  font-family: "Kalam", cursive;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: var(--doodle-shadow);
+  transform: rotate(1deg);
+  position: relative;
+}
+
+.download-btn:hover {
+  background: var(--notebook-green);
+  color: white;
+  transform: rotate(-1deg) scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+
+.download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.download-btn i {
+  margin-right: 0.5rem;
+}
+
 /* Content Protection - Disable all images */
 img {
   -webkit-user-select: none;
@@ -846,25 +885,6 @@ img {
   transform: rotate(-0.5deg);
 }
 
-.image-gallery::before {
-  content: "iitjee.xyz";
-  position: sticky;
-  top: 65%;
-  left: 35%;
-  transform: translate(-50%, -50%) rotate(-45deg);
-  font-size: 4rem;
-  font-weight: bold;
-  color: rgba(var(--primary-color-rgb), 0.1);
-  pointer-events: none;
-  z-index: 1000;
-  user-select: none;
-  text-transform: uppercase;
-  letter-spacing: 0.5rem;
-  white-space: nowrap;
-  display: block;
-  width: 0;
-  height: 0;
-}
 
 /* Custom scrollbar for the gallery */
 .image-gallery::-webkit-scrollbar {
@@ -1167,6 +1187,23 @@ img {
 
   header {
     margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .header-buttons {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .download-btn {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+  }
+
+  .back-button {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
   }
 
   .image-gallery {
@@ -1194,10 +1231,6 @@ img {
     font-size: 1.3rem;
   }
 
-  .image-gallery::before {
-    font-size: 3.5rem;
-    letter-spacing: 0.4rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1215,6 +1248,21 @@ img {
 
   .subject-icon {
     font-size: 3rem;
+  }
+
+  .header-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .download-btn {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .back-button {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.9rem;
   }
 
   .contact-section {
@@ -1237,8 +1285,4 @@ img {
     font-size: 1.2rem;
   }
 
-  .image-gallery::before {
-    font-size: 2.5rem;
-    letter-spacing: 0.3rem;
-  }
 }

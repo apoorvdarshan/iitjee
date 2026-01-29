@@ -65,14 +65,19 @@
       href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Kalam:wght@300;400;700&family=Caveat:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- jsPDF for PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   </head>
   <body>
     <div class="container">
       <header>
         <h1 id="gallery-title">Chapter Gallery</h1>
-        <div>
+        <div class="header-buttons">
           <button class="back-button" onclick="goBack()">
             ← Back to Chapters
+          </button>
+          <button id="download-pdf" class="download-btn" onclick="downloadChapterPDF()">
+            <i class="fas fa-download"></i> Download PDF
           </button>
           <button class="theme-toggle" onclick="toggleTheme()">
             <i class="fas fa-moon"></i>
