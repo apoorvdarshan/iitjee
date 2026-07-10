@@ -1,8 +1,11 @@
 {
   "scripts": {
-    "watermark": "node watermark.js"
+    "watermark": "node watermark.js",
+    "deploy": "npm run build && npx wrangler deploy",
+    "build": "node static-build.mjs"
   },
   "devDependencies": {
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "wrangler": "^4.110.0"
   }
 }

@@ -21,3 +21,6 @@ Thumbs.db
 .netlify
 .vercel
 node_modules/
+.env*
+.wrangler/
+dist/
