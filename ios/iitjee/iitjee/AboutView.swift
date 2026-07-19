@@ -2,10 +2,15 @@ import SwiftUI
 
 struct AboutView: View {
     private let creator = URL(string: "https://github.com/apoorvdarshan")!
+    @AppStorage(AppAppearance.storageKey) private var storedAppearance = AppAppearance.system.rawValue
 
     private var versionText: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
-        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+        let version = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleShortVersionString"
+        ) as? String ?? "1.0"
+        let build = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleVersion"
+        ) as? String ?? "1"
         return "Version \(version) (\(build))"
     }
 
@@ -14,44 +19,48 @@ struct AboutView: View {
             NotebookBackground(accent: AppPalette.about)
 
             ScrollView {
-                VStack(spacing: 18) {
+                VStack(alignment: .leading, spacing: 34) {
                     aboutHero
-                    archiveStats
+                    ArchiveStatLine()
 
                     ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .top, spacing: 18) {
-                            VStack(spacing: 18) {
-                                missionCard
-                                coverageCard
+                        HStack(alignment: .top, spacing: 30) {
+                            VStack(alignment: .leading, spacing: 32) {
+                                missionSection
+                                coverageSection
                             }
-                            .frame(minWidth: 420, maxWidth: .infinity)
+                            .frame(minWidth: 410, maxWidth: .infinity, alignment: .topLeading)
 
-                            VStack(spacing: 18) {
-                                offlineCard
+                            DoodleVerticalRule(color: AppPalette.about)
+
+                            VStack(alignment: .leading, spacing: 32) {
+                                offlineSection
+                                appearanceSection
                                 independenceNote
-                                linksCard
+                                creatorLink
                             }
-                            .frame(minWidth: 360, maxWidth: .infinity)
+                            .frame(minWidth: 340, maxWidth: .infinity, alignment: .topLeading)
                         }
 
-                        VStack(spacing: 18) {
-                            missionCard
-                            offlineCard
-                            coverageCard
+                        VStack(alignment: .leading, spacing: 32) {
+                            missionSection
+                            offlineSection
+                            appearanceSection
+                            coverageSection
                             independenceNote
-                            linksCard
+                            creatorLink
                         }
                     }
 
                     Text(versionText)
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.tertiary)
-                        .padding(.top, 4)
                 }
                 .readableWidth()
-                .padding(.horizontal, 18)
-                .padding(.top, 12)
-                .padding(.bottom, 28)
+                .padding(.leading, 72)
+                .padding(.trailing, 24)
+                .padding(.top, 22)
+                .padding(.bottom, 38)
             }
         }
         .navigationTitle("About")
@@ -59,236 +68,311 @@ struct AboutView: View {
     }
 
     private var aboutHero: some View {
-        VStack(spacing: 18) {
-            PCMAppMark()
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .center, spacing: 26) {
+                PCMAppMark()
+                aboutHeroCopy
+            }
 
-            VStack(spacing: 7) {
-                Text("PCM Notes")
-                    .font(.system(.largeTitle, design: .rounded, weight: .black))
-
-                Text("Handwritten exam revision")
-                    .font(.headline)
-                    .foregroundStyle(AppPalette.about)
-
-                Text("A focused Physics, Chemistry, and Mathematics library for JEE preparation—with Physics and Chemistry useful for NEET revision.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 20) {
+                PCMAppMark()
+                aboutHeroCopy
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.horizontal, 22)
-        .padding(.vertical, 26)
-        .notebookGlass(tint: AppPalette.about, cornerRadius: 30)
     }
 
-    private var archiveStats: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 12) { archiveStatItems }
-            VStack(spacing: 12) { archiveStatItems }
+    private var aboutHeroCopy: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            EyebrowLabel(text: "Inside cover", color: AppPalette.about)
+
+            Text("PCM Notes")
+                .font(.custom("Noteworthy-Bold", size: 44, relativeTo: .largeTitle))
+                .markerHighlight(AppPalette.physicsSecondary)
+
+            Text("Handwritten exam revision")
+                .font(.headline)
+                .foregroundStyle(AppPalette.about)
+
+            Text("Physics, Chemistry, and Mathematics notes organised for fast JEE revision—with Physics and Chemistry also useful for NEET.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    @ViewBuilder
-    private var archiveStatItems: some View {
-        AboutStat(
-            value: ChapterCatalog.totalChapterCount.formatted(),
-            label: "chapters",
-            color: AppPalette.physics
-        )
-        AboutStat(
-            value: ChapterCatalog.totalPageCount.formatted(),
-            label: "offline pages",
-            color: AppPalette.chemistry
-        )
-        AboutStat(
-            value: "3",
-            label: "subjects",
-            color: AppPalette.mathematics
-        )
-    }
-
-    private var missionCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            EyebrowLabel(text: "Why this exists", color: AppPalette.about)
+    private var missionSection: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            DoodleSectionTitle(
+                title: "Why this exists",
+                color: AppPalette.about,
+                annotation: "the short version"
+            )
 
             Text("Less hunting. More revising.")
-                .font(.system(.title3, design: .rounded, weight: .black))
+                .font(.custom("Noteworthy-Bold", size: 26, relativeTo: .title2))
+                .markerHighlight(AppPalette.about)
 
-            Text("PCM Notes turns a large handwritten archive into a chapter-first native library. Pick a subject, find the exact topic, and open the complete PDF—even without a connection.")
+            Text("A large handwritten archive is easier to use when every topic has a clear place. Pick a subject, find the chapter, and open the complete PDF—even without a connection.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .paperSurface(tint: AppPalette.about, cornerRadius: 24)
     }
 
-    private var offlineCard: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            EyebrowLabel(text: "Built for focus", color: AppPalette.chemistry)
+    private var offlineSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            DoodleSectionTitle(
+                title: "Built for focus",
+                color: AppPalette.chemistry,
+                annotation: "no loading links"
+            )
 
-            Label("Every chapter travels with you", systemImage: "internaldrive.fill")
-                .font(.system(.title3, design: .rounded, weight: .black))
+            OfflineStamp()
 
-            Text("The roughly 500 MB handwritten archive is packaged as 91 local PDFs. Reading, zooming, and sharing a chapter never depends on the website.")
+            Text("The roughly 500 MB archive is packaged as local PDFs. Reading, zooming, sharing, and returning to your saved page never depends on the website.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Label("No internet required", systemImage: "checkmark.seal.fill")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(.primary)
-                .padding(.horizontal, 11)
-                .padding(.vertical, 7)
-                .background(AppPalette.chemistry.opacity(0.11), in: Capsule())
+            Label("No internet required", systemImage: "checkmark.seal")
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(AppPalette.chemistry)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .paperSurface(tint: AppPalette.chemistry, cornerRadius: 24)
     }
 
-    private var coverageCard: some View {
-        VStack(alignment: .leading, spacing: 15) {
-            EyebrowLabel(text: "Inside the archive", color: AppPalette.about)
+    private var coverageSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            DoodleSectionTitle(
+                title: "Inside the notebook",
+                color: AppPalette.mathematics,
+                annotation: "full syllabus index"
+            )
 
             ForEach(SubjectArea.allCases) { subject in
-                HStack(spacing: 13) {
+                HStack(spacing: 14) {
                     Image(systemName: subject.symbol)
-                        .font(.headline)
+                        .font(.title3.weight(.semibold))
                         .foregroundStyle(subject.accent)
-                        .frame(width: 38, height: 38)
-                        .background(subject.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                        .frame(width: 32)
+                        .rotationEffect(.degrees(subject == .chemistry ? -5 : 3))
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(subject.name)
-                            .font(.subheadline.weight(.bold))
+                            .font(.headline)
+
                         Text("\(subject.chapters.count) chapters · \(subject.pageCount.formatted()) pages")
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
 
-                    Spacer()
+                    Spacer(minLength: 0)
                 }
+                .padding(.vertical, 14)
+                .overlay(alignment: .bottom) {
+                    DoodleRule(color: subject.accent)
+                }
+                .accessibilityElement(children: .combine)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .paperSurface(tint: AppPalette.about, cornerRadius: 24)
     }
 
-    private var independenceNote: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "checkmark.shield.fill")
-                .foregroundStyle(AppPalette.chemistry)
+    private var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            DoodleSectionTitle(
+                title: "Paper & ink",
+                color: AppPalette.about,
+                annotation: "appearance"
+            )
 
-            Text("PCM Notes is an independent study resource. It is not affiliated with IITs, NTA, JEE, or NEET. Biology is not included.")
+            HStack(spacing: 8) {
+                ForEach(AppAppearance.allCases) { appearance in
+                    AppearanceChoice(
+                        appearance: appearance,
+                        isSelected: storedAppearance == appearance.rawValue
+                    ) {
+                        storedAppearance = appearance.rawValue
+                    }
+                }
+            }
+
+            Text("System follows your device. Light and Dark stay fixed until you change them here.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(17)
-        .paperSurface(tint: AppPalette.chemistry, cornerRadius: 20)
     }
 
-    private var linksCard: some View {
-        VStack(spacing: 0) {
-            AboutLink(
-                title: "Created by Apoorv Darshan",
-                symbol: "person.crop.circle.fill",
-                color: AppPalette.mathematics,
-                destination: creator
-            )
+    private var independenceNote: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            DoodleRule(color: AppPalette.chemistry, lineWidth: 1.4)
+
+            HStack(alignment: .top, spacing: 12) {
+                Text("NB")
+                    .font(.caption.monospaced().weight(.black))
+                    .foregroundStyle(AppPalette.chemistry)
+                    .rotationEffect(.degrees(-5))
+
+                Text("PCM Notes is an independent study resource. It is not affiliated with IITs, NTA, JEE, or NEET. Biology is not included.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            DoodleRule(color: AppPalette.chemistry, lineWidth: 1.4)
         }
-        .paperSurface(tint: AppPalette.about, cornerRadius: 24)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var creatorLink: some View {
+        Link(destination: creator) {
+            HStack(spacing: 12) {
+                Text("Made by Apoorv Darshan")
+                    .font(.custom("Noteworthy-Bold", size: 21, relativeTo: .body))
+                    .foregroundStyle(.primary)
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "arrow.up.right")
+                    .font(.callout.weight(.bold))
+                    .foregroundStyle(AppPalette.mathematics)
+            }
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+            .overlay(alignment: .bottom) {
+                DoodleRule(color: AppPalette.mathematics)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint("Opens the creator's GitHub profile")
+    }
+}
+
+private struct AppearanceChoice: View {
+    let appearance: AppAppearance
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 7) {
+                ZStack {
+                    if isSelected {
+                        DoodleLoop(color: AppPalette.about)
+                            .frame(width: 44, height: 36)
+                    }
+
+                    Image(systemName: appearance.symbol)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(isSelected ? AppPalette.about : .secondary)
+                }
+                .frame(height: 38)
+
+                Text(appearance.title)
+                    .font(.caption.weight(isSelected ? .bold : .medium))
+                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
+
+                DoodleRule(color: isSelected ? AppPalette.about : AppPalette.rule)
+                    .opacity(isSelected ? 1 : 0.42)
+            }
+            .frame(maxWidth: .infinity, minHeight: 58)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(appearance.title)
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint("Changes the app appearance")
+        .accessibilityIdentifier("appearance.\(appearance.rawValue)")
     }
 }
 
 private struct PCMAppMark: View {
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 27, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [AppPalette.physics, AppPalette.mathematics],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-
-            Canvas { context, size in
-                for y in stride(from: 22.0, through: size.height, by: 16.0) {
-                    var path = Path()
-                    path.move(to: CGPoint(x: 12, y: y))
-                    path.addLine(to: CGPoint(x: size.width - 12, y: y))
-                    context.stroke(path, with: .color(.white.opacity(0.14)), lineWidth: 1)
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 27, style: .continuous))
+            DoodleLoop(color: AppPalette.mathematics)
+                .rotationEffect(.degrees(-4))
 
             Text("PCM")
-                .font(.system(size: 28, weight: .black, design: .rounded))
-                .tracking(-1)
-                .foregroundStyle(.white)
+                .font(.custom("Noteworthy-Bold", size: 31, relativeTo: .title))
+                .tracking(-0.5)
+                .foregroundStyle(.primary)
+                .markerHighlight(AppPalette.physicsSecondary)
         }
-        .frame(width: 92, height: 92)
-        .shadow(color: AppPalette.mathematics.opacity(0.25), radius: 22, y: 12)
-        .accessibilityLabel("PCM Notes app icon")
+        .frame(width: 118, height: 88)
+        .accessibilityLabel("PCM Notes")
     }
 }
 
-private struct AboutStat: View {
-    let value: String
-    let label: String
-    let color: Color
-
+private struct ArchiveStatLine: View {
     var body: some View {
-        VStack(spacing: 5) {
+        ViewThatFits(in: .horizontal) {
+            HStack(alignment: .firstTextBaseline, spacing: 13) {
+                stat(ChapterCatalog.totalChapterCount.formatted(), "chapters", AppPalette.physics)
+                cross
+                stat(ChapterCatalog.totalPageCount.formatted(), "pages", AppPalette.chemistry)
+                cross
+                stat("3", "subjects", AppPalette.mathematics)
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                stat(ChapterCatalog.totalChapterCount.formatted(), "chapters", AppPalette.physics)
+                stat(ChapterCatalog.totalPageCount.formatted(), "pages", AppPalette.chemistry)
+                stat("3", "subjects", AppPalette.mathematics)
+            }
+        }
+        .padding(.vertical, 4)
+        .overlay(alignment: .bottom) {
+            DoodleRule(color: AppPalette.about, lineWidth: 1.5)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var cross: some View {
+        Text("×")
+            .font(.custom("Noteworthy-Bold", size: 20, relativeTo: .body))
+            .foregroundStyle(.tertiary)
+    }
+
+    private func stat(_ value: String, _ label: String, _ color: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text(value)
                 .font(.system(.title3, design: .monospaced, weight: .black))
                 .foregroundStyle(color)
 
             Text(label)
-                .font(.caption2.weight(.bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(.secondary)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
-        .paperSurface(tint: color, cornerRadius: 20)
-        .accessibilityElement(children: .combine)
     }
 }
 
-private struct AboutLink: View {
-    let title: String
-    let symbol: String
-    let color: Color
-    let destination: URL
-
+private struct OfflineStamp: View {
     var body: some View {
-        Link(destination: destination) {
-            HStack(spacing: 13) {
-                Image(systemName: symbol)
-                    .foregroundStyle(color)
-                    .frame(width: 32, height: 32)
-                    .background(color.opacity(0.11), in: RoundedRectangle(cornerRadius: 10))
-
-                Text(title)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(.primary)
-
-                Spacer()
-
-                Image(systemName: "arrow.up.right")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(color)
+        ZStack {
+            Canvas { context, size in
+                let inset: CGFloat = 3
+                var border = Path()
+                border.move(to: CGPoint(x: inset + 2, y: inset))
+                border.addLine(to: CGPoint(x: size.width - inset, y: inset + 1))
+                border.addLine(to: CGPoint(x: size.width - inset - 1, y: size.height - inset))
+                border.addLine(to: CGPoint(x: inset, y: size.height - inset - 1))
+                border.closeSubpath()
+                context.stroke(
+                    border,
+                    with: .color(AppPalette.chemistry.opacity(0.72)),
+                    style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round)
+                )
             }
-            .padding(14)
+
+            Text("OFFLINE · 91 PDFs")
+                .font(.system(.subheadline, design: .monospaced, weight: .black))
+                .foregroundStyle(AppPalette.chemistry)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
         }
-        .buttonStyle(.plain)
+        .fixedSize()
+        .rotationEffect(.degrees(-2.5))
+        .accessibilityLabel("91 PDFs available offline")
     }
 }
 

@@ -29,6 +29,7 @@ struct ChapterReaderView: View {
     @State private var currentPage: Int
     @State private var renderedPageCount = 0
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     init(subject: SubjectArea, chapter: Chapter) {
         self.subject = subject
@@ -70,7 +71,8 @@ struct ChapterReaderView: View {
 
     private var missingPDF: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            (colorScheme == .dark ? AppPalette.ink : AppPalette.paper)
+                .ignoresSafeArea()
 
             ContentUnavailableView {
                 Label("PDF unavailable", systemImage: "doc.badge.exclamationmark")
@@ -83,10 +85,8 @@ struct ChapterReaderView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(subject.accent)
             }
-            .foregroundStyle(.white)
             .padding(30)
         }
-        .preferredColorScheme(.dark)
     }
 }
 
@@ -218,6 +218,7 @@ private struct FocusPDFReader: View {
     @Binding var pageCount: Int
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("reader.ipad.layout") private var storedLayout = PDFReadingLayout.continuous.rawValue
 
     private var isPad: Bool {
@@ -228,9 +229,21 @@ private struct FocusPDFReader: View {
         PDFReadingLayout(rawValue: storedLayout) ?? .continuous
     }
 
+    private var readerBackdrop: Color {
+        colorScheme == .dark ? .black : Color(uiColor: .systemGray5)
+    }
+
+    private var chromeBackground: Color {
+        colorScheme == .dark ? .black.opacity(0.78) : AppPalette.paper.opacity(0.94)
+    }
+
+    private var chromeButtonBackground: Color {
+        colorScheme == .dark ? .black.opacity(0.62) : .white.opacity(0.86)
+    }
+
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            readerBackdrop.ignoresSafeArea()
 
             LocalPDFView(
                 url: pdfURL,
@@ -238,7 +251,7 @@ private struct FocusPDFReader: View {
                 currentPage: $currentPage,
                 pageCount: $pageCount
             )
-            .background(Color.black)
+            .background(readerBackdrop)
             .ignoresSafeArea()
         }
         .safeAreaInset(edge: .top) {
@@ -251,13 +264,13 @@ private struct FocusPDFReader: View {
                         .frame(width: 40, height: 40)
                 }
                 .buttonStyle(.plain)
-                .background(.black.opacity(0.62), in: Circle())
+                .background(chromeButtonBackground, in: Circle())
                 .accessibilityLabel("Close focus reader")
 
                 Text(title)
                     .font(.headline)
                     .lineLimit(1)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(.primary)
 
                 Spacer()
 
@@ -275,7 +288,7 @@ private struct FocusPDFReader: View {
                             .frame(width: 40, height: 40)
                     }
                     .buttonStyle(.plain)
-                    .background(.black.opacity(0.62), in: Circle())
+                    .background(chromeButtonBackground, in: Circle())
                     .accessibilityLabel("Reading layout")
                     .accessibilityValue(readingLayout.title)
                     .accessibilityIdentifier("reader.layoutMenu")
@@ -287,13 +300,13 @@ private struct FocusPDFReader: View {
                         .frame(width: 40, height: 40)
                 }
                 .buttonStyle(.plain)
-                .background(.black.opacity(0.62), in: Circle())
+                .background(chromeButtonBackground, in: Circle())
                 .accessibilityLabel("Share chapter PDF")
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(.primary)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(.black.opacity(0.78))
+            .background(chromeBackground)
         }
         .safeAreaInset(edge: .bottom) {
             ReaderControlBar(
@@ -304,9 +317,8 @@ private struct FocusPDFReader: View {
             )
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(.black.opacity(0.76))
+            .background(chromeBackground)
         }
-        .preferredColorScheme(.dark)
         .statusBarHidden()
     }
 }

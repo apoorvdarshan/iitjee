@@ -27,6 +27,11 @@ private enum AppTab: Hashable {
 
 struct ContentView: View {
     @State private var selection: AppTab = .physics
+    @AppStorage(AppAppearance.storageKey) private var storedAppearance = AppAppearance.system.rawValue
+
+    private var appearance: AppAppearance {
+        AppAppearance(rawValue: storedAppearance) ?? .system
+    }
 
     var body: some View {
         TabView(selection: $selection) {
@@ -66,6 +71,7 @@ struct ContentView: View {
         }
         .tint(selection.accent)
         .nativeTabMinimization()
+        .preferredColorScheme(appearance.colorScheme)
     }
 }
 

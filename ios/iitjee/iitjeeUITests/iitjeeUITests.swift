@@ -102,6 +102,37 @@ final class iitjeeUITests: XCTestCase {
     }
 
     @MainActor
+    func testAppearanceSelectorOffersSystemLightAndDark() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let aboutTab = app.tabBars.buttons["About"]
+        XCTAssertTrue(aboutTab.waitForExistence(timeout: 5))
+        aboutTab.tap()
+
+        let systemChoice = app.buttons["appearance.system"]
+        let lightChoice = app.buttons["appearance.light"]
+        let darkChoice = app.buttons["appearance.dark"]
+
+        for _ in 0..<8 where !darkChoice.isHittable {
+            app.swipeUp()
+        }
+
+        XCTAssertTrue(systemChoice.isHittable)
+        XCTAssertTrue(lightChoice.isHittable)
+        XCTAssertTrue(darkChoice.isHittable)
+
+        darkChoice.tap()
+        XCTAssertEqual(darkChoice.value as? String, "Selected")
+
+        lightChoice.tap()
+        XCTAssertEqual(lightChoice.value as? String, "Selected")
+
+        systemChoice.tap()
+        XCTAssertEqual(systemChoice.value as? String, "Selected")
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
