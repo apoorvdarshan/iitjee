@@ -490,16 +490,16 @@ function loadImageForPDF(src) {
 function initializePage() {
   initializeTheme();
 
-  const path = window.location.pathname;
-  const page = path.substring(path.lastIndexOf("/") + 1);
+  const path = window.location.pathname.replace(/\/+$/, "");
+  const page = path.substring(path.lastIndexOf("/") + 1).replace(/\.html$/i, "");
 
-  if (page === "physics.html") {
+  if (page === "physics") {
     loadChapters("physics");
-  } else if (page === "chemistry.html") {
+  } else if (page === "chemistry") {
     loadChapters("chemistry");
-  } else if (page === "mathematics.html") {
+  } else if (page === "mathematics") {
     loadChapters("mathematics");
-  } else if (page === "gallery.html") {
+  } else if (page === "gallery") {
     loadGallery();
   }
 }
