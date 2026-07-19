@@ -1,9 +1,37 @@
 import SwiftUI
 
-struct SubjectView: View {
+struct SubjectScene: View {
     let subject: SubjectArea
 
+    @State private var selectedChapter: Chapter?
+    @State private var preferredCompactColumn: NavigationSplitViewColumn = .sidebar
+
+    var body: some View {
+        NavigationSplitView(preferredCompactColumn: $preferredCompactColumn) {
+            SubjectBrowserView(
+                subject: subject,
+                selectedChapter: $selectedChapter
+            )
+            .navigationSplitViewColumnWidth(min: 292, ideal: 350, max: 410)
+        } detail: {
+            if let selectedChapter {
+                ChapterReaderView(subject: subject, chapter: selectedChapter)
+                    .id(selectedChapter.id)
+            } else {
+                SubjectWelcomeView(subject: subject)
+            }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .tint(subject.accent)
+    }
+}
+
+private struct SubjectBrowserView: View {
+    let subject: SubjectArea
+    @Binding var selectedChapter: Chapter?
+
     @State private var searchText = ""
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var filteredChapters: [Chapter] {
         guard !searchText.isEmpty else { return subject.chapters }
@@ -18,49 +46,67 @@ struct SubjectView: View {
         ZStack {
             NotebookBackground(accent: subject.accent)
 
-            ScrollView {
-                LazyVStack(spacing: 13) {
-                    SubjectHero(subject: subject)
-                        .padding(.bottom, 8)
+            List(selection: $selectedChapter) {
+                SubjectHero(subject: subject)
+                    .listRowInsets(EdgeInsets(top: 12, leading: 14, bottom: 14, trailing: 14))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
 
-                    HStack {
-                        EyebrowLabel(text: "Chapter index", color: subject.accent)
-                        Spacer()
-                        Text("\(filteredChapters.count) shown")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, 4)
-
+                Section {
                     if filteredChapters.isEmpty {
                         ContentUnavailableView.search(text: searchText)
-                            .frame(minHeight: 260)
+                            .frame(maxWidth: .infinity, minHeight: 260)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     } else {
                         ForEach(filteredChapters) { chapter in
                             NavigationLink(value: chapter) {
-                                ChapterCard(chapter: chapter, subject: subject)
+                                ChapterRow(
+                                    chapter: chapter,
+                                    subject: subject,
+                                    isSelected: selectedChapter == chapter
+                                )
                             }
                             .buttonStyle(.plain)
+                            .listRowInsets(
+                                EdgeInsets(top: 5, leading: 14, bottom: 5, trailing: 14)
+                            )
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                         }
                     }
+                } header: {
+                    HStack {
+                        EyebrowLabel(text: "Chapter spine", color: subject.accent)
+
+                        Spacer()
+
+                        if !searchText.isEmpty {
+                            Text("\(filteredChapters.count) shown")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .textCase(nil)
+                    .padding(.horizontal, 2)
+                    .padding(.top, 4)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 12)
-                .padding(.bottom, 28)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
-        .navigationTitle(subject.tabName)
+        .navigationTitle("PCM Notes")
         .navigationBarTitleDisplayMode(.inline)
         .searchable(text: $searchText, prompt: "Find a chapter")
-        .navigationDestination(for: Chapter.self) { chapter in
-            ChapterGalleryView(subject: subject, chapter: chapter)
-        }
-        .animation(.snappy(duration: 0.24), value: filteredChapters)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.24), value: filteredChapters)
     }
 }
 
 private struct SubjectHero: View {
     let subject: SubjectArea
+
+    @ScaledMetric(relativeTo: .largeTitle) private var glyphSize = 66
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private var examLabel: String {
         subject == .mathematics ? "JEE MAIN + ADVANCED" : "JEE + NEET REVISION"
@@ -68,11 +114,11 @@ private struct SubjectHero: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 12) {
                 EyebrowLabel(text: examLabel, color: subject.accent)
 
                 Text(subject.name)
-                    .font(.system(size: 38, weight: .black, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded, weight: .black))
                     .foregroundStyle(.primary)
                     .minimumScaleFactor(0.78)
 
@@ -80,82 +126,208 @@ private struct SubjectHero: View {
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.trailing, 48)
+                    .padding(.trailing, dynamicTypeSize.isAccessibilitySize ? 0 : 42)
 
-                HStack(spacing: 9) {
-                    MetricPill(
-                        value: "\(subject.chapters.count)",
-                        label: "chapters",
-                        color: subject.accent
-                    )
-                    MetricPill(
-                        value: subject.pageCount.formatted(),
-                        label: "pages",
-                        color: subject.secondaryAccent
-                    )
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) { heroMetrics }
+                    VStack(alignment: .leading, spacing: 8) { heroMetrics }
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Image(systemName: subject.symbol)
-                .font(.system(size: 70, weight: .light))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(subject.accent.opacity(0.22))
-                .rotationEffect(.degrees(subject == .chemistry ? -8 : 7))
-                .offset(x: 8, y: 8)
-                .accessibilityHidden(true)
+            if !dynamicTypeSize.isAccessibilitySize {
+                Image(systemName: subject.symbol)
+                    .font(.system(size: glyphSize, weight: .light))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(subject.accent.opacity(0.20))
+                    .rotationEffect(.degrees(subject == .chemistry ? -8 : 7))
+                    .offset(x: 8, y: 7)
+                    .accessibilityHidden(true)
+            }
         }
-        .padding(22)
-        .notebookGlass(tint: subject.accent, cornerRadius: 30)
-        .shadow(color: subject.accent.opacity(0.10), radius: 22, y: 12)
+        .padding(20)
+        .notebookGlass(tint: subject.accent, cornerRadius: 28)
+        .shadow(color: subject.accent.opacity(0.08), radius: 18, y: 9)
+    }
+
+    @ViewBuilder
+    private var heroMetrics: some View {
+        MetricPill(
+            value: "\(subject.chapters.count)",
+            label: "chapters",
+            color: subject.accent
+        )
+        MetricPill(
+            value: subject.pageCount.formatted(),
+            label: "pages",
+            color: subject.secondaryAccent
+        )
     }
 }
 
-private struct ChapterCard: View {
+private struct ChapterRow: View {
     let chapter: Chapter
+    let subject: SubjectArea
+    let isSelected: Bool
+
+    @AppStorage private var savedPage: Int
+    @ScaledMetric(relativeTo: .body) private var badgeSize = 44
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    init(chapter: Chapter, subject: SubjectArea, isSelected: Bool) {
+        self.chapter = chapter
+        self.subject = subject
+        self.isSelected = isSelected
+        _savedPage = AppStorage(
+            wrappedValue: 0,
+            chapter.readingProgressKey(for: subject)
+        )
+    }
+
+    var body: some View {
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 11) {
+                    numberBadge
+                    chapterCopy
+                }
+            } else {
+                HStack(spacing: 12) {
+                    numberBadge
+                    chapterCopy
+                    Spacer(minLength: 2)
+                }
+            }
+        }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 11)
+        .contentShape(RoundedRectangle(cornerRadius: 19, style: .continuous))
+        .paperSurface(tint: subject.accent, cornerRadius: 19, selected: isSelected)
+        .hoverEffect(.lift)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            "Chapter \(chapter.number), \(chapter.title), \(chapter.pageCount) pages"
+        )
+        .accessibilityHint("Opens the bundled handwritten PDF")
+        .accessibilityIdentifier("chapter.\(subject.slug).\(chapter.number)")
+    }
+
+    private var numberBadge: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(subject.accent.opacity(isSelected ? 0.18 : 0.11))
+
+            Text(String(format: "%02d", chapter.number))
+                .font(.system(.subheadline, design: .monospaced, weight: .black))
+                .foregroundStyle(.primary)
+        }
+        .frame(width: min(badgeSize, 64), height: min(badgeSize, 64))
+    }
+
+    private var chapterCopy: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(chapter.title)
+                .font(.system(.body, design: .rounded, weight: .bold))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Label(progressLabel, systemImage: "checkmark.circle.fill")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .symbolRenderingMode(.hierarchical)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if savedPage > 1 {
+                ProgressView(
+                    value: Double(savedPage),
+                    total: Double(chapter.pageCount)
+                )
+                .tint(subject.accent)
+                .accessibilityLabel("Reading progress")
+                .accessibilityValue("Page \(savedPage) of \(chapter.pageCount)")
+            }
+        }
+    }
+
+    private var progressLabel: String {
+        if savedPage > 1 {
+            "Resume page \(savedPage) of \(chapter.pageCount)"
+        } else {
+            "\(chapter.pageCount) pages · offline PDF"
+        }
+    }
+}
+
+private struct SubjectWelcomeView: View {
     let subject: SubjectArea
 
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(subject.accent.opacity(0.13))
+        ZStack {
+            NotebookBackground(accent: subject.accent)
 
-                Text(String(format: "%02d", chapter.number))
-                    .font(.system(.subheadline, design: .monospaced, weight: .black))
-                    .foregroundStyle(subject.accent)
+            ScrollView {
+                VStack(spacing: 24) {
+                    ZStack {
+                        Circle()
+                            .fill(subject.accent.opacity(0.12))
+                            .frame(width: 132, height: 132)
+
+                        Image(systemName: subject.symbol)
+                            .font(.system(size: 58, weight: .light))
+                            .symbolRenderingMode(.hierarchical)
+                            .foregroundStyle(subject.accent)
+                    }
+                    .accessibilityHidden(true)
+
+                    VStack(spacing: 10) {
+                        EyebrowLabel(text: "Your offline study desk", color: subject.accent)
+
+                        Text(subject.name)
+                            .font(.system(.largeTitle, design: .rounded, weight: .black))
+
+                        Text("Choose a chapter from the spine. Its complete handwritten PDF will stay open here while you move through the syllabus.")
+                            .font(.title3.weight(.medium))
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    HStack(spacing: 10) {
+                        MetricPill(
+                            value: "\(subject.chapters.count)",
+                            label: "chapters",
+                            color: subject.accent
+                        )
+                        MetricPill(
+                            value: subject.pageCount.formatted(),
+                            label: "offline pages",
+                            color: subject.secondaryAccent
+                        )
+                    }
+
+                    Label("No internet required", systemImage: "arrow.down.circle.fill")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 12)
+                        .notebookGlass(tint: subject.accent, cornerRadius: 18)
+                }
+                .frame(maxWidth: 620)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 72)
+                .frame(maxWidth: .infinity)
             }
-            .frame(width: 48, height: 48)
-
-            VStack(alignment: .leading, spacing: 5) {
-                Text(chapter.title)
-                    .font(.system(.body, design: .rounded, weight: .bold))
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.leading)
-
-                Label("\(chapter.pageCount) handwritten pages", systemImage: "doc.text.image")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer(minLength: 4)
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(subject.accent)
-                .padding(9)
-                .background(subject.accent.opacity(0.10), in: Circle())
         }
-        .padding(14)
-        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .notebookGlass(tint: subject.accent, cornerRadius: 22, interactive: true)
-        .accessibilityElement(children: .combine)
-        .accessibilityHint("Opens the handwritten notes gallery")
+        .navigationTitle(subject.name)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
-#Preview {
-    NavigationStack {
-        SubjectView(subject: .physics)
-    }
+#Preview("iPhone") {
+    SubjectScene(subject: .physics)
+}
+
+#Preview("iPad", traits: .landscapeLeft) {
+    SubjectScene(subject: .chemistry)
 }

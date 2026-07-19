@@ -9,18 +9,20 @@ struct Chapter: Identifiable, Hashable, Sendable {
 
     var id: String { folderName }
 
-    func pageURL(for subject: SubjectArea, page: Int) -> URL {
-        let unreserved = CharacterSet.alphanumerics.union(
-            CharacterSet(charactersIn: "-._~")
-        )
-        let encodedFolder = folderName.addingPercentEncoding(
-            withAllowedCharacters: unreserved
-        )!
-        let fileName = String(format: "%04d.jpg", page)
+    var pdfResourceName: String {
+        String(format: "%02d", number)
+    }
 
-        return URL(
-            string: "\(SubjectArea.archiveBaseURL.absoluteString)/\(subject.slug)/\(encodedFolder)/\(fileName)"
-        )!
+    func pdfURL(for subject: SubjectArea, in bundle: Bundle = .main) -> URL? {
+        bundle.url(
+            forResource: pdfResourceName,
+            withExtension: "pdf",
+            subdirectory: "OfflineNotes/\(subject.slug)"
+        )
+    }
+
+    func readingProgressKey(for subject: SubjectArea) -> String {
+        "reader.\(subject.slug).\(number).page"
     }
 }
 
@@ -28,8 +30,6 @@ enum SubjectArea: String, CaseIterable, Identifiable, Hashable, Sendable {
     case physics
     case chemistry
     case mathematics
-
-    static let archiveBaseURL = URL(string: "https://iitjee.apoorvdarshan.com")!
 
     var id: String { rawValue }
     var slug: String { rawValue }

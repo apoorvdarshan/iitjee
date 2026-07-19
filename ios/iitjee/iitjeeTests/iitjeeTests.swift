@@ -29,13 +29,20 @@ struct iitjeeTests {
         }
     }
 
-    @Test func noteURLsEncodeFolderNamesAsPathSegments() {
+    @Test func chapterPDFResourcesHaveStableLocalNames() {
         let chapter = ChapterCatalog.physics[4]
-        let url = chapter.pageURL(for: .physics, page: 1)
 
-        #expect(url.scheme == "https")
-        #expect(url.host == "iitjee.apoorvdarshan.com")
-        #expect(!url.absoluteString.contains(" "))
-        #expect(url.absoluteString.hasSuffix("0001.jpg"))
+        #expect(chapter.pdfResourceName == "05")
+        #expect(chapter.readingProgressKey(for: .physics) == "reader.physics.5.page")
+    }
+
+    @Test func everyChapterMapsToOneUniquePDF() {
+        for subject in SubjectArea.allCases {
+            let resourceNames = subject.chapters.map(\.pdfResourceName)
+
+            #expect(Set(resourceNames).count == subject.chapters.count)
+            #expect(resourceNames.first == "01")
+            #expect(resourceNames.last == String(format: "%02d", subject.chapters.count))
+        }
     }
 }

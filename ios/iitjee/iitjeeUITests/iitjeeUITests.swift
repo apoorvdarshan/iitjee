@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import UIKit
 
 final class iitjeeUITests: XCTestCase {
 
@@ -37,6 +38,57 @@ final class iitjeeUITests: XCTestCase {
         }
 
         XCTAssertTrue(app.navigationBars["About"].waitForExistence(timeout: 2))
+    }
+
+    @MainActor
+    func testOfflinePDFReaderOpens() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let closeReader = app.buttons["Close focus reader"]
+        if !closeReader.waitForExistence(timeout: 2) {
+            let firstChapter = app.buttons["chapter.physics.1"]
+            XCTAssertTrue(firstChapter.waitForExistence(timeout: 8))
+            firstChapter.tap()
+        }
+
+        XCTAssertTrue(closeReader.waitForExistence(timeout: 12))
+        XCTAssertTrue(app.sliders["reader.pageSlider"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
+    func testIPadTwoPageLayoutIsAvailable() throws {
+        guard UIDevice.current.userInterfaceIdiom == .pad else {
+            throw XCTSkip("Two-page reading is intentionally limited to iPad.")
+        }
+
+        let app = XCUIApplication()
+        app.launch()
+
+        let closeReader = app.buttons["Close focus reader"]
+        if !closeReader.waitForExistence(timeout: 2) {
+            let firstChapter = app.buttons["chapter.physics.1"]
+            XCTAssertTrue(firstChapter.waitForExistence(timeout: 8))
+            firstChapter.tap()
+        }
+
+        XCTAssertTrue(closeReader.waitForExistence(timeout: 12))
+
+        let layoutMenu = app.buttons["reader.layoutMenu"]
+        XCTAssertTrue(layoutMenu.waitForExistence(timeout: 5))
+
+        layoutMenu.tap()
+
+        let twoPageOption = app.descendants(matching: .any)["Two-page spread"]
+        XCTAssertTrue(twoPageOption.waitForExistence(timeout: 5))
+        twoPageOption.tap()
+
+        let layoutChanged = NSPredicate(
+            format: "value == %@",
+            "Two-page spread"
+        )
+        expectation(for: layoutChanged, evaluatedWith: layoutMenu)
+        waitForExpectations(timeout: 5)
     }
 
     @MainActor

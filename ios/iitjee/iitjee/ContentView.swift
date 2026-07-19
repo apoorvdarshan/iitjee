@@ -30,25 +30,19 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selection) {
-            NavigationStack {
-                SubjectView(subject: .physics)
-            }
+            SubjectScene(subject: .physics)
             .tabItem {
                 Label("Physics", systemImage: "atom")
             }
             .tag(AppTab.physics)
 
-            NavigationStack {
-                SubjectView(subject: .chemistry)
-            }
+            SubjectScene(subject: .chemistry)
             .tabItem {
                 Label("Chemistry", systemImage: "flask.fill")
             }
             .tag(AppTab.chemistry)
 
-            NavigationStack {
-                SubjectView(subject: .mathematics)
-            }
+            SubjectScene(subject: .mathematics)
             .tabItem {
                 Label("Maths", systemImage: "function")
             }

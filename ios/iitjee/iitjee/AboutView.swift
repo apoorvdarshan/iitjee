@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct AboutView: View {
-    private let website = URL(string: "https://iitjee.apoorvdarshan.com")!
     private let creator = URL(string: "https://github.com/apoorvdarshan")!
 
     private var versionText: String {
@@ -15,19 +14,41 @@ struct AboutView: View {
             NotebookBackground(accent: AppPalette.about)
 
             ScrollView {
-                LazyVStack(spacing: 16) {
+                VStack(spacing: 18) {
                     aboutHero
                     archiveStats
-                    missionCard
-                    coverageCard
-                    independenceNote
-                    linksCard
+
+                    ViewThatFits(in: .horizontal) {
+                        HStack(alignment: .top, spacing: 18) {
+                            VStack(spacing: 18) {
+                                missionCard
+                                coverageCard
+                            }
+                            .frame(minWidth: 420, maxWidth: .infinity)
+
+                            VStack(spacing: 18) {
+                                offlineCard
+                                independenceNote
+                                linksCard
+                            }
+                            .frame(minWidth: 360, maxWidth: .infinity)
+                        }
+
+                        VStack(spacing: 18) {
+                            missionCard
+                            offlineCard
+                            coverageCard
+                            independenceNote
+                            linksCard
+                        }
+                    }
 
                     Text(versionText)
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.tertiary)
                         .padding(.top, 4)
                 }
+                .readableWidth()
                 .padding(.horizontal, 18)
                 .padding(.top, 12)
                 .padding(.bottom, 28)
@@ -63,23 +84,29 @@ struct AboutView: View {
     }
 
     private var archiveStats: some View {
-        HStack(spacing: 12) {
-            AboutStat(
-                value: ChapterCatalog.totalChapterCount.formatted(),
-                label: "chapters",
-                color: AppPalette.physics
-            )
-            AboutStat(
-                value: ChapterCatalog.totalPageCount.formatted(),
-                label: "pages",
-                color: AppPalette.chemistry
-            )
-            AboutStat(
-                value: "3",
-                label: "subjects",
-                color: AppPalette.mathematics
-            )
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) { archiveStatItems }
+            VStack(spacing: 12) { archiveStatItems }
         }
+    }
+
+    @ViewBuilder
+    private var archiveStatItems: some View {
+        AboutStat(
+            value: ChapterCatalog.totalChapterCount.formatted(),
+            label: "chapters",
+            color: AppPalette.physics
+        )
+        AboutStat(
+            value: ChapterCatalog.totalPageCount.formatted(),
+            label: "offline pages",
+            color: AppPalette.chemistry
+        )
+        AboutStat(
+            value: "3",
+            label: "subjects",
+            color: AppPalette.mathematics
+        )
     }
 
     private var missionCard: some View {
@@ -89,14 +116,38 @@ struct AboutView: View {
             Text("Less hunting. More revising.")
                 .font(.system(.title3, design: .rounded, weight: .black))
 
-            Text("PCM Notes turns a large handwritten archive into a chapter-first native library. Pick a subject, find the exact topic, and move straight into the pages that matter.")
+            Text("PCM Notes turns a large handwritten archive into a chapter-first native library. Pick a subject, find the exact topic, and open the complete PDF—even without a connection.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .notebookGlass(tint: AppPalette.about, cornerRadius: 24)
+        .paperSurface(tint: AppPalette.about, cornerRadius: 24)
+    }
+
+    private var offlineCard: some View {
+        VStack(alignment: .leading, spacing: 13) {
+            EyebrowLabel(text: "Built for focus", color: AppPalette.chemistry)
+
+            Label("Every chapter travels with you", systemImage: "internaldrive.fill")
+                .font(.system(.title3, design: .rounded, weight: .black))
+
+            Text("The roughly 500 MB handwritten archive is packaged as 91 local PDFs. Reading, zooming, and sharing a chapter never depends on the website.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Label("No internet required", systemImage: "checkmark.seal.fill")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 7)
+                .background(AppPalette.chemistry.opacity(0.11), in: Capsule())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .paperSurface(tint: AppPalette.chemistry, cornerRadius: 24)
     }
 
     private var coverageCard: some View {
@@ -125,7 +176,7 @@ struct AboutView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .notebookGlass(tint: AppPalette.about, cornerRadius: 24)
+        .paperSurface(tint: AppPalette.about, cornerRadius: 24)
     }
 
     private var independenceNote: some View {
@@ -140,20 +191,11 @@ struct AboutView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(17)
-        .notebookGlass(tint: AppPalette.chemistry, cornerRadius: 20)
+        .paperSurface(tint: AppPalette.chemistry, cornerRadius: 20)
     }
 
     private var linksCard: some View {
         VStack(spacing: 0) {
-            AboutLink(
-                title: "Visit the web archive",
-                symbol: "safari.fill",
-                color: AppPalette.physics,
-                destination: website
-            )
-
-            Divider().padding(.leading, 58)
-
             AboutLink(
                 title: "Created by Apoorv Darshan",
                 symbol: "person.crop.circle.fill",
@@ -161,7 +203,7 @@ struct AboutView: View {
                 destination: creator
             )
         }
-        .notebookGlass(tint: AppPalette.about, cornerRadius: 24)
+        .paperSurface(tint: AppPalette.about, cornerRadius: 24)
     }
 }
 
@@ -215,7 +257,7 @@ private struct AboutStat: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 15)
-        .notebookGlass(tint: color, cornerRadius: 20)
+        .paperSurface(tint: color, cornerRadius: 20)
         .accessibilityElement(children: .combine)
     }
 }
