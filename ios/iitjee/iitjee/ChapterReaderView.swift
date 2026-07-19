@@ -28,9 +28,7 @@ struct ChapterReaderView: View {
 
     @State private var currentPage: Int
     @State private var renderedPageCount = 0
-    @State private var presentsFocusReader = false
-    @State private var didPresentFocusReader = false
-    @State private var suspendsEmbeddedReader = true
+    @Environment(\.dismiss) private var dismiss
 
     init(subject: SubjectArea, chapter: Chapter) {
         self.subject = subject
@@ -48,83 +46,8 @@ struct ChapterReaderView: View {
         chapter.pdfURL(for: subject)
     }
 
-    private var effectivePageCount: Int {
-        max(renderedPageCount, chapter.pageCount)
-    }
-
     var body: some View {
-        ZStack {
-            NotebookBackground(accent: subject.accent)
-
-            if let pdfURL {
-                VStack(spacing: 12) {
-                    readerHeader
-
-                    Group {
-                        if suspendsEmbeddedReader {
-                            ZStack {
-                                Color(uiColor: .secondarySystemBackground)
-
-                                ProgressView("Opening focus reader…")
-                                    .font(.callout.weight(.semibold))
-                                    .tint(subject.accent)
-                            }
-                        } else {
-                            LocalPDFView(
-                                url: pdfURL,
-                                readingLayout: .continuous,
-                                currentPage: $currentPage,
-                                pageCount: $renderedPageCount
-                            )
-                        }
-                    }
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .strokeBorder(subject.accent.opacity(0.18), lineWidth: 1)
-                    }
-                    .shadow(color: .black.opacity(0.08), radius: 12, y: 5)
-
-                    ReaderControlBar(
-                        currentPage: $currentPage,
-                        pageCount: effectivePageCount,
-                        accent: subject.accent,
-                        spreadMode: false
-                    )
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
-            } else {
-                missingPDF
-            }
-        }
-        .navigationTitle(chapter.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            if let pdfURL {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button {
-                        presentFocusReader()
-                    } label: {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
-                    }
-                    .accessibilityLabel("Open focus reader")
-
-                    ShareLink(
-                        item: pdfURL,
-                        preview: SharePreview("\(subject.name) - \(chapter.title)")
-                    ) {
-                        Image(systemName: "square.and.arrow.up")
-                    }
-                    .accessibilityLabel("Share chapter PDF")
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $presentsFocusReader, onDismiss: {
-            suspendsEmbeddedReader = false
-        }) {
+        Group {
             if let pdfURL {
                 FocusPDFReader(
                     title: chapter.title,
@@ -133,6 +56,8 @@ struct ChapterReaderView: View {
                     currentPage: $currentPage,
                     pageCount: $renderedPageCount
                 )
+            } else {
+                missingPDF
             }
         }
         .onChange(of: currentPage) { _, newPage in
@@ -141,86 +66,28 @@ struct ChapterReaderView: View {
                 forKey: chapter.readingProgressKey(for: subject)
             )
         }
-        .onAppear {
-            guard pdfURL != nil else {
-                suspendsEmbeddedReader = false
-                return
-            }
-            guard !didPresentFocusReader else { return }
-            didPresentFocusReader = true
-
-            DispatchQueue.main.async {
-                presentFocusReader()
-            }
-        }
-    }
-
-    private var readerHeader: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 14) {
-                chapterIdentity
-                Spacer(minLength: 12)
-                readerStatus
-            }
-
-            VStack(alignment: .leading, spacing: 12) {
-                chapterIdentity
-                readerStatus
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .paperSurface(tint: subject.accent, cornerRadius: 20)
-    }
-
-    private var chapterIdentity: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            EyebrowLabel(
-                text: "\(subject.name) · Chapter \(chapter.number)",
-                color: subject.accent
-            )
-
-            Text(chapter.title)
-                .font(.system(.title3, design: .rounded, weight: .black))
-                .lineLimit(2)
-                .minimumScaleFactor(0.82)
-        }
-    }
-
-    private var readerStatus: some View {
-        HStack(spacing: 8) {
-            Label("Offline", systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.primary)
-
-            Divider()
-                .frame(height: 15)
-
-            Text("\(chapter.pageCount) pages")
-                .foregroundStyle(.secondary)
-        }
-        .font(.caption.weight(.bold))
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(subject.accent.opacity(0.10), in: Capsule())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Bundled offline PDF, \(chapter.pageCount) pages")
-        .accessibilityIdentifier("reader.offlineStatus")
     }
 
     private var missingPDF: some View {
-        ContentUnavailableView {
-            Label("PDF unavailable", systemImage: "doc.badge.exclamationmark")
-        } description: {
-            Text("Rebuild and reinstall PCM Notes to embed this chapter's offline PDF.")
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            ContentUnavailableView {
+                Label("PDF unavailable", systemImage: "doc.badge.exclamationmark")
+            } description: {
+                Text("Rebuild and reinstall PCM Notes to embed this chapter's offline PDF.")
+            } actions: {
+                Button("Return to chapters") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(subject.accent)
+            }
+            .foregroundStyle(.white)
+            .padding(30)
         }
-        .padding(30)
+        .preferredColorScheme(.dark)
     }
-
-    private func presentFocusReader() {
-        suspendsEmbeddedReader = true
-        presentsFocusReader = true
-    }
-
 }
 
 private struct ReaderControlBar: View {
@@ -507,7 +374,11 @@ private struct LocalPDFView: UIViewRepresentable {
         coordinator.loadedLayout = readingLayout
         pdfView.document = document
         pdfView.autoScales = true
-        pageCount = document.pageCount
+        let documentPageCount = document.pageCount
+
+        DispatchQueue.main.async {
+            pageCount = documentPageCount
+        }
 
         let targetIndex = min(max(currentPage - 1, 0), max(document.pageCount - 1, 0))
 
@@ -569,8 +440,19 @@ private struct LocalPDFView: UIViewRepresentable {
                     let page = pdfView.currentPage
                 else { return }
 
-                parent.currentPage = document.index(for: page) + 1
-                parent.pageCount = document.pageCount
+                let visiblePage = document.index(for: page) + 1
+                let documentPageCount = document.pageCount
+
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+
+                    if parent.currentPage != visiblePage {
+                        parent.currentPage = visiblePage
+                    }
+                    if parent.pageCount != documentPageCount {
+                        parent.pageCount = documentPageCount
+                    }
+                }
             }
         }
 
@@ -588,7 +470,5 @@ private struct LocalPDFView: UIViewRepresentable {
 }
 
 #Preview {
-    NavigationStack {
-        ChapterReaderView(subject: .physics, chapter: ChapterCatalog.physics[0])
-    }
+    ChapterReaderView(subject: .physics, chapter: ChapterCatalog.physics[0])
 }

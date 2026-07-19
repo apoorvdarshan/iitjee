@@ -41,19 +41,30 @@ final class iitjeeUITests: XCTestCase {
     }
 
     @MainActor
-    func testOfflinePDFReaderOpens() throws {
+    func testOfflinePDFReaderClosesDirectlyToChapterList() throws {
         let app = XCUIApplication()
         app.launch()
 
+        let firstChapter = app.buttons["chapter.physics.1"]
         let closeReader = app.buttons["Close focus reader"]
-        if !closeReader.waitForExistence(timeout: 2) {
-            let firstChapter = app.buttons["chapter.physics.1"]
-            XCTAssertTrue(firstChapter.waitForExistence(timeout: 8))
-            firstChapter.tap()
-        }
+        let pageSlider = app.sliders["reader.pageSlider"]
+
+        XCTAssertTrue(firstChapter.waitForExistence(timeout: 8))
+        firstChapter.tap()
 
         XCTAssertTrue(closeReader.waitForExistence(timeout: 12))
-        XCTAssertTrue(app.sliders["reader.pageSlider"].waitForExistence(timeout: 5))
+        XCTAssertTrue(pageSlider.waitForExistence(timeout: 5))
+
+        closeReader.tap()
+
+        XCTAssertTrue(closeReader.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(pageSlider.waitForNonExistence(timeout: 5))
+        XCTAssertTrue(firstChapter.waitForExistence(timeout: 5))
+        XCTAssertTrue(firstChapter.isHittable)
+        XCTAssertFalse(app.buttons["Open focus reader"].exists)
+
+        firstChapter.tap()
+        XCTAssertTrue(closeReader.waitForExistence(timeout: 12))
     }
 
     @MainActor
@@ -65,12 +76,11 @@ final class iitjeeUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
+        let firstChapter = app.buttons["chapter.physics.1"]
         let closeReader = app.buttons["Close focus reader"]
-        if !closeReader.waitForExistence(timeout: 2) {
-            let firstChapter = app.buttons["chapter.physics.1"]
-            XCTAssertTrue(firstChapter.waitForExistence(timeout: 8))
-            firstChapter.tap()
-        }
+
+        XCTAssertTrue(firstChapter.waitForExistence(timeout: 8))
+        firstChapter.tap()
 
         XCTAssertTrue(closeReader.waitForExistence(timeout: 12))
 

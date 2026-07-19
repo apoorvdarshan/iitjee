@@ -14,15 +14,14 @@ struct SubjectScene: View {
             )
             .navigationSplitViewColumnWidth(min: 292, ideal: 350, max: 410)
         } detail: {
-            if let selectedChapter {
-                ChapterReaderView(subject: subject, chapter: selectedChapter)
-                    .id(selectedChapter.id)
-            } else {
-                SubjectWelcomeView(subject: subject)
-            }
+            SubjectWelcomeView(subject: subject)
         }
         .navigationSplitViewStyle(.balanced)
         .tint(subject.accent)
+        .fullScreenCover(item: $selectedChapter) { chapter in
+            ChapterReaderView(subject: subject, chapter: chapter)
+                .id(chapter.id)
+        }
     }
 }
 
@@ -46,7 +45,7 @@ private struct SubjectBrowserView: View {
         ZStack {
             NotebookBackground(accent: subject.accent)
 
-            List(selection: $selectedChapter) {
+            List {
                 SubjectHero(subject: subject)
                     .listRowInsets(EdgeInsets(top: 12, leading: 14, bottom: 14, trailing: 14))
                     .listRowBackground(Color.clear)
@@ -60,7 +59,9 @@ private struct SubjectBrowserView: View {
                             .listRowSeparator(.hidden)
                     } else {
                         ForEach(filteredChapters) { chapter in
-                            NavigationLink(value: chapter) {
+                            Button {
+                                selectedChapter = chapter
+                            } label: {
                                 ChapterRow(
                                     chapter: chapter,
                                     subject: subject,
@@ -73,6 +74,11 @@ private struct SubjectBrowserView: View {
                             )
                             .listRowBackground(Color.clear)
                             .listRowSeparator(.hidden)
+                            .accessibilityLabel(
+                                "Chapter \(chapter.number), \(chapter.title), \(chapter.pageCount) pages"
+                            )
+                            .accessibilityHint("Opens the bundled handwritten PDF full screen")
+                            .accessibilityIdentifier("chapter.\(subject.slug).\(chapter.number)")
                         }
                     }
                 } header: {
@@ -205,11 +211,6 @@ private struct ChapterRow: View {
         .paperSurface(tint: subject.accent, cornerRadius: 19, selected: isSelected)
         .hoverEffect(.lift)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(
-            "Chapter \(chapter.number), \(chapter.title), \(chapter.pageCount) pages"
-        )
-        .accessibilityHint("Opens the bundled handwritten PDF")
-        .accessibilityIdentifier("chapter.\(subject.slug).\(chapter.number)")
     }
 
     private var numberBadge: some View {
@@ -286,7 +287,7 @@ private struct SubjectWelcomeView: View {
                         Text(subject.name)
                             .font(.system(.largeTitle, design: .rounded, weight: .black))
 
-                        Text("Choose a chapter from the spine. Its complete handwritten PDF will stay open here while you move through the syllabus.")
+                        Text("Choose a chapter from the spine to open its handwritten PDF full screen. Close it to return straight to the list.")
                             .font(.title3.weight(.medium))
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
