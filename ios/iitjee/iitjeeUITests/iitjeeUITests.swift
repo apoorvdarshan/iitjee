@@ -23,14 +23,20 @@ final class iitjeeUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testFivePrimaryTabsAreReachable() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
+
+        for tabName in ["Physics", "Chemistry", "Maths", "Support", "About"] {
+            let tab = tabBar.buttons[tabName]
+            XCTAssertTrue(tab.exists, "Missing \(tabName) tab")
+            tab.tap()
+        }
+
+        XCTAssertTrue(app.navigationBars["About"].waitForExistence(timeout: 2))
     }
 
     @MainActor
