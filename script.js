@@ -44,12 +44,12 @@ function initializeTheme() {
 
 // Navigation Functions
 function navigateToSubject(subject) {
-  window.location.href = `${subject}.html`;
+  window.location.href = `/${subject}`;
 }
 
 function goBack() {
   const subject = localStorage.getItem("currentSubject");
-  window.location.href = chapterData[subject] ? `${subject}.html` : "index.html";
+  window.location.href = chapterData[subject] ? `/${subject}` : "/";
 }
 
 
@@ -217,7 +217,7 @@ function openChapter(subject, chapterName) {
   localStorage.setItem("currentChapter", chapterName);
 
   const params = new URLSearchParams({ subject, chapter: chapterName });
-  window.location.href = `gallery.html?${params.toString()}`;
+  window.location.href = `/gallery?${params.toString()}`;
 }
 
 // Gallery Functions
@@ -227,7 +227,7 @@ function loadGallery() {
   const chapter = params.get("chapter") || localStorage.getItem("currentChapter");
 
   if (!subject || !chapter || !chapterData[subject]?.includes(chapter)) {
-    window.location.href = "index.html";
+    window.location.href = "/";
     return;
   }
 
@@ -249,7 +249,7 @@ function loadGallery() {
   document.title = `${chapterName} — PCM Notes`;
 
   const backLink = document.getElementById("reader-back");
-  if (backLink) backLink.href = `${subject}.html`;
+  if (backLink) backLink.href = `/${subject}`;
 
   const countLabel = document.getElementById("reader-page-count");
   if (countLabel) countLabel.textContent = `Chapter ${chapterNumber} · ${pageCount} handwritten pages`;
@@ -418,7 +418,7 @@ function getImageCount(subject, chapter) {
 
 // Navigation helper
 function navigateToSubjectPage(subject) {
-  window.location.href = `${subject}.html`;
+  window.location.href = `/${subject}`;
 }
 
 // PDF Download Function
