@@ -1,6 +1,20 @@
 import Combine
-import StoreKit
+import RevenueCat
 import SwiftUI
+
+enum RevenueCatConfiguration {
+    // RevenueCat's app-specific public SDK key is designed to ship in the app.
+    // The read/write secret key is intentionally never stored in this project.
+    static let publicAPIKey = "appl_CVdEBjqTWFFtAFCGLodwdkUfUZQ"
+
+    static func configure() {
+        #if DEBUG
+        Purchases.logLevel = .debug
+        #endif
+
+        Purchases.configure(withAPIKey: publicAPIKey)
+    }
+}
 
 enum TipProductID: String, CaseIterable, Identifiable, Sendable {
     case small = "com.apoorvdarshan.iitjee.tip.small"
@@ -83,59 +97,36 @@ final class TipStore: ObservableObject {
     @Published private(set) var activeProductID: TipProductID?
     @Published private(set) var feedback: Feedback?
 
-    private var productsByID: [String: Product] = [:]
-    private var handledTransactionIDs: Set<UInt64> = []
-    private var updatesTask: Task<Void, Never>?
+    private var productsByID: [String: StoreProduct] = [:]
     private var hasStarted = false
-
-    deinit {
-        updatesTask?.cancel()
-    }
 
     func start() async {
         guard !hasStarted else { return }
         hasStarted = true
-
-        updatesTask = Task { [weak self] in
-            for await result in StoreKit.Transaction.updates {
-                guard let self else { return }
-                await self.process(result)
-            }
-        }
-
-        await finishUnfinishedTransactions()
         await loadProducts()
     }
 
-    func product(for tip: TipProductID) -> Product? {
+    func product(for tip: TipProductID) -> StoreProduct? {
         productsByID[tip.rawValue]
     }
 
     func loadProducts() async {
         catalogState = .loading
 
-        do {
-            let loadedProducts = try await Product.products(
-                for: TipProductID.allCases.map(\.rawValue)
-            )
-            productsByID = Dictionary(
-                uniqueKeysWithValues: loadedProducts
-                    .filter { $0.type == .consumable }
-                    .map { ($0.id, $0) }
-            )
-            catalogState = productsByID.count == TipProductID.allCases.count
-                ? .ready
-                : .unavailable
-        } catch {
-            productsByID = [:]
-            catalogState = .unavailable
-        }
+        let loadedProducts = await Purchases.shared.products(
+            TipProductID.allCases.map(\.rawValue)
+        )
+        productsByID = Dictionary(
+            uniqueKeysWithValues: loadedProducts.map { ($0.productIdentifier, $0) }
+        )
+        catalogState = productsByID.count == TipProductID.allCases.count
+            ? .ready
+            : .unavailable
     }
 
     func purchase(_ tip: TipProductID) async {
         guard activeProductID == nil,
-              let product = product(for: tip),
-              product.type == .consumable else {
+              let product = product(for: tip) else {
             feedback = Feedback(
                 kind: .error,
                 message: "That tip is unavailable right now. Please try again later."
@@ -148,64 +139,42 @@ final class TipStore: ObservableObject {
         defer { activeProductID = nil }
 
         do {
-            switch try await product.purchase() {
-            case .success(let verification):
-                await process(verification)
-            case .pending:
-                feedback = Feedback(
-                    kind: .pending,
-                    message: "Your tip is pending approval. Apple will finish it when it is approved."
-                )
-            case .userCancelled:
+            let result = try await Purchases.shared.purchase(product: product)
+
+            if result.userCancelled {
                 feedback = Feedback(
                     kind: .info,
                     message: "Tip cancelled. Nothing was charged."
                 )
-            @unknown default:
-                feedback = Feedback(
-                    kind: .error,
-                    message: "The App Store returned an unfamiliar result. Please try again later."
-                )
-            }
-        } catch {
-            feedback = Feedback(
-                kind: .error,
-                message: "The tip could not be completed. Check your connection and try again."
-            )
-        }
-    }
-
-    func dismissFeedback() {
-        feedback = nil
-    }
-
-    private func finishUnfinishedTransactions() async {
-        for await result in StoreKit.Transaction.unfinished {
-            await process(result, showsThankYou: false)
-        }
-    }
-
-    private func process(
-        _ result: VerificationResult<StoreKit.Transaction>,
-        showsThankYou: Bool = true
-    ) async {
-        switch result {
-        case .verified(let transaction):
-            guard TipProductID(rawValue: transaction.productID) != nil else { return }
-            guard handledTransactionIDs.insert(transaction.id).inserted else { return }
-            await transaction.finish()
-
-            if showsThankYou {
+            } else {
                 feedback = Feedback(
                     kind: .success,
                     message: "Thank you—your tip helps keep PCM Notes free, ad-free, and improving."
                 )
             }
-        case .unverified:
-            feedback = Feedback(
-                kind: .error,
-                message: "Apple could not verify this transaction. Nothing was unlocked or changed."
-            )
+        } catch {
+            let errorCode = (error as NSError).code
+
+            if errorCode == ErrorCode.purchaseCancelledError.rawValue {
+                feedback = Feedback(
+                    kind: .info,
+                    message: "Tip cancelled. Nothing was charged."
+                )
+            } else if errorCode == ErrorCode.paymentPendingError.rawValue {
+                feedback = Feedback(
+                    kind: .pending,
+                    message: "Your tip is pending approval. Apple will finish it when it is approved."
+                )
+            } else {
+                feedback = Feedback(
+                    kind: .error,
+                    message: "The tip could not be completed. Check your connection and try again."
+                )
+            }
         }
+    }
+
+    func dismissFeedback() {
+        feedback = nil
     }
 }

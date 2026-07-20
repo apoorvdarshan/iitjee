@@ -60,11 +60,11 @@ enum LegalDocument: String, Identifiable {
                 ),
                 LegalSectionContent(
                     title: "What we do not collect",
-                    body: "The app has no account system, advertising, analytics, tracking, or profiling. We do not collect your reading history, sell personal data, or share app activity with data brokers."
+                    body: "The app has no account system, advertising, reading analytics, cross-app tracking, or profiling. We do not collect your reading history, sell personal data, or share app activity with data brokers. RevenueCat provides aggregate analytics only for optional App Store purchases."
                 ),
                 LegalSectionContent(
                     title: "Optional App Store tips",
-                    body: "PCM Notes offers optional, repeatable consumable tips. Apple shows the local price, processes payment credentials, and applies its own privacy policy. StoreKit verifies the product and transaction on your device so the app can finish the purchase; PCM Notes does not send purchase data to a developer server or third-party analytics service. Tips unlock nothing and are not charitable donations."
+                    body: "PCM Notes offers optional, repeatable consumable tips. Apple shows the local price and processes payment credentials. RevenueCat receives purchase history and an anonymous App User ID to validate receipts, complete the purchase flow, and provide aggregate purchase analytics. Neither PCM Notes nor RevenueCat receives payment-card details. Tips unlock nothing and are not charitable donations."
                 ),
                 LegalSectionContent(
                     title: "When you contact us",
@@ -107,7 +107,7 @@ enum LegalDocument: String, Identifiable {
                 ),
                 LegalSectionContent(
                     title: "External services",
-                    body: "Apple's App Store processes optional tips. Email and X links leave PCM Notes and are operated by third parties. Their availability, content, privacy practices, and terms are outside our control."
+                    body: "Apple's App Store processes optional tips and RevenueCat validates and records their purchase history. Email and X links leave PCM Notes and are operated by third parties. Their availability, content, privacy practices, and terms are outside our control."
                 ),
                 LegalSectionContent(
                     title: "Liability",

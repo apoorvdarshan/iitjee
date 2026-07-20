@@ -1,4 +1,4 @@
-import StoreKit
+import RevenueCat
 import SwiftUI
 
 struct TipJarSection: View {
@@ -97,13 +97,13 @@ private struct TipPurchaseRow: View {
     @EnvironmentObject private var tipStore: TipStore
     let tip: TipProductID
 
-    private var product: Product? {
+    private var product: StoreProduct? {
         tipStore.product(for: tip)
     }
 
     private var priceText: String {
         if let product {
-            return product.displayPrice
+            return product.localizedPriceString
         }
 
         switch tipStore.catalogState {
@@ -139,7 +139,7 @@ private struct TipPurchaseRow: View {
                 .frame(width: 44, height: 44)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(product?.displayName ?? tip.fallbackName)
+                    Text(product?.localizedTitle ?? tip.fallbackName)
                         .font(.headline)
                         .foregroundStyle(.primary)
 
@@ -165,7 +165,7 @@ private struct TipPurchaseRow: View {
         .buttonStyle(.plain)
         .disabled(product == nil || tipStore.activeProductID != nil)
         .accessibilityIdentifier("tip.product.\(tip.shortID)")
-        .accessibilityLabel("\(product?.displayName ?? tip.fallbackName), \(priceText)")
+        .accessibilityLabel("\(product?.localizedTitle ?? tip.fallbackName), \(priceText)")
         .accessibilityHint("Optional repeatable tip. It unlocks no content or features.")
     }
 }

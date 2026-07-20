@@ -55,11 +55,11 @@ App Store Connect submission details for PCM Notes v1.0, build 1. Each field is 
     - No account or login
     - No subscription or paywall
     - No advertising
-    - No analytics, tracking, or profiling
+    - No ads, reading analytics, cross-app tracking, or profiling
     - Reading progress and preferences stay on your device
 
     OPTIONAL TIPS
-    The Support tab offers four optional, repeatable tips processed by Apple through StoreKit. Tips unlock no notes, content, or reader features. PCM Notes does not use RevenueCat or another third-party purchase SDK.
+    The Support tab offers four optional, repeatable tips processed by Apple through StoreKit and recorded by RevenueCat. Tips unlock no notes, content, or reader features.
 
     EXAM COVERAGE
     Physics and Chemistry are useful for JEE and NEET revision. Mathematics is organised for JEE Main and Advanced. Biology is not included.
@@ -121,15 +121,17 @@ The products are configured but intentionally not submitted for review yet. Atta
 
 ## App Privacy
 
-    Data collection: Data Not Collected
+    Data collection: Purchases → Purchase History
+    Purpose: App Functionality and Analytics
+    Linked to identity: No (anonymous RevenueCat App User ID)
     Tracking: No
 
-The app has no account, analytics, advertising, tracking, or network-backed study content. It stores reading progress and appearance/layout preferences locally on the device. The Support tab offers four optional, repeatable tips processed by Apple through StoreKit. Tips unlock no content or features and are not subscriptions. The developer does not collect StoreKit transaction or payment information; Apple may process purchase, transaction, and payment information under Apple’s terms and privacy policy. The App Privacy response therefore remains Data Not Collected by the developer.
+The app has no account, advertising, cross-app tracking, profiling, or network-backed study content. It stores reading progress and appearance/layout preferences locally on the device. The Support tab offers four optional, repeatable tips processed by Apple through StoreKit and recorded by RevenueCat. RevenueCat receives purchase history and an anonymous App User ID for receipt validation, app functionality, and aggregate purchase analytics. Tips unlock no content or features and are not subscriptions. Neither the developer nor RevenueCat receives payment-card details.
 
 ## Reviewer Notes
 
     PCM Notes is a native iPhone and iPad study reader with no account, login,
-    paywall, subscription, advertising, or analytics. Every note and reader
+    paywall, subscription, advertising, or reading analytics. Every note and reader
     feature is available without payment.
 
     To review the main flow:
@@ -145,7 +147,7 @@ The app has no account, analytics, advertising, tracking, or network-backed stud
     System, Light, or Dark.
 
     The Support tab contains four optional, repeatable consumable tips. Purchases
-    use Apple StoreKit directly; the app does not use RevenueCat. A tip unlocks no
+    use Apple StoreKit through RevenueCat. A tip unlocks no
     content or feature and does not begin a subscription. Reviewers may open
     Support to inspect the tip jar without purchasing.
 
