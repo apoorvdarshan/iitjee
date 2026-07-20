@@ -20,6 +20,7 @@ struct AboutView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 34) {
                     aboutHero
+                    legalSection
                     ArchiveStatLine()
 
                     ViewThatFits(in: .horizontal) {
@@ -35,7 +36,6 @@ struct AboutView: View {
                             VStack(alignment: .leading, spacing: 32) {
                                 offlineSection
                                 appearanceSection
-                                legalSection
                                 independenceNote
                                 creatorCredit
                             }
@@ -47,7 +47,6 @@ struct AboutView: View {
                             offlineSection
                             appearanceSection
                             coverageSection
-                            legalSection
                             independenceNote
                             creatorCredit
                         }
@@ -226,7 +225,7 @@ struct AboutView: View {
     }
 
     private var legalSection: some View {
-        LegalLinksSection(color: AppPalette.about, annotation: "privacy + terms")
+        LegalLinksSection(color: AppPalette.about, annotation: "tap · opens in app")
     }
 
     private var creatorCredit: some View {
