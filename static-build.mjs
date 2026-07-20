@@ -5,6 +5,7 @@ rmSync(output, { recursive: true, force: true });
 mkdirSync(output, { recursive: true });
 
 for (const path of [
+  "assets",
   "chemistry",
   "mathematics",
   "physics",
