@@ -54,7 +54,6 @@ App Store Connect submission details for PCM Notes v1.0, build 1. Each field is 
     PRIVATE BY DESIGN
     - No account or login
     - No subscription or paywall
-    - No advertising
     - No ads, reading analytics, cross-app tracking, or profiling
     - Reading progress and preferences stay on your device
 
@@ -119,6 +118,8 @@ All four products are repeatable consumables with India as the base storefront a
 
 The products are configured but intentionally not submitted for review yet. Attach the final Support-screen review screenshot to each product when preparing the release build.
 
+All four products are also configured as consumables in the RevenueCat project for bundle ID `com.apoorvdarshan.iitjee`. The app uses RevenueCat Purchases 5.x with an anonymous App User ID. App Store Server Notifications are configured for RevenueCat, and tracking of new purchases received through those notifications is enabled.
+
 ## App Privacy
 
     Data collection: Purchases → Purchase History
@@ -155,7 +156,8 @@ The app has no account, advertising, cross-app tracking, profiling, or network-b
     without a network connection. The archive is roughly 500 MB, so a long PDF
     may take a moment to prepare on older devices.
 
-    Privacy Policy and Terms of Use are available inside About only.
+    Privacy Policy and Terms of Use are available as native pages inside the
+    About tab. The same documents are available at the URLs above.
     Support email: ad13dtu@gmail.com
     Alternate email: apoorvdarshan@gmail.com
     X: @apoorvdarshan

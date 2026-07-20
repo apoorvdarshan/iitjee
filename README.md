@@ -109,7 +109,7 @@ The tag creates a GitHub Release with generated notes and is also the trigger in
 - **Email Apoorv:** [apoorvdarshan@gmail.com](mailto:apoorvdarshan@gmail.com?subject=PCM%20Notes%20Support)
 - **X:** [@apoorvdarshan](https://x.com/apoorvdarshan)
 
-Ko-fi support and product links are available from the website. The iOS app separately offers four optional, repeatable Apple-processed tips from its Support tab; tipping never unlocks notes or reader features.
+Ko-fi support and product links are available from the website. The iOS app separately offers four optional, repeatable tips processed by Apple through StoreKit and recorded by RevenueCat; tipping never unlocks notes or reader features.
 
 ## 🔒 Privacy
 

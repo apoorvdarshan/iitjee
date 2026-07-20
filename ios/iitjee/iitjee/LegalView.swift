@@ -91,7 +91,7 @@ enum LegalDocument: String, Identifiable {
                 ),
                 LegalSectionContent(
                     title: "Optional tips",
-                    body: "The Support tab may offer repeatable consumable tips through Apple's In-App Purchase system. Tipping is optional, unlocks no content or feature, and is not a charitable donation. Apple displays and charges the price, and its terms govern billing and refunds. Finished consumable tips are not restorable purchases."
+                    body: "The Support tab may offer repeatable consumable tips through Apple's In-App Purchase system and RevenueCat. Tipping is optional, unlocks no content or feature, and is not a charitable donation. Apple displays and charges the price, RevenueCat validates and records the purchase, and Apple's terms govern billing and refunds. Finished consumable tips are not restorable purchases."
                 ),
                 LegalSectionContent(
                     title: "Independent resource",
@@ -199,7 +199,7 @@ struct LegalDocumentView: View {
 
                     DoodleRule(color: document.accent, lineWidth: 1.5)
 
-                    Text("Last updated 20 July 2026")
+                    Text("Last updated 21 July 2026")
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("legal.lastUpdated")

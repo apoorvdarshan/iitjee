@@ -36,7 +36,7 @@ struct TipJarSection: View {
                     .foregroundStyle(AppPalette.chemistry)
                     .rotationEffect(.degrees(-4))
 
-                Text("PCM Notes stays complete whether or not you tip. Tips are optional, repeatable, processed by Apple, and unlock no content or features.")
+                Text("PCM Notes stays complete whether or not you tip. Tips are optional, repeatable, processed by Apple through StoreKit, recorded by RevenueCat, and unlock no content or features.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
