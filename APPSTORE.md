@@ -116,7 +116,7 @@ All four products are repeatable consumables with India as the base storefront a
 | Study Fuel | `com.apoorvdarshan.iitjee.tip.large` | `6792611495` | ₹199 |
 | Notebook Hero | `com.apoorvdarshan.iitjee.tip.generous` | `6792611270` | ₹499 |
 
-The products are configured but intentionally not submitted for review yet. Attach the final Support-screen review screenshot to each product when preparing the release build.
+All four products are localized, include their final Support-screen App Review screenshot, and are `READY_TO_SUBMIT`. Because these are the app's first in-app purchases, select all four on the PCM Notes 1.0 version page so Apple reviews them with the first app binary.
 
 All four products are also configured as consumables in the RevenueCat project for bundle ID `com.apoorvdarshan.iitjee`. The app uses RevenueCat Purchases 5.x with an anonymous App User ID. App Store Server Notifications are configured for RevenueCat, and tracking of new purchases received through those notifications is enabled.
 
@@ -161,3 +161,20 @@ The app has no account, advertising, cross-app tracking, profiling, or network-b
     Support email: ad13dtu@gmail.com
     Alternate email: apoorvdarshan@gmail.com
     X: @apoorvdarshan
+
+## Final Submission Checklist
+
+Live App Store Connect state verified on 21 July 2026:
+
+- App name, subtitle, description, promotional text, keywords, support URL, marketing URL, privacy URL, Education primary category, and Reference secondary category are populated.
+- Five iPhone 6.7-inch and five iPad 12.9-inch screenshots are uploaded and fully processed.
+- All four consumable tips are localized, include an App Review screenshot, and are ready to select for the first submission.
+- Xcode Cloud's enabled `Default` workflow performs a clean, required App Store-eligible iOS archive for tags beginning with `v`.
+
+Required before pushing the first release tag:
+
+- Complete and publish App Privacy with **Purchases → Purchase History**, used for **App Functionality** and **Analytics**, not linked to identity, and not used for tracking.
+- Complete the App Store age-rating questionnaire for the study-notes content.
+- Add the required App Review contact phone number in international format. The review contact name, email, and reviewer notes can then be saved together.
+
+After the tag build finishes processing, select that build and all four first in-app purchases on the PCM Notes 1.0 version page before submitting to App Review.
