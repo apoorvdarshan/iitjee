@@ -70,7 +70,7 @@ struct ContentView: View {
             .tag(AppTab.about)
         }
         .tint(selection.accent)
-        .nativeTabMinimization()
+        .persistentTabBar()
         .preferredColorScheme(appearance.colorScheme)
     }
 }

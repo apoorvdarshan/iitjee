@@ -433,9 +433,9 @@ extension View {
     }
 
     @ViewBuilder
-    func nativeTabMinimization() -> some View {
+    func persistentTabBar() -> some View {
         if #available(iOS 26.0, *) {
-            tabBarMinimizeBehavior(.onScrollDown)
+            tabBarMinimizeBehavior(.never)
         } else {
             self
         }

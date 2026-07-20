@@ -41,6 +41,26 @@ final class iitjeeUITests: XCTestCase {
     }
 
     @MainActor
+    func testTabBarStaysExpandedWhileScrolling() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["chapter.physics.1"].waitForExistence(timeout: 8))
+
+        app.swipeUp()
+        app.swipeUp()
+        app.swipeUp()
+
+        for tabName in ["Physics", "Chemistry", "Maths", "Support", "About"] {
+            let tab = tabBar.buttons[tabName]
+            XCTAssertTrue(tab.exists, "Missing \(tabName) tab after scrolling")
+            XCTAssertTrue(tab.isHittable, "Collapsed \(tabName) tab after scrolling")
+        }
+    }
+
+    @MainActor
     func testOfflinePDFReaderClosesDirectlyToChapterList() throws {
         let app = XCUIApplication()
         app.launch()
