@@ -112,7 +112,7 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../PCMNotes.storekit">
+         identifier = "../../PCMNotes.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
