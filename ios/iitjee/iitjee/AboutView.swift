@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct AboutView: View {
-    private let creator = URL(string: "https://github.com/apoorvdarshan")!
     @AppStorage(AppAppearance.storageKey) private var storedAppearance = AppAppearance.system.rawValue
 
     private var versionText: String {
@@ -36,8 +35,9 @@ struct AboutView: View {
                             VStack(alignment: .leading, spacing: 32) {
                                 offlineSection
                                 appearanceSection
+                                legalSection
                                 independenceNote
-                                creatorLink
+                                creatorCredit
                             }
                             .frame(minWidth: 340, maxWidth: .infinity, alignment: .topLeading)
                         }
@@ -47,8 +47,9 @@ struct AboutView: View {
                             offlineSection
                             appearanceSection
                             coverageSection
+                            legalSection
                             independenceNote
-                            creatorLink
+                            creatorCredit
                         }
                     }
 
@@ -224,27 +225,29 @@ struct AboutView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private var creatorLink: some View {
-        Link(destination: creator) {
-            HStack(spacing: 12) {
-                Text("Made by Apoorv Darshan")
-                    .font(.custom("Noteworthy-Bold", size: 21, relativeTo: .body))
-                    .foregroundStyle(.primary)
+    private var legalSection: some View {
+        LegalLinksSection(color: AppPalette.about, annotation: "privacy + terms")
+    }
 
-                Spacer(minLength: 8)
+    private var creatorCredit: some View {
+        HStack(spacing: 12) {
+            Text("Made by Apoorv Darshan")
+                .font(.custom("Noteworthy-Bold", size: 21, relativeTo: .body))
+                .foregroundStyle(.primary)
 
-                Image(systemName: "arrow.up.right")
-                    .font(.callout.weight(.bold))
-                    .foregroundStyle(AppPalette.mathematics)
-            }
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
-            .overlay(alignment: .bottom) {
-                DoodleRule(color: AppPalette.mathematics)
-            }
+            Spacer(minLength: 8)
+
+            Text("INDIE")
+                .font(.caption2.monospaced().weight(.black))
+                .foregroundStyle(AppPalette.mathematics)
+                .rotationEffect(.degrees(-4))
         }
-        .buttonStyle(.plain)
-        .accessibilityHint("Opens the creator's GitHub profile")
+        .padding(.vertical, 12)
+        .overlay(alignment: .bottom) {
+            DoodleRule(color: AppPalette.mathematics)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("about.creator")
     }
 }
 

@@ -153,6 +153,51 @@ final class iitjeeUITests: XCTestCase {
     }
 
     @MainActor
+    func testSupportShowsPrivateContactsAndInAppLegalPages() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let supportTab = app.tabBars.buttons["Support"]
+        XCTAssertTrue(supportTab.waitForExistence(timeout: 5))
+        supportTab.tap()
+
+        let studyEmail = app.descendants(matching: .any)["support.email.study"]
+        let creatorEmail = app.descendants(matching: .any)["support.email.creator"]
+        let xProfile = app.descendants(matching: .any)["support.x"]
+
+        XCTAssertTrue(studyEmail.waitForExistence(timeout: 5))
+        XCTAssertTrue(creatorEmail.waitForExistence(timeout: 5))
+        XCTAssertTrue(xProfile.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["ad13dtu@gmail.com"].exists)
+        XCTAssertTrue(app.staticTexts["apoorvdarshan@gmail.com"].exists)
+        XCTAssertTrue(app.staticTexts["@apoorvdarshan"].exists)
+
+        let privacyLink = app.descendants(matching: .any)["legal.privacy"]
+        for _ in 0..<6 where !privacyLink.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(privacyLink.isHittable)
+        privacyLink.tap()
+
+        XCTAssertTrue(app.navigationBars["Privacy Policy"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["NO TRACKING"].exists)
+        XCTAssertTrue(app.staticTexts["What the app stores"].exists)
+
+        app.navigationBars.buttons["Support"].tap()
+
+        let termsLink = app.descendants(matching: .any)["legal.terms"]
+        for _ in 0..<6 where !termsLink.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(termsLink.isHittable)
+        termsLink.tap()
+
+        XCTAssertTrue(app.navigationBars["Terms of Use"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["PERSONAL STUDY"].exists)
+        XCTAssertTrue(app.staticTexts["Personal study use"].exists)
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {

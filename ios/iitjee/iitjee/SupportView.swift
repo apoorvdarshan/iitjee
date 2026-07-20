@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct SupportView: View {
-    private let supportEmail = URL(
+    private let studySupportEmail = URL(
         string: "mailto:ad13dtu@gmail.com?subject=PCM%20Notes%20Support"
     )!
-    private let instagram = URL(string: "https://instagram.com/apoorvdarshan")!
-    private let github = URL(string: "https://github.com/apoorvdarshan/iitjee")!
+    private let creatorEmail = URL(
+        string: "mailto:apoorvdarshan@gmail.com?subject=PCM%20Notes%20Contact"
+    )!
+    private let xProfile = URL(string: "https://x.com/apoorvdarshan")!
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
@@ -53,7 +55,7 @@ struct SupportView: View {
                     .font(.custom("Noteworthy-Bold", size: 42, relativeTo: .largeTitle))
                     .markerHighlight(AppPalette.support)
 
-                Text("Send the subject, chapter, and PDF page. That is enough to find the problem quickly.")
+                Text("Choose either email address, or message @apoorvdarshan on X. For a note issue, include the subject, chapter, and PDF page.")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -82,12 +84,22 @@ struct SupportView: View {
                 )
 
                 NotebookActionRow(
-                    title: "Email support",
-                    detail: "Questions, corrections, or missing pages",
+                    title: "Study support",
+                    detail: "ad13dtu@gmail.com",
                     symbol: "envelope",
                     color: AppPalette.support,
-                    destination: supportEmail
+                    destination: studySupportEmail
                 )
+                .accessibilityIdentifier("support.email.study")
+
+                NotebookActionRow(
+                    title: "Contact Apoorv",
+                    detail: "apoorvdarshan@gmail.com",
+                    symbol: "envelope.open",
+                    color: AppPalette.about,
+                    destination: creatorEmail
+                )
+                .accessibilityIdentifier("support.email.creator")
 
                 NotebookInfoRow(
                     title: "All notes are already offline",
@@ -99,27 +111,22 @@ struct SupportView: View {
 
             VStack(alignment: .leading, spacing: 0) {
                 DoodleSectionTitle(
-                    title: "Elsewhere",
+                    title: "On X",
                     color: AppPalette.mathematicsSecondary,
-                    annotation: "links"
+                    annotation: "updates + messages"
                 )
 
                 NotebookActionRow(
-                    title: "Instagram",
+                    title: "X (Twitter)",
                     detail: "@apoorvdarshan",
-                    symbol: "camera",
+                    symbol: "at",
                     color: AppPalette.mathematicsSecondary,
-                    destination: instagram
+                    destination: xProfile
                 )
-
-                NotebookActionRow(
-                    title: "GitHub",
-                    detail: "Source and issue tracking",
-                    symbol: "chevron.left.forwardslash.chevron.right",
-                    color: AppPalette.chemistry,
-                    destination: github
-                )
+                .accessibilityIdentifier("support.x")
             }
+
+            LegalLinksSection(color: AppPalette.about)
         }
     }
 

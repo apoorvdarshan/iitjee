@@ -1,105 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-US">
   <head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-17209424543"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'AW-17209424543');
-</script>
-    <!-- Event snippet for Page view conversion page -->
-<script>
-  gtag('event', 'conversion', {'send_to': 'AW-17209424543/zI_zCMD319saEJ_1i45A'});
-</script>
-
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chapter Gallery - IIT JEE Handwritten Notes - IITJEE</title>
-
-    <!-- SEO Meta Tags -->
-    <meta
-      name="description"
-      content="Browse handwritten notes for IIT JEE chapters. View detailed notes with diagrams, formulas, and explanations for Physics, Chemistry, and Mathematics."
-    />
-    <meta
-      name="keywords"
-      content="IIT JEE chapter notes, handwritten notes gallery, JEE preparation notes, chapter wise notes, study material"
-    />
-    <meta name="author" content="IITJEE" />
-    <meta name="robots" content="index, follow" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chapter Reader — PCM Notes</title>
+    <meta name="description" content="Read a complete handwritten PCM Notes chapter page by page." />
+    <meta name="author" content="Apoorv Darshan" />
+    <meta name="robots" content="noindex, follow" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8faf8" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1724" />
     <link rel="canonical" href="https://iitjee.apoorvdarshan.com/gallery.html" />
-
-    <!-- Open Graph Meta Tags -->
-    <meta
-      property="og:title"
-      content="Chapter Gallery - IIT JEE Handwritten Notes"
-    />
-    <meta
-      property="og:description"
-      content="Browse handwritten notes for IIT JEE chapters with detailed explanations and diagrams."
-    />
+    <link rel="icon" href="favicon.ico" />
     <meta property="og:type" content="article" />
-    <meta property="og:url" content="https://iitjee.apoorvdarshan.com/gallery.html" />
-
-    <!-- Twitter Card Meta Tags -->
+    <meta property="og:site_name" content="PCM Notes" />
+    <meta property="og:title" content="Chapter Reader — PCM Notes" />
+    <meta property="og:description" content="Read handwritten Physics, Chemistry and Mathematics notes." />
     <meta name="twitter:card" content="summary" />
-    <meta
-      name="twitter:title"
-      content="Chapter Gallery - IIT JEE Handwritten Notes"
-    />
-    <meta
-      name="twitter:description"
-      content="Browse handwritten notes for IIT JEE chapters."
-    />
-    <link rel="stylesheet" href="style.css" />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
+    <meta name="twitter:site" content="@apoorvdarshan" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Kalam:wght@300;400;700&family=Caveat:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <!-- jsPDF for PDF download -->
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17209424543"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "AW-17209424543");
+      gtag("config", "G-ECWRRXTV1R");
+    </script>
   </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1 id="gallery-title">Chapter Gallery</h1>
-        <div class="header-buttons">
-          <button class="back-button" onclick="goBack()">
-            ← Back to Chapters
-          </button>
-          <button id="download-pdf" class="download-btn" onclick="downloadChapterPDF()">
-            <i class="fas fa-download"></i> Download PDF
-          </button>
-          <button class="theme-toggle" onclick="toggleTheme()">
-            <i class="fas fa-moon"></i>
-          </button>
-        </div>
+  <body data-page="gallery">
+    <a class="skip-link" href="#image-gallery">Skip to handwritten pages</a>
+    <div class="reader-progress-track" aria-hidden="true"><div class="reader-progress-bar"></div></div>
+
+    <div class="notebook-shell">
+      <header class="site-header">
+        <a class="wordmark" href="index.html" aria-label="PCM Notes home"><span class="wordmark-mark"><span>PCM</span></span><span>Notes</span></a>
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="index.html#subjects">Subjects</a><a href="index.html#support">Contact</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a>
+        </nav>
+        <button class="theme-toggle" type="button" onclick="toggleTheme()" aria-label="Appearance: System"><i class="fa-solid fa-circle-half-stroke" aria-hidden="true"></i><span class="theme-label">System</span></button>
       </header>
 
-      <main>
-        <div class="gallery-layout">
-          <div class="ad-left"></div>
-
-          <div class="gallery-container">
-            <div id="image-gallery" class="image-gallery">
-              <div class="loading">Loading images...</div>
-            </div>
+      <main class="page-content reader-page-content">
+        <div class="reader-toolbar" aria-label="Reader controls">
+          <a id="reader-back" class="back-button" href="index.html"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i><span>Chapters</span></a>
+          <div class="reader-title-wrap">
+            <h1 id="gallery-title" class="reader-title">Opening chapter…</h1>
+            <span id="reader-page-count" class="reader-page-count">Local handwritten pages</span>
           </div>
+          <button id="download-pdf" class="download-btn" type="button" onclick="downloadChapterPDF()"><i class="fa-solid fa-download" aria-hidden="true"></i><span>Download PDF</span></button>
+        </div>
 
-          <div class="ad-right"></div>
+        <div class="gallery-layout">
+          <div class="gallery-container">
+            <div id="image-gallery" class="image-gallery" aria-live="polite"><div class="loading">Opening handwritten pages</div></div>
+          </div>
         </div>
       </main>
-    </div>
 
+      <footer class="site-footer">
+        <p>© <span data-current-year>2026</span> PCM Notes · Reader</p>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="mailto:ad13dtu@gmail.com">ad13dtu@gmail.com</a><a href="mailto:apoorvdarshan@gmail.com">apoorvdarshan@gmail.com</a><a href="https://x.com/apoorvdarshan" target="_blank" rel="noopener noreferrer">X</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms</a>
+        </nav>
+      </footer>
+    </div>
     <script src="script.js"></script>
   </body>
 </html>

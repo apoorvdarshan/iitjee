@@ -1,30 +1,45 @@
-// Theme Management
-function toggleTheme() {
-  const body = document.body;
-  const themeToggle = document.querySelector(".theme-toggle i");
+// Appearance: System → Light → Dark, matching the iOS app.
+const themeModes = ["system", "light", "dark"];
 
-  if (body.getAttribute("data-theme") === "dark") {
-    body.removeAttribute("data-theme");
-    themeToggle.className = "fas fa-moon";
-    localStorage.setItem("theme", "light");
+function applyTheme(mode) {
+  const validMode = themeModes.includes(mode) ? mode : "system";
+  const root = document.documentElement;
+
+  if (validMode === "system") {
+    root.removeAttribute("data-theme");
   } else {
-    body.setAttribute("data-theme", "dark");
-    themeToggle.className = "fas fa-sun";
-    localStorage.setItem("theme", "dark");
+    root.setAttribute("data-theme", validMode);
   }
+
+  const iconClasses = {
+    system: "fa-solid fa-circle-half-stroke",
+    light: "fa-solid fa-sun",
+    dark: "fa-solid fa-moon",
+  };
+
+  document.querySelectorAll(".theme-toggle").forEach((button) => {
+    const icon = button.querySelector("i");
+    const label = button.querySelector(".theme-label");
+    const title = validMode.charAt(0).toUpperCase() + validMode.slice(1);
+
+    button.dataset.mode = validMode;
+    button.setAttribute("aria-label", `Appearance: ${title}. Activate for the next option.`);
+    button.title = `Appearance: ${title}`;
+    if (icon) icon.className = iconClasses[validMode];
+    if (label) label.textContent = title;
+  });
 }
 
-// Initialize theme on page load
-function initializeTheme() {
-  const savedTheme = localStorage.getItem("theme");
-  const themeToggle = document.querySelector(".theme-toggle i");
+function toggleTheme() {
+  const currentMode = localStorage.getItem("theme") || "system";
+  const currentIndex = themeModes.indexOf(currentMode);
+  const nextMode = themeModes[(Math.max(currentIndex, 0) + 1) % themeModes.length];
+  localStorage.setItem("theme", nextMode);
+  applyTheme(nextMode);
+}
 
-  if (savedTheme === "dark") {
-    document.body.setAttribute("data-theme", "dark");
-    if (themeToggle) themeToggle.className = "fas fa-sun";
-  } else {
-    if (themeToggle) themeToggle.className = "fas fa-moon";
-  }
+function initializeTheme() {
+  applyTheme(localStorage.getItem("theme") || "system");
 }
 
 // Navigation Functions
@@ -33,7 +48,8 @@ function navigateToSubject(subject) {
 }
 
 function goBack() {
-  window.history.back();
+  const subject = localStorage.getItem("currentSubject");
+  window.location.href = chapterData[subject] ? `${subject}.html` : "index.html";
 }
 
 
@@ -141,33 +157,57 @@ const chapterData = {
 // Load chapters for subject pages
 function loadChapters(subject) {
   const chapterList = document.getElementById("chapter-list");
-  const subjectTitle = document.getElementById("subject-title");
+  const searchInput = document.getElementById("chapter-search");
 
   if (!chapterList || !chapterData[subject]) return;
 
-  subjectTitle.textContent = subject.charAt(0).toUpperCase() + subject.slice(1);
-  chapterList.innerHTML = '<div class="loading">Loading chapters...</div>';
-
-  setTimeout(() => {
-    const chapters = chapterData[subject];
+  const renderChapters = (chapters) => {
     chapterList.innerHTML = "";
 
-    chapters.forEach((chapter, index) => {
-      const chapterCard = document.createElement("div");
-      chapterCard.className = "chapter-card";
-      chapterCard.onclick = () => openChapter(subject, chapter);
+    if (chapters.length === 0) {
+      chapterList.innerHTML = '<div class="empty-state">No chapter matches that search.</div>';
+    }
 
+    chapters.forEach((chapter) => {
+      const chapterCard = document.createElement("button");
       const chapterNumber = chapter.split(".")[0];
       const chapterName = chapter.split(".").slice(1).join(".").trim();
+      const pageCount = getImageCount(subject, chapter);
 
+      chapterCard.type = "button";
+      chapterCard.className = "chapter-card";
+      chapterCard.setAttribute(
+        "aria-label",
+        `Chapter ${chapterNumber}, ${chapterName}, ${pageCount} pages`,
+      );
+      chapterCard.onclick = () => openChapter(subject, chapter);
       chapterCard.innerHTML = `
-                <div class="chapter-title">Chapter ${chapterNumber}</div>
-                <div class="chapter-subtitle">${chapterName}</div>
-            `;
-
+        <span class="margin-number" aria-hidden="true">${String(chapterNumber).padStart(2, "0")}</span>
+        <span class="row-copy">
+          <span class="chapter-title">Chapter ${chapterNumber}</span>
+          <span class="chapter-subtitle">${chapterName}</span>
+        </span>
+        <span class="chapter-pages">${pageCount} pages</span>
+        <span class="row-arrow" aria-hidden="true">↗</span>
+      `;
       chapterList.appendChild(chapterCard);
     });
-  }, 500);
+
+    const count = document.getElementById("chapter-count");
+    if (count) count.textContent = `${chapters.length} ${chapters.length === 1 ? "chapter" : "chapters"}`;
+  };
+
+  renderChapters(chapterData[subject]);
+
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.trim().toLocaleLowerCase();
+      const filtered = chapterData[subject].filter((chapter) =>
+        chapter.toLocaleLowerCase().includes(query),
+      );
+      renderChapters(filtered);
+    });
+  }
 }
 
 // Open chapter and load images
@@ -176,19 +216,24 @@ function openChapter(subject, chapterName) {
   localStorage.setItem("currentSubject", subject);
   localStorage.setItem("currentChapter", chapterName);
 
-  // Navigate to gallery page
-  window.location.href = "gallery.html";
+  const params = new URLSearchParams({ subject, chapter: chapterName });
+  window.location.href = `gallery.html?${params.toString()}`;
 }
 
 // Gallery Functions
 function loadGallery() {
-  const subject = localStorage.getItem("currentSubject");
-  const chapter = localStorage.getItem("currentChapter");
+  const params = new URLSearchParams(window.location.search);
+  const subject = params.get("subject") || localStorage.getItem("currentSubject");
+  const chapter = params.get("chapter") || localStorage.getItem("currentChapter");
 
-  if (!subject || !chapter) {
+  if (!subject || !chapter || !chapterData[subject]?.includes(chapter)) {
     window.location.href = "index.html";
     return;
   }
+
+  localStorage.setItem("currentSubject", subject);
+  localStorage.setItem("currentChapter", chapter);
+  document.body.dataset.subject = subject;
 
   const galleryTitle = document.getElementById("gallery-title");
   const imageGallery = document.getElementById("image-gallery");
@@ -198,33 +243,30 @@ function loadGallery() {
   const chapterNumber = chapter.split(".")[0];
   const chapterName = chapter.split(".").slice(1).join(".").trim();
 
-  galleryTitle.textContent = `${
-    subject.charAt(0).toUpperCase() + subject.slice(1)
-  } - Chapter ${chapterNumber}: ${chapterName}`;
+  const subjectName = subject.charAt(0).toUpperCase() + subject.slice(1);
+  const pageCount = getImageCount(subject, chapter);
+  galleryTitle.textContent = `${subjectName} · ${chapterName}`;
+  document.title = `${chapterName} — PCM Notes`;
 
-  // Show loading state
-  imageGallery.innerHTML = '<div class="loading">Loading images...</div>';
+  const backLink = document.getElementById("reader-back");
+  if (backLink) backLink.href = `${subject}.html`;
 
-  // Simulate loading images (in a real app, you'd scan the directory)
-  setTimeout(() => {
-    loadImages(subject, chapter);
-  }, 1000);
+  const countLabel = document.getElementById("reader-page-count");
+  if (countLabel) countLabel.textContent = `Chapter ${chapterNumber} · ${pageCount} handwritten pages`;
+
+  loadImages(subject, chapter);
+  initializeReaderProgress();
 }
 
 function loadImages(subject, chapter) {
   const imageGallery = document.getElementById("image-gallery");
   if (!imageGallery) return;
 
-  // Clear loading state
   imageGallery.innerHTML = "";
-
-  // Generate image paths based on the expected structure
-  // This simulates finding images in the chapter folder
   const imageCount = getImageCount(subject, chapter);
 
   if (imageCount === 0) {
-    imageGallery.innerHTML =
-      '<div class="loading">No images found in this chapter.</div>';
+    imageGallery.innerHTML = '<div class="empty-state">No handwritten pages were found for this chapter.</div>';
     return;
   }
 
@@ -232,20 +274,39 @@ function loadImages(subject, chapter) {
     const imageNumber = String(i).padStart(4, "0");
     const imagePath = `${subject}/${chapter}/${imageNumber}.jpg`;
 
+    const figure = document.createElement("figure");
     const img = document.createElement("img");
-    img.src = imagePath;
-    img.alt = `${subject} Chapter Notes - Page ${i} | IIT JEE Handwritten Notes`;
-    img.loading = "lazy";
-    img.className = "gallery-image";
-    img.title = `${subject} notes page ${i}`;
+    const caption = document.createElement("figcaption");
 
-    // Handle image load errors
+    figure.className = "note-page";
+    img.src = imagePath;
+    img.alt = `${subject} handwritten chapter notes, page ${i} of ${imageCount}`;
+    img.loading = i === 1 ? "eager" : "lazy";
+    img.decoding = "async";
+    img.className = "gallery-image";
+    if (i === 1) img.fetchPriority = "high";
+    caption.className = "page-caption";
+    caption.textContent = `${i} / ${imageCount}`;
+
     img.onerror = function () {
-      this.style.display = "none";
+      figure.remove();
     };
 
-    imageGallery.appendChild(img);
+    figure.append(img, caption);
+    imageGallery.appendChild(figure);
   }
+}
+
+function initializeReaderProgress() {
+  const update = () => {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = scrollable > 0 ? Math.min((window.scrollY / scrollable) * 100, 100) : 0;
+    document.documentElement.style.setProperty("--reader-progress", `${progress}%`);
+  };
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
 }
 
 // Get estimated image count based on the folder structure
@@ -279,76 +340,76 @@ function getImageCount(subject, chapter) {
       "23.EXPERIMENTAL SKILLS IN PHYSICS": 19,
     },
     chemistry: {
-      "1.Some Basic Concepts of Chemistry": 78,
-      "2.Structure of Atom": 51,
-      "3.Classification of Elements & Periodicity in Properties": 36,
-      "4.Chemical Bonding & Molecular Structure": 83,
-      "5.Gaseous State": 39,
-      "6.Thermodynamics": 51,
-      "7.Chemical Kinetics & Nuclear Chemistry": 21,
-      "8.Hydrogen": 6,
-      "9.Chemical Equilibrium": 17,
-      "10.Ionic Equilibrium": 43,
-      "11.The s-BLOCK elements": 21,
-      "12.The p-BLOCK elements": 51,
-      "13.GOC": 23,
-      "14.Isomerism": 23,
-      "15.Hydrocarbons": 38,
-      "16.Environmental Chemistry": 14,
+      "1.Some Basic Concepts of Chemistry": 81,
+      "2.Structure of Atom": 54,
+      "3.Classification of Elements & Periodicity in Properties": 39,
+      "4.Chemical Bonding & Molecular Structure": 86,
+      "5.Gaseous State": 42,
+      "6.Thermodynamics": 54,
+      "7.Chemical Kinetics & Nuclear Chemistry": 24,
+      "8.Hydrogen": 9,
+      "9.Chemical Equilibrium": 20,
+      "10.Ionic Equilibrium": 46,
+      "11.The s-BLOCK elements": 24,
+      "12.The p-BLOCK elements": 54,
+      "13.GOC": 26,
+      "14.Isomerism": 26,
+      "15.Hydrocarbons": 41,
+      "16.Environmental Chemistry": 17,
       "17.Electrophilic Aromatic Substitution": 3,
-      "18.Alkyl & Aryl Halides": 11,
-      "19.Alcohol, Phenol & Ether": 24,
-      "20.Aldehydes & Ketones": 24,
-      "21.Carboxylic Acids & Derivatives": 10,
-      "22.Amines": 13,
-      "23.Solid State": 41,
-      "24.Solutions": 14,
-      "25.Surface Chemistry": 16,
-      "26.General Principles and Processes of Isolation of Elements": 11,
-      "27.Electrochemistry": 18,
-      "28.The d- and f- BLOCK Elements": 18,
-      "29.Coordination Compounds": 16,
-      "30.QUALITATIVE SALT ANALYSIS": 21,
-      "31.Polymers": 7,
-      "32.Biomolecules": 22,
-      "33.Chemistry in Everyday Life": 4,
-      "34.IUPAC Nomenclature": 14,
-      "35.PRACTICAL ORGANIC CHEMISTRY": 1,
-      "36.Purification and Characteristics of Organic Compounds": 4,
+      "18.Alkyl & Aryl Halides": 14,
+      "19.Alcohol, Phenol & Ether": 27,
+      "20.Aldehydes & Ketones": 27,
+      "21.Carboxylic Acids & Derivatives": 13,
+      "22.Amines": 16,
+      "23.Solid State": 44,
+      "24.Solutions": 17,
+      "25.Surface Chemistry": 19,
+      "26.General Principles and Processes of Isolation of Elements": 14,
+      "27.Electrochemistry": 21,
+      "28.The d- and f- BLOCK Elements": 21,
+      "29.Coordination Compounds": 19,
+      "30.QUALITATIVE SALT ANALYSIS": 24,
+      "31.Polymers": 10,
+      "32.Biomolecules": 25,
+      "33.Chemistry in Everyday Life": 7,
+      "34.IUPAC Nomenclature": 17,
+      "35.PRACTICAL ORGANIC CHEMISTRY": 4,
+      "36.Purification and Characteristics of Organic Compounds": 7,
       "37.CONFORMERS": 1,
     },
     mathematics: {
-      "1.Set, Relation & Function": 55,
+      "1.Set, Relation & Function": 58,
       "2.Linear Inequalities & Linear Programming": 1,
-      "3.Logarithm": 5,
-      "4.Trigonometric Ratios & Identities": 8,
-      "5.Basic Calculus": 35,
-      "6.Quadratic Equations & Expressions": 13,
+      "3.Logarithm": 8,
+      "4.Trigonometric Ratios & Identities": 11,
+      "5.Basic Calculus": 38,
+      "6.Quadratic Equations & Expressions": 15,
       "7.Mathematical Reasoning": 3,
       "8.Sequence & Progression": 28,
       "9.Straight Lines": 24,
-      "10.Circle": 17,
-      "11.Parabola & Conic Section": 13,
+      "10.Circle": 20,
+      "11.Parabola & Conic Section": 16,
       "12.Mathematical Induction": 2,
-      "13.Ellipse": 12,
-      "14.Hyperbola": 6,
-      "15.Complex Number": 13,
-      "16.Solution of Triangle": 10,
-      "17.Trigonometric Equations": 9,
-      "18.Permutation & Combinations": 15,
-      "19.Binomial Theorem": 11,
-      "20.Probability": 9,
-      "21.Statistics": 4,
-      "22.Function-II": 47,
-      "23.Inverse Trigonometric Functions": 19,
-      "24.Limit, Continuity & Differentiability (Differentiation)": 62,
-      "25.Application of Derivatives": 46,
-      "26.Indefinite Integration": 16,
-      "27.Definite Integration": 13,
-      "28.Area Under Curve (Quadrature)": 3,
-      "29.Differential Equations": 12,
-      "30.Matrices & Determinants": 26,
-      "31.Vectors & 3D": 27,
+      "13.Ellipse": 15,
+      "14.Hyperbola": 9,
+      "15.Complex Number": 16,
+      "16.Solution of Triangle": 13,
+      "17.Trigonometric Equations": 12,
+      "18.Permutation & Combinations": 18,
+      "19.Binomial Theorem": 14,
+      "20.Probability": 12,
+      "21.Statistics": 7,
+      "22.Function-II": 50,
+      "23.Inverse Trigonometric Functions": 22,
+      "24.Limit, Continuity & Differentiability (Differentiation)": 65,
+      "25.Application of Derivatives": 49,
+      "26.Indefinite Integration": 19,
+      "27.Definite Integration": 16,
+      "28.Area Under Curve (Quadrature)": 6,
+      "29.Differential Equations": 15,
+      "30.Matrices & Determinants": 29,
+      "31.Vectors & 3D": 30,
     },
   };
 
@@ -490,6 +551,10 @@ function loadImageForPDF(src) {
 function initializePage() {
   initializeTheme();
 
+  document.querySelectorAll("[data-current-year]").forEach((element) => {
+    element.textContent = String(new Date().getFullYear());
+  });
+
   const path = window.location.pathname.replace(/\/+$/, "");
   const page = path.substring(path.lastIndexOf("/") + 1).replace(/\.html$/i, "");
 
@@ -504,87 +569,7 @@ function initializePage() {
   }
 }
 
-// Content Protection - Disable right-click and keyboard shortcuts
-function disableContentProtection() {
-  // Disable right-click context menu
-  document.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-    return false;
-  });
-
-  // Disable keyboard shortcuts (except developer tools)
-  document.addEventListener("keydown", function (e) {
-    // Allow F12 (Developer Tools) - removed restriction
-    // Allow Ctrl+Shift+I (Developer Tools) - removed restriction
-    // Allow Ctrl+Shift+J (Console) - removed restriction
-    // Allow Ctrl+Shift+C (Inspect Element) - removed restriction
-
-    // Disable Ctrl+U (View Source)
-    if (e.ctrlKey && e.keyCode === 85) {
-      e.preventDefault();
-      return false;
-    }
-
-    // Disable Ctrl+S (Save)
-    if (e.ctrlKey && e.keyCode === 83) {
-      e.preventDefault();
-      return false;
-    }
-
-    // Disable Ctrl+P (Print)
-    if (e.ctrlKey && e.keyCode === 80) {
-      e.preventDefault();
-      return false;
-    }
-
-    // Disable Ctrl+A (Select All)
-    if (e.ctrlKey && e.keyCode === 65) {
-      e.preventDefault();
-      return false;
-    }
-
-    // Disable Ctrl+C (Copy)
-    if (e.ctrlKey && e.keyCode === 67) {
-      e.preventDefault();
-      return false;
-    }
-
-    // Disable Ctrl+V (Paste)
-    if (e.ctrlKey && e.keyCode === 86) {
-      e.preventDefault();
-      return false;
-    }
-
-    // Disable Ctrl+X (Cut)
-    if (e.ctrlKey && e.keyCode === 88) {
-      e.preventDefault();
-      return false;
-    }
-  });
-
-  // Disable text selection
-  document.addEventListener("selectstart", function (e) {
-    e.preventDefault();
-    return false;
-  });
-
-  // Disable drag and drop
-  document.addEventListener("dragstart", function (e) {
-    e.preventDefault();
-    return false;
-  });
-
-  // Disable printing through window.print()
-  window.print = function () {
-    return false;
-  };
-
-  // Developer tools are now allowed via keyboard shortcuts
-  // Removed developer tools detection and warnings
-}
-
 // Wait for DOM to be loaded
 document.addEventListener("DOMContentLoaded", function () {
   initializePage();
-  disableContentProtection();
 });
