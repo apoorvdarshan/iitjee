@@ -53,10 +53,13 @@ App Store Connect submission details for PCM Notes v1.0, build 1. Each field is 
 
     PRIVATE BY DESIGN
     - No account or login
-    - No subscriptions or in-app purchases
+    - No subscription or paywall
     - No advertising
     - No analytics, tracking, or profiling
     - Reading progress and preferences stay on your device
+
+    OPTIONAL TIPS
+    The Support tab offers four optional, repeatable tips processed by Apple through StoreKit. Tips unlock no notes, content, or reader features. PCM Notes does not use RevenueCat or another third-party purchase SDK.
 
     EXAM COVERAGE
     Physics and Chemistry are useful for JEE and NEET revision. Mathematics is organised for JEE Main and Advanced. Biology is not included.
@@ -103,17 +106,31 @@ App Store Connect submission details for PCM Notes v1.0, build 1. Each field is 
 
     https://iitjee.apoorvdarshan.com/
 
+## In-App Purchases
+
+All four products are repeatable consumables with India as the base storefront and automatic price equalisation enabled for all 175 storefronts.
+
+| Reference name | Product ID | Apple ID | India price |
+| --- | --- | --- | ---: |
+| Small Tip | `com.apoorvdarshan.iitjee.tip.small` | `6792611295` | ₹49 |
+| Chai Tip | `com.apoorvdarshan.iitjee.tip.medium` | `6792611296` | ₹99 |
+| Study Fuel | `com.apoorvdarshan.iitjee.tip.large` | `6792611495` | ₹199 |
+| Notebook Hero | `com.apoorvdarshan.iitjee.tip.generous` | `6792611270` | ₹499 |
+
+The products are configured but intentionally not submitted for review yet. Attach the final Support-screen review screenshot to each product when preparing the release build.
+
 ## App Privacy
 
     Data collection: Data Not Collected
     Tracking: No
 
-The app has no account, analytics, advertising, tracking, purchases, or network-backed content. It stores reading progress and appearance/layout preferences locally on the device.
+The app has no account, analytics, advertising, tracking, or network-backed study content. It stores reading progress and appearance/layout preferences locally on the device. The Support tab offers four optional, repeatable tips processed by Apple through StoreKit. Tips unlock no content or features and are not subscriptions. The developer does not collect StoreKit transaction or payment information; Apple may process purchase, transaction, and payment information under Apple’s terms and privacy policy. The App Privacy response therefore remains Data Not Collected by the developer.
 
 ## Reviewer Notes
 
     PCM Notes is a native iPhone and iPad study reader with no account, login,
-    paywall, subscription, in-app purchase, advertising, or analytics.
+    paywall, subscription, advertising, or analytics. Every note and reader
+    feature is available without payment.
 
     To review the main flow:
     1. Launch the app. Physics opens by default.
@@ -127,11 +144,16 @@ The app has no account, analytics, advertising, tracking, purchases, or network-
     Continuous and Two-page spread. Appearance can be changed from About using
     System, Light, or Dark.
 
+    The Support tab contains four optional, repeatable consumable tips. Purchases
+    use Apple StoreKit directly; the app does not use RevenueCat. A tip unlocks no
+    content or feature and does not begin a subscription. Reviewers may open
+    Support to inspect the tip jar without purchasing.
+
     All 91 chapter PDFs are included in the app bundle. Core study content works
     without a network connection. The archive is roughly 500 MB, so a long PDF
     may take a moment to prepare on older devices.
 
-    Privacy Policy and Terms of Use are available inside Support and About.
+    Privacy Policy and Terms of Use are available inside About only.
     Support email: ad13dtu@gmail.com
     Alternate email: apoorvdarshan@gmail.com
     X: @apoorvdarshan

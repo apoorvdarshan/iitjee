@@ -1,0 +1,83 @@
+{
+  "identifier" : "23E60F1E-15D9-4AF0-A7D0-17E36AE7CB55",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "49",
+      "familyShareable" : false,
+      "internalID" : "E1422806-2D13-4CDA-8354-950F38199684",
+      "localizations" : [
+        {
+          "description" : "A small optional tip for PCM Notes.",
+          "displayName" : "Small Tip",
+          "locale" : "en_IN"
+        }
+      ],
+      "productID" : "com.apoorvdarshan.iitjee.tip.small",
+      "referenceName" : "Small Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "99",
+      "familyShareable" : false,
+      "internalID" : "0148D4E9-BD17-4104-8CA8-937886336309",
+      "localizations" : [
+        {
+          "description" : "An optional chai-sized tip for PCM Notes.",
+          "displayName" : "Chai Tip",
+          "locale" : "en_IN"
+        }
+      ],
+      "productID" : "com.apoorvdarshan.iitjee.tip.medium",
+      "referenceName" : "Chai Tip",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "199",
+      "familyShareable" : false,
+      "internalID" : "6C1EC062-DFA8-42EB-B7A8-70BE58B70DA5",
+      "localizations" : [
+        {
+          "description" : "An optional tip to fuel future note improvements.",
+          "displayName" : "Study Fuel",
+          "locale" : "en_IN"
+        }
+      ],
+      "productID" : "com.apoorvdarshan.iitjee.tip.large",
+      "referenceName" : "Study Fuel",
+      "type" : "Consumable"
+    },
+    {
+      "displayPrice" : "499",
+      "familyShareable" : false,
+      "internalID" : "442477C6-CBF3-4D67-B14D-C51B80AC21A2",
+      "localizations" : [
+        {
+          "description" : "A generous optional tip for PCM Notes.",
+          "displayName" : "Notebook Hero",
+          "locale" : "en_IN"
+        }
+      ],
+      "productID" : "com.apoorvdarshan.iitjee.tip.generous",
+      "referenceName" : "Notebook Hero",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_IN",
+    "_storefront" : "IND",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

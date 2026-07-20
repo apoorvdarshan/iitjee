@@ -45,4 +45,16 @@ struct iitjeeTests {
             #expect(resourceNames.last == String(format: "%02d", subject.chapters.count))
         }
     }
+
+    @Test func tipProductsUseStableOrderedIdentifiers() {
+        #expect(
+            TipProductID.allCases.map(\.rawValue) == [
+                "com.apoorvdarshan.iitjee.tip.small",
+                "com.apoorvdarshan.iitjee.tip.medium",
+                "com.apoorvdarshan.iitjee.tip.large",
+                "com.apoorvdarshan.iitjee.tip.generous"
+            ]
+        )
+        #expect(Set(TipProductID.allCases.map(\.rawValue)).count == 4)
+    }
 }

@@ -153,7 +153,7 @@ final class iitjeeUITests: XCTestCase {
     }
 
     @MainActor
-    func testSupportShowsPrivateContactsAndInAppLegalPages() throws {
+    func testSupportShowsContactsAndOptionalTips() throws {
         let app = XCUIApplication()
         app.launch()
 
@@ -171,9 +171,28 @@ final class iitjeeUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["ad13dtu@gmail.com"].exists)
         XCTAssertTrue(app.staticTexts["apoorvdarshan@gmail.com"].exists)
         XCTAssertTrue(app.staticTexts["@apoorvdarshan"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["tip.disclosure"].waitForExistence(timeout: 5))
+
+        for tier in ["small", "medium", "large", "generous"] {
+            let tipButton = app.buttons["tip.product.\(tier)"]
+            XCTAssertTrue(
+                tipButton.waitForExistence(timeout: 8),
+                "Missing repeatable \(tier) tip"
+            )
+        }
+    }
+
+    @MainActor
+    func testAboutShowsInAppLegalPages() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let aboutTab = app.tabBars.buttons["About"]
+        XCTAssertTrue(aboutTab.waitForExistence(timeout: 5))
+        aboutTab.tap()
 
         let privacyLink = app.descendants(matching: .any)["legal.privacy"]
-        for _ in 0..<6 where !privacyLink.isHittable {
+        for _ in 0..<10 where !privacyLink.isHittable {
             app.swipeUp()
         }
         XCTAssertTrue(privacyLink.isHittable)
@@ -183,10 +202,10 @@ final class iitjeeUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["NO TRACKING"].exists)
         XCTAssertTrue(app.staticTexts["What the app stores"].exists)
 
-        app.navigationBars.buttons["Support"].tap()
+        app.navigationBars.buttons["About"].tap()
 
         let termsLink = app.descendants(matching: .any)["legal.terms"]
-        for _ in 0..<6 where !termsLink.isHittable {
+        for _ in 0..<10 where !termsLink.isHittable {
             app.swipeUp()
         }
         XCTAssertTrue(termsLink.isHittable)

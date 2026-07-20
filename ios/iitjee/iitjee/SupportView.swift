@@ -17,6 +17,7 @@ struct SupportView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 34) {
                     supportHero
+                    TipJarSection()
 
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .top, spacing: 30) {
@@ -55,7 +56,7 @@ struct SupportView: View {
                     .font(.custom("Noteworthy-Bold", size: 42, relativeTo: .largeTitle))
                     .markerHighlight(AppPalette.support)
 
-                Text("Choose either email address, or message @apoorvdarshan on X. For a note issue, include the subject, chapter, and PDF page.")
+                Text("For a note issue, use either email address and include the subject, chapter, and PDF page. You can also message @apoorvdarshan on X.")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -101,12 +102,6 @@ struct SupportView: View {
                 )
                 .accessibilityIdentifier("support.email.creator")
 
-                NotebookInfoRow(
-                    title: "All notes are already offline",
-                    detail: "91 chapter PDFs · 2,173 handwritten pages",
-                    symbol: "checkmark",
-                    color: AppPalette.chemistry
-                )
             }
 
             VStack(alignment: .leading, spacing: 0) {
@@ -125,8 +120,6 @@ struct SupportView: View {
                 )
                 .accessibilityIdentifier("support.x")
             }
-
-            LegalLinksSection(color: AppPalette.about)
         }
     }
 
@@ -206,39 +199,6 @@ private struct NotebookActionRow: View {
     }
 }
 
-private struct NotebookInfoRow: View {
-    let title: String
-    let detail: String
-    let symbol: String
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 14) {
-            Text(symbol == "checkmark" ? "✓" : "•")
-                .font(.custom("Noteworthy-Bold", size: 26, relativeTo: .title3))
-                .foregroundStyle(color)
-                .frame(width: 30)
-                .rotationEffect(.degrees(-7))
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.headline)
-
-                Text(detail)
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(.vertical, 15)
-        .overlay(alignment: .bottom) {
-            DoodleRule(color: color)
-        }
-        .accessibilityElement(children: .combine)
-    }
-}
-
 private struct FAQRow: View {
     let number: Int
     let question: String
@@ -280,4 +240,5 @@ private struct FAQRow: View {
     NavigationStack {
         SupportView()
     }
+    .environmentObject(TipStore())
 }

@@ -46,7 +46,8 @@ Physics and Chemistry support JEE and NEET revision. Mathematics is organised fo
 - **System, Light, and Dark** — follow the device appearance or keep a fixed paper-and-ink theme.
 - **Five native tabs** — Physics, Chemistry, Maths, Support, and About.
 - **Notebook-first design** — ruled paper, hand-drawn science marks, subject inks, and a persistent native tab bar.
-- **No account or paywall** — no login, subscription, advertising, analytics, or tracking.
+- **No account, subscription, or paywall** — every note and reader feature remains available without payment.
+- **Optional Apple tips** — the Support tab offers four repeatable tips through StoreKit; they unlock no content or features.
 
 ## 📖 Reader experience
 
@@ -60,11 +61,12 @@ On iPad, the layout menu adds a two-page continuous spread with book-style page 
 - **PDFKit** — local PDF rendering, zoom, paging, and two-page spreads.
 - **AppKit + PDFKit build tool** — converts the tracked handwritten JPEG archive into 91 chapter PDFs during an Xcode build.
 - **UserDefaults / AppStorage** — local progress, layout, and appearance preferences.
+- **StoreKit** — four optional, repeatable tips processed by Apple with no subscription or unlocked entitlement.
 - **Swift Testing + XCTest UI Tests** — focused model and navigation coverage.
 - **HTML, CSS, and JavaScript** — responsive public notebook and browser reader.
 - **Cloudflare Workers static assets** — production website delivery.
 
-There are no third-party iOS runtime dependencies.
+There are no third-party iOS runtime dependencies. Purchases use StoreKit directly; the app does not use RevenueCat or another third-party purchase SDK.
 
 ## 🚀 Build and run
 
@@ -107,13 +109,15 @@ The tag creates a GitHub Release with generated notes and is also the trigger in
 - **Email Apoorv:** [apoorvdarshan@gmail.com](mailto:apoorvdarshan@gmail.com?subject=PCM%20Notes%20Support)
 - **X:** [@apoorvdarshan](https://x.com/apoorvdarshan)
 
-Voluntary support and product links are available from the website.
+Ko-fi support and product links are available from the website. The iOS app separately offers four optional, repeatable Apple-processed tips from its Support tab; tipping never unlocks notes or reader features.
 
 ## 🔒 Privacy
 
-The iOS app has no account system, advertising, analytics, tracking, or profiling. It does not send reading activity to PCM Notes. Chapter PDFs are bundled locally, and only the last-read page, selected iPad reader layout, and System/Light/Dark preference are stored on the device.
+The iOS app has no account system, advertising, analytics, tracking, or profiling. It does not send reading activity or StoreKit transaction information to PCM Notes. Chapter PDFs are bundled locally, and only the last-read page, selected iPad reader layout, and System/Light/Dark preference are stored on the device.
 
-App Store privacy label: **Data Not Collected**.
+If a user chooses one of the four optional tips, Apple may process purchase, transaction, and payment information under Apple’s terms and privacy policy. The developer does not collect payment details, and no content or feature is tied to a tip.
+
+App Store privacy label for data collected by the developer: **Data Not Collected**.
 
 ## 📜 Copyright
 

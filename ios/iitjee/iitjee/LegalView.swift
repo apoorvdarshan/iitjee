@@ -63,6 +63,10 @@ enum LegalDocument: String, Identifiable {
                     body: "The app has no account system, advertising, analytics, tracking, or profiling. We do not collect your reading history, sell personal data, or share app activity with data brokers."
                 ),
                 LegalSectionContent(
+                    title: "Optional App Store tips",
+                    body: "PCM Notes offers optional, repeatable consumable tips. Apple shows the local price, processes payment credentials, and applies its own privacy policy. StoreKit verifies the product and transaction on your device so the app can finish the purchase; PCM Notes does not send purchase data to a developer server or third-party analytics service. Tips unlock nothing and are not charitable donations."
+                ),
+                LegalSectionContent(
                     title: "When you contact us",
                     body: "If you choose an email link, your email app and provider handle the message and send the details you include to us. If you choose the X link, the X app or website handles that visit under its own privacy policy. PCM Notes does not silently send either service information."
                 ),
@@ -86,6 +90,10 @@ enum LegalDocument: String, Identifiable {
                     body: "The app, its design, and the bundled compilation remain protected by their applicable ownership and licence rights. Installing the app gives you a limited, revocable, non-transferable right to use them for personal study; it does not transfer ownership."
                 ),
                 LegalSectionContent(
+                    title: "Optional tips",
+                    body: "The Support tab may offer repeatable consumable tips through Apple's In-App Purchase system. Tipping is optional, unlocks no content or feature, and is not a charitable donation. Apple displays and charges the price, and its terms govern billing and refunds. Finished consumable tips are not restorable purchases."
+                ),
+                LegalSectionContent(
                     title: "Independent resource",
                     body: "PCM Notes is independent and is not affiliated with, endorsed by, or an official product of any IIT, NTA, JEE, NEET, or other examination authority. Names and marks belong to their respective owners."
                 ),
@@ -99,7 +107,7 @@ enum LegalDocument: String, Identifiable {
                 ),
                 LegalSectionContent(
                     title: "External services",
-                    body: "Email and X links leave PCM Notes and are operated by third parties. Their availability, content, privacy practices, and terms are outside our control."
+                    body: "Apple's App Store processes optional tips. Email and X links leave PCM Notes and are operated by third parties. Their availability, content, privacy practices, and terms are outside our control."
                 ),
                 LegalSectionContent(
                     title: "Liability",

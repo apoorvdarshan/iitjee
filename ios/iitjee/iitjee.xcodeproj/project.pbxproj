@@ -176,6 +176,11 @@
 				TargetAttributes = {
 					BAD4B0BE300D6D630023E871 = {
 						CreatedOnToolsVersion = 26.6;
+						SystemCapabilities = {
+							com.apple.InAppPurchase = {
+								enabled = 1;
+							};
+						};
 					};
 					BAD4B0CB300D6D660023E871 = {
 						CreatedOnToolsVersion = 26.6;
@@ -252,6 +257,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(BUILD_DIR)/OfflineNotesGenerator",
 				"$(BUILD_DIR)/OfflineNotesCache",
 				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/OfflineNotes",
 			);
@@ -429,6 +435,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 23RV7FYH36;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "PCM Notes";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
@@ -464,6 +471,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 23RV7FYH36;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "PCM Notes";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
