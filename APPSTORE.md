@@ -129,6 +129,20 @@ All four products are also configured as consumables in the RevenueCat project f
 
 The app has no account, advertising, cross-app tracking, profiling, or network-backed study content. It stores reading progress and appearance/layout preferences locally on the device. The Support tab offers four optional, repeatable tips processed by Apple through StoreKit and recorded by RevenueCat. RevenueCat receives purchase history and an anonymous App User ID for receipt validation, app functionality, and aggregate purchase analytics. Tips unlock no content or features and are not subscriptions. Neither the developer nor RevenueCat receives payment-card details.
 
+The App Privacy responses were published in App Store Connect on 21 July 2026.
+
+## Age Rating
+
+    Calculated rating: 4+
+    Age category override: Not Applicable
+    Age suitability URL: Not provided
+
+The App Store Connect questionnaire was completed on 21 July 2026 with no
+in-app controls, unrestricted web access, user-generated content, social
+features, chat, advertising, mature content, medical or wellness guidance,
+sexual content, violence, gambling, contests, or loot boxes. Apple applies its
+equivalent regional ratings automatically.
+
 ## Reviewer Notes
 
     PCM Notes is a native iPhone and iPad study reader with no account, login,
@@ -169,12 +183,12 @@ Live App Store Connect state verified on 21 July 2026:
 - App name, subtitle, description, promotional text, keywords, support URL, marketing URL, privacy URL, Education primary category, and Reference secondary category are populated.
 - Five iPhone 6.7-inch and five iPad 12.9-inch screenshots are uploaded and fully processed.
 - All four consumable tips are localized, include an App Review screenshot, and are ready to select for the first submission.
+- App Privacy is published with **Purchases → Purchase History** used for **App Functionality** and **Analytics**, not linked to identity, and not used for tracking.
+- The age-rating questionnaire is complete with a calculated global rating of **4+**, no category override, and Apple-managed regional equivalents.
 - Xcode Cloud's enabled `Default` workflow performs a clean, required App Store-eligible iOS archive for tags beginning with `v`.
 
 Required before pushing the first release tag:
 
-- Complete and publish App Privacy with **Purchases → Purchase History**, used for **App Functionality** and **Analytics**, not linked to identity, and not used for tracking.
-- Complete the App Store age-rating questionnaire for the study-notes content.
 - Add the required App Review contact phone number in international format. The review contact name, email, and reviewer notes can then be saved together.
 
 After the tag build finishes processing, select that build and all four first in-app purchases on the PCM Notes 1.0 version page before submitting to App Review.
