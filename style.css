@@ -420,9 +420,15 @@ svg {
   color: #fff;
   background: #050607;
   box-shadow: 4px 5px 0 color-mix(in srgb, var(--physics) 24%, transparent);
-  cursor: not-allowed;
-  opacity: 1;
+  text-decoration: none;
   transform: rotate(-0.6deg);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.app-store-button:hover,
+.app-store-button:focus-visible {
+  box-shadow: 6px 7px 0 color-mix(in srgb, var(--physics) 32%, transparent);
+  transform: rotate(-0.6deg) translateY(-2px);
 }
 
 .app-store-button i {
