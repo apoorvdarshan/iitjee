@@ -65,9 +65,9 @@ App Store Connect submission details for PCM Notes v1.0, build 1. Each field is 
 
     PCM Notes is an independent revision resource. It is not affiliated with or endorsed by IITs, NTA, JEE, or NEET. Always compare important information with the current official syllabus and trusted textbooks.
 
-    Support: https://iitjee.aopv.dev/#support
-    Privacy Policy: https://iitjee.aopv.dev/privacy.html
-    Terms of Use: https://iitjee.aopv.dev/terms.html
+    Support: https://iitjee.apoorvdarshan.com/#support
+    Privacy Policy: https://iitjee.apoorvdarshan.com/privacy.html
+    Terms of Use: https://iitjee.apoorvdarshan.com/terms.html
     Contact 1: ad13dtu@gmail.com
     Contact 2: apoorvdarshan@gmail.com
 
@@ -95,15 +95,15 @@ App Store Connect submission details for PCM Notes v1.0, build 1. Each field is 
 
 ## Privacy URL
 
-    https://iitjee.aopv.dev/privacy.html
+    https://iitjee.apoorvdarshan.com/privacy.html
 
 ## Support URL
 
-    https://iitjee.aopv.dev/#support
+    https://iitjee.apoorvdarshan.com/#support
 
 ## Marketing URL
 
-    https://iitjee.aopv.dev/
+    https://iitjee.apoorvdarshan.com/
 
 ## In-App Purchases
 

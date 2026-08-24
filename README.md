@@ -103,9 +103,9 @@ The tag creates a GitHub Release with generated notes and is also the trigger in
 ## 🔗 Links and support
 
 - **App Store:** [Download PCM Notes for iPhone and iPad](https://apps.apple.com/us/app/pcm-notes-jee-neet/id6792598227)
-- **Website:** [iitjee.aopv.dev](https://iitjee.aopv.dev/)
-- **Privacy Policy:** [iitjee.aopv.dev/privacy.html](https://iitjee.aopv.dev/privacy.html)
-- **Terms of Use:** [iitjee.aopv.dev/terms.html](https://iitjee.aopv.dev/terms.html)
+- **Website:** [iitjee.apoorvdarshan.com](https://iitjee.apoorvdarshan.com/)
+- **Privacy Policy:** [iitjee.apoorvdarshan.com/privacy.html](https://iitjee.apoorvdarshan.com/privacy.html)
+- **Terms of Use:** [iitjee.apoorvdarshan.com/terms.html](https://iitjee.apoorvdarshan.com/terms.html)
 - **Email support:** [ad13dtu@gmail.com](mailto:ad13dtu@gmail.com?subject=PCM%20Notes%20Support)
 - **Email Apoorv:** [apoorvdarshan@gmail.com](mailto:apoorvdarshan@gmail.com?subject=PCM%20Notes%20Support)
 - **X:** [@apoorvdarshan](https://x.com/apoorvdarshan)

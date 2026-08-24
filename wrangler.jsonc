@@ -10,7 +10,7 @@
   },
   "routes": [
     {
-      "pattern": "iitjee.aopv.dev",
+      "pattern": "iitjee.apoorvdarshan.com",
       "custom_domain": true
     }
   ],
