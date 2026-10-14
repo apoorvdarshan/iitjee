@@ -103,7 +103,7 @@ run, even when the master switch is off (the printed switch summary shows it as
 | `IOS_UPLOAD_BUILD` | Run the iOS tests, then build, sign and upload the binary to App Store Connect and wait until it is processed |
 | `IOS_UPLOAD_LISTING` | Name, subtitle, privacy URL, description, keywords, promotional text, marketing and support URLs for every locale in `store/metadata/ios/` |
 | `IOS_UPLOAD_WHATS_NEW` | What's New (`store/metadata/ios/<locale>/whats_new.txt`, required for every locale; refused if it still repeats the live version's text) |
-| `IOS_UPLOAD_SCREENSHOTS` | iPhone 6.7" (`APP_IPHONE_67`) and iPad 12.9" (`APP_IPAD_PRO_3GEN_129`) screenshots from `marketing/mockups/` |
+| `IOS_UPLOAD_SCREENSHOTS` | iPhone 6.7" (`APP_IPHONE_67`) and iPad 12.9" (`APP_IPAD_PRO_3GEN_129`) screenshots from `store/metadata/screenshots/ios/` |
 | `IOS_SUBMIT_REVIEW` | Select this run's build and submit the version **and** any Ready-to-Submit products from `catalog/products.json` for review, together in one review submission. Requires `IOS_UPLOAD_BUILD` |
 | `IOS_PUBLIC_RELEASE` | Release automatically after approval. Off = you release it by hand. Requires `IOS_SUBMIT_REVIEW` |
 | `IOS_BUILD_POLL_SECONDS` | Poll interval, default 30 (10–600) |
@@ -161,9 +161,9 @@ live version's What's New.
 
 ## Screenshots
 
-The App Store screenshots are the marketing mockups, byte-identical to the ones
-live for 1.0: `marketing/mockups/iphone/*.png` (1290×2796, iPhone 6.7") and
-`marketing/mockups/ipad/*.png` (2048×2732, iPad 12.9"), uploaded in file-name order
+The App Store screenshots are mockups, byte-identical to the ones live for 1.0:
+`store/metadata/screenshots/ios/6.7/*.png` (1290×2796, iPhone 6.7") and
+`store/metadata/screenshots/ios/12.9/*.png` (2048×2732, iPad 12.9"), uploaded in file-name order
 to the primary locale (other locales fall back to it). Sizes are checked before
 upload, a set that already matches (by checksum) is left alone, and a changed set
 is replaced and waited on until App Store Connect has processed it. With the

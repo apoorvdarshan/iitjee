@@ -12,7 +12,6 @@ on:
       - 'store/**'
       - 'requirements-store.txt'
       - 'RELEASE_NOTES.md'
-      - 'marketing/mockups/**'
       - 'ios/iitjee/iitjee.xcodeproj/project.pbxproj'
       - 'ios/iitjee/PCMNotes.storekit'
       - 'ios/iitjee/iitjee/TipStore.swift'
@@ -26,7 +25,6 @@ on:
       - 'store/**'
       - 'requirements-store.txt'
       - 'RELEASE_NOTES.md'
-      - 'marketing/mockups/**'
       - 'ios/iitjee/iitjee.xcodeproj/project.pbxproj'
       - 'ios/iitjee/PCMNotes.storekit'
       - 'ios/iitjee/iitjee/TipStore.swift'
@@ -54,7 +52,6 @@ jobs:
           sparse-checkout: |
             /scripts/
             /store/
-            /marketing/mockups/
             /ios/iitjee/iitjee.xcodeproj/project.pbxproj
             /ios/iitjee/PCMNotes.storekit
             /ios/iitjee/iitjee/TipStore.swift
