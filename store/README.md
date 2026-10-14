@@ -27,7 +27,8 @@ vX.Y.Z tag ─► resolve switches (the tag must equal MARKETING_VERSION exactly
                         ─► archive Release ─► verify app id/version/build and that every
                            tracked note page is bundled
                         ─► cloud-signed export + upload
-                        ─► wait until THIS build is VALID (poll 30 s, up to 120 min from upload start)
+                        ─► wait-for-build job: wait until THIS build is VALID
+                           (poll 30 s, up to 120 min from upload start)
        IOS_UPLOAD_LISTING / IOS_UPLOAD_WHATS_NEW / IOS_UPLOAD_SCREENSHOTS
                         ─► version metadata for every locale in store/metadata/ios/
        IOS_SUBMIT_REVIEW ─► select this run's build, read it back, set release type
@@ -48,6 +49,27 @@ processing, is expired, is ambiguous, belongs to another app or version, was
 uploaded before this run, or is not the build selected on the version. An older
 build is never substituted. The wait covers build processing only, not App Review
 or the public release.
+
+Waiting for the uploaded build is its own job (`wait-for-build`), which hands the
+processed build's id to the `app-store-connect` job. If a listing, screenshot or
+review step fails, fix the cause and use **Re-run failed jobs**: the re-run keeps
+the finished wait and its build id instead of waiting again against the original
+upload deadline (which would always time out). When the build job fails, its
+archive/export/upload logs are kept for 7 days as the
+`ios-release-logs-<run id>-<attempt>` artifact, with the App Store Connect key ID
+and issuer ID replaced by placeholders.
+
+Tag runs share one concurrency group with `queue: max`, so releases run one at a
+time and a tag pushed while another release is running waits its turn instead of
+being dropped. Manual validation runs have their own group and never block or
+cancel a release.
+
+`RELEASE_NOTES.md` only feeds the GitHub Release. A tag without a section still
+gets a GitHub Release, with GitHub's generated notes; an empty section fails
+before anything is built. The App Store What's New comes from `whats_new.txt` and
+is checked (present for every locale, at most 4000 characters) before the build
+only when `IOS_UPLOAD_WHATS_NEW` is on; with it off, a missing or unfit
+`whats_new.txt` never blocks a release.
 
 ## Switches
 
@@ -145,7 +167,7 @@ RevenueCat switch.
 | [`scripts/store/export_listing.py`](../scripts/store/export_listing.py) | Read-only export of the live listing into `store/metadata/` |
 | [`scripts/store/validate_catalog.py`](../scripts/store/validate_catalog.py) | Catalog ↔ app ↔ StoreKit configuration check |
 | [`scripts/store/print_gates.py`](../scripts/store/print_gates.py) | Prints the switches |
-| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, build wait timeout/failure/ambiguity/mismatch/old build, selection read-back, token refresh, listing, screenshots, products |
+| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, build wait timeout/failure/ambiguity/mismatch/old build, selection read-back, token refresh, listing, What's New (strict only when its switch is on), screenshots, products, release notes |
 | [`scripts/release_notes.py`](../scripts/release_notes.py) | GitHub Release notes from `RELEASE_NOTES.md` (generated notes when the tag has no section) |
 
 The **Store release checks** workflow runs the offline tests, the catalog check and
