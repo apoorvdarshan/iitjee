@@ -97,11 +97,11 @@ jobs:
           done
 
       # A missing RELEASE_NOTES.md means GitHub's generated notes, so the checks the
-      # iOS Release workflow runs before building must pass without it too. Runs
-      # them on a copy of this checkout, the way the release does: the offline
-      # tests without the repository listing and screenshot files, then the notes
-      # for a tag (to stdout before the build, to a file for the GitHub Release;
-      # an empty file means generated notes).
+      # iOS Release workflow runs before building must pass without it too. On a
+      # copy of this checkout without the file, run them as the release does: the
+      # offline tests without the repository listing and screenshot files, then
+      # the notes for a tag (to stdout before the build, to a file for the GitHub
+      # Release; an empty file means generated notes).
       - name: Check a release still passes without RELEASE_NOTES.md
         run: |
           set -euo pipefail
