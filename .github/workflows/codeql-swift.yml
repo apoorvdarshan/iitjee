@@ -59,12 +59,15 @@ jobs:
             /chemistry/
             /mathematics/
 
-      # Swift Package Manager evaluates package manifests in a sandbox, which fails
-      # under CodeQL's build tracer ("Bad CPU type in executable" from sandbox-exec).
-      # So the pinned packages are resolved first, outside the tracer, and the traced
-      # build below reuses them without resolving again.
+      # Swift Package Manager evaluates package manifests inside sandbox-exec, which
+      # cannot start under CodeQL's build tracer ("Bad CPU type in executable"), even
+      # when the build only reloads already-resolved packages. On this throwaway
+      # runner, turn that manifest sandbox off for Xcode, and resolve the pinned
+      # packages before tracing starts; the traced build reuses them.
       - name: Resolve the pinned Swift packages
         run: |
+          defaults write com.apple.dt.Xcode IDEPackageSupportDisableManifestSandbox -bool YES
+          defaults write com.apple.dt.Xcode IDEPackageSupportDisablePluginExecutionSandbox -bool YES
           xcodebuild -version
           xcodebuild -resolvePackageDependencies \
             -project ios/iitjee/iitjee.xcodeproj \
@@ -91,6 +94,8 @@ jobs:
             -clonedSourcePackagesDirPath "$RUNNER_TEMP/codeql-packages" \
             -disableAutomaticPackageResolution \
             -skipPackageUpdates \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
 
