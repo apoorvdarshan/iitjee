@@ -28,12 +28,7 @@ private struct SubjectBrowserView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var filteredChapters: [Chapter] {
-        guard !searchText.isEmpty else { return subject.chapters }
-
-        return subject.chapters.filter { chapter in
-            chapter.title.localizedCaseInsensitiveContains(searchText)
-                || String(chapter.number).localizedCaseInsensitiveContains(searchText)
-        }
+        subject.chapters(matching: searchText)
     }
 
     var body: some View {
@@ -243,11 +238,7 @@ private struct ChapterRow: View {
     }
 
     private var progressLabel: String {
-        if savedPage > 1 {
-            "Resume page \(savedPage) of \(chapter.pageCount)"
-        } else {
-            "\(chapter.pageCount) pages · offline PDF"
-        }
+        chapter.progressSummary(savedPage: savedPage)
     }
 }
 

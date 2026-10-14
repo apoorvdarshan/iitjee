@@ -1,4 +1,3 @@
-import RevenueCat
 import SwiftUI
 
 struct TipJarSection: View {
@@ -97,13 +96,13 @@ private struct TipPurchaseRow: View {
     @EnvironmentObject private var tipStore: TipStore
     let tip: TipProductID
 
-    private var product: StoreProduct? {
-        tipStore.product(for: tip)
+    private var offer: TipOffer? {
+        tipStore.offer(for: tip)
     }
 
     private var priceText: String {
-        if let product {
-            return product.localizedPriceString
+        if let offer {
+            return offer.price
         }
 
         switch tipStore.catalogState {
@@ -139,7 +138,7 @@ private struct TipPurchaseRow: View {
                 .frame(width: 44, height: 44)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(product?.localizedTitle ?? tip.fallbackName)
+                    Text(offer?.title ?? tip.fallbackName)
                         .font(.headline)
                         .foregroundStyle(.primary)
 
@@ -152,7 +151,7 @@ private struct TipPurchaseRow: View {
 
                 Text(priceText)
                     .font(.system(.subheadline, design: .rounded, weight: .bold))
-                    .foregroundStyle(product == nil ? Color.secondary : tip.color)
+                    .foregroundStyle(offer == nil ? Color.secondary : tip.color)
                     .markerHighlight(tip.color)
                     .lineLimit(1)
             }
@@ -163,9 +162,9 @@ private struct TipPurchaseRow: View {
             }
         }
         .buttonStyle(.plain)
-        .disabled(product == nil || tipStore.activeProductID != nil)
+        .disabled(offer == nil || tipStore.activeProductID != nil)
         .accessibilityIdentifier("tip.product.\(tip.shortID)")
-        .accessibilityLabel("\(product?.localizedTitle ?? tip.fallbackName), \(priceText)")
+        .accessibilityLabel("\(offer?.title ?? tip.fallbackName), \(priceText)")
         .accessibilityHint("Optional repeatable tip. It unlocks no content or features.")
     }
 }

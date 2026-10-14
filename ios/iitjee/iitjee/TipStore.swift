@@ -70,6 +70,73 @@ enum TipProductID: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// What the tip jar shows for one product: the store's localized name and price.
+struct TipOffer: Equatable, Sendable {
+    let tip: TipProductID
+    let title: String
+    let price: String
+}
+
+/// How a tip purchase ended, independent of the store SDK.
+enum TipPurchaseOutcome: String, Sendable {
+    case purchased
+    case cancelled
+    case pending
+    case failed
+}
+
+/// The store behind the tip jar: RevenueCat and StoreKit in the app, a local
+/// stand-in in tests and previews.
+@MainActor
+protocol TipPurchasing: AnyObject {
+    /// Offers for the tips the store can sell right now (missing ones are unavailable).
+    func loadOffers(for tips: [TipProductID]) async -> [TipOffer]
+    func purchase(_ tip: TipProductID) async -> TipPurchaseOutcome
+}
+
+/// Loads tip prices from StoreKit and buys tips through RevenueCat.
+@MainActor
+final class RevenueCatTipPurchasing: TipPurchasing {
+    private var productsByID: [String: StoreProduct] = [:]
+
+    func loadOffers(for tips: [TipProductID]) async -> [TipOffer] {
+        let loadedProducts = await Purchases.shared.products(tips.map(\.rawValue))
+        productsByID = Dictionary(
+            uniqueKeysWithValues: loadedProducts.map { ($0.productIdentifier, $0) }
+        )
+        return tips.compactMap { tip in
+            productsByID[tip.rawValue].map { product in
+                TipOffer(
+                    tip: tip,
+                    title: product.localizedTitle,
+                    price: product.localizedPriceString
+                )
+            }
+        }
+    }
+
+    func purchase(_ tip: TipProductID) async -> TipPurchaseOutcome {
+        guard let product = productsByID[tip.rawValue] else { return .failed }
+
+        do {
+            let result = try await Purchases.shared.purchase(product: product)
+            return result.userCancelled ? .cancelled : .purchased
+        } catch {
+            return Self.outcome(for: error)
+        }
+    }
+
+    /// A dismissed payment sheet charges nothing, Ask to Buy and similar
+    /// approvals leave the tip pending, and any other error means it failed.
+    nonisolated static func outcome(for error: Error) -> TipPurchaseOutcome {
+        switch (error as NSError).code {
+        case ErrorCode.purchaseCancelledError.rawValue: .cancelled
+        case ErrorCode.paymentPendingError.rawValue: .pending
+        default: .failed
+        }
+    }
+}
+
 @MainActor
 final class TipStore: ObservableObject {
     enum CatalogState: Equatable {
@@ -97,8 +164,14 @@ final class TipStore: ObservableObject {
     @Published private(set) var activeProductID: TipProductID?
     @Published private(set) var feedback: Feedback?
 
-    private var productsByID: [String: StoreProduct] = [:]
+    private let purchaser: any TipPurchasing
+    private var offersByTip: [TipProductID: TipOffer] = [:]
     private var hasStarted = false
+
+    /// Without a purchaser the store sells through RevenueCat.
+    init(purchaser: (any TipPurchasing)? = nil) {
+        self.purchaser = purchaser ?? RevenueCatTipPurchasing()
+    }
 
     func start() async {
         guard !hasStarted else { return }
@@ -106,27 +179,26 @@ final class TipStore: ObservableObject {
         await loadProducts()
     }
 
-    func product(for tip: TipProductID) -> StoreProduct? {
-        productsByID[tip.rawValue]
+    func offer(for tip: TipProductID) -> TipOffer? {
+        offersByTip[tip]
     }
 
     func loadProducts() async {
         catalogState = .loading
 
-        let loadedProducts = await Purchases.shared.products(
-            TipProductID.allCases.map(\.rawValue)
+        let offers = await purchaser.loadOffers(for: TipProductID.allCases)
+        offersByTip = Dictionary(
+            offers.map { ($0.tip, $0) },
+            uniquingKeysWith: { first, _ in first }
         )
-        productsByID = Dictionary(
-            uniqueKeysWithValues: loadedProducts.map { ($0.productIdentifier, $0) }
-        )
-        catalogState = productsByID.count == TipProductID.allCases.count
+        catalogState = offersByTip.count == TipProductID.allCases.count
             ? .ready
             : .unavailable
     }
 
     func purchase(_ tip: TipProductID) async {
         guard activeProductID == nil,
-              let product = product(for: tip) else {
+              offer(for: tip) != nil else {
             feedback = Feedback(
                 kind: .error,
                 message: "That tip is unavailable right now. Please try again later."
@@ -138,39 +210,27 @@ final class TipStore: ObservableObject {
         feedback = nil
         defer { activeProductID = nil }
 
-        do {
-            let result = try await Purchases.shared.purchase(product: product)
-
-            if result.userCancelled {
-                feedback = Feedback(
-                    kind: .info,
-                    message: "Tip cancelled. Nothing was charged."
-                )
-            } else {
-                feedback = Feedback(
-                    kind: .success,
-                    message: "Thank you—your tip helps keep PCM Notes free, ad-free, and improving."
-                )
-            }
-        } catch {
-            let errorCode = (error as NSError).code
-
-            if errorCode == ErrorCode.purchaseCancelledError.rawValue {
-                feedback = Feedback(
-                    kind: .info,
-                    message: "Tip cancelled. Nothing was charged."
-                )
-            } else if errorCode == ErrorCode.paymentPendingError.rawValue {
-                feedback = Feedback(
-                    kind: .pending,
-                    message: "Your tip is pending approval. Apple will finish it when it is approved."
-                )
-            } else {
-                feedback = Feedback(
-                    kind: .error,
-                    message: "The tip could not be completed. Check your connection and try again."
-                )
-            }
+        switch await purchaser.purchase(tip) {
+        case .purchased:
+            feedback = Feedback(
+                kind: .success,
+                message: "Thank you—your tip helps keep PCM Notes free, ad-free, and improving."
+            )
+        case .cancelled:
+            feedback = Feedback(
+                kind: .info,
+                message: "Tip cancelled. Nothing was charged."
+            )
+        case .pending:
+            feedback = Feedback(
+                kind: .pending,
+                message: "Your tip is pending approval. Apple will finish it when it is approved."
+            )
+        case .failed:
+            feedback = Feedback(
+                kind: .error,
+                message: "The tip could not be completed. Check your connection and try again."
+            )
         }
     }
 

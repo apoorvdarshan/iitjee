@@ -24,6 +24,21 @@ struct Chapter: Identifiable, Hashable, Sendable {
     func readingProgressKey(for subject: SubjectArea) -> String {
         "reader.\(subject.slug).\(number).page"
     }
+
+    /// The page the reader opens at: the saved page, or page 1 for a chapter that
+    /// was never opened, never past the chapter's last page.
+    func resumePage(fromSaved savedPage: Int) -> Int {
+        min(max(savedPage, 1), pageCount)
+    }
+
+    /// The chapter row's progress line: where to resume, or the size of an unread chapter.
+    func progressSummary(savedPage: Int) -> String {
+        if savedPage > 1 {
+            "Resume page \(savedPage) of \(pageCount)"
+        } else {
+            "\(pageCount) pages · offline PDF"
+        }
+    }
 }
 
 enum SubjectArea: String, CaseIterable, Identifiable, Hashable, Sendable {
@@ -88,6 +103,17 @@ enum SubjectArea: String, CaseIterable, Identifiable, Hashable, Sendable {
 
     var pageCount: Int {
         chapters.reduce(0) { $0 + $1.pageCount }
+    }
+
+    /// Chapters whose title or number contains `query`, ignoring case; every
+    /// chapter for an empty query.
+    func chapters(matching query: String) -> [Chapter] {
+        guard !query.isEmpty else { return chapters }
+
+        return chapters.filter { chapter in
+            chapter.title.localizedCaseInsensitiveContains(query)
+                || String(chapter.number).localizedCaseInsensitiveContains(query)
+        }
     }
 }
 

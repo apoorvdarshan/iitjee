@@ -62,7 +62,7 @@ On iPad, the layout menu adds a two-page continuous spread with book-style page 
 - **AppKit + PDFKit build tool** — converts the tracked handwritten JPEG archive into 91 chapter PDFs during an Xcode build.
 - **UserDefaults / AppStorage** — local progress, layout, and appearance preferences.
 - **StoreKit + RevenueCat** — four optional, repeatable tips processed by Apple and recorded by RevenueCat, with no subscription or unlocked entitlement.
-- **Swift Testing + XCTest UI Tests** — focused model and navigation coverage.
+- **Swift Testing + XCTest UI Tests** — catalog, bundled-PDF, reader, search and tip-jar unit tests, plus iPhone and iPad UI journeys, run in GitHub Actions.
 - **HTML, CSS, and JavaScript** — responsive public notebook and browser reader.
 - **Cloudflare Workers static assets** — production website delivery.
 
@@ -89,16 +89,39 @@ npm run deploy
 
 `npm run deploy` requires an authenticated Wrangler session.
 
-### Releases
-
-Version tags beginning with `v` drive the configured release workflows. Create and push an annotated tag only when that version is ready for release:
+### Tests
 
 ```sh
-git tag -a v1.0.0 -m "PCM Notes 1.0.0"
-git push origin v1.0.0
+bash scripts/test-ios.sh
 ```
 
-The tag creates a GitHub Release with generated notes and is also the trigger intended for the configured Xcode Cloud App Store archive workflow. No release tag should be pushed until the app and listing are ready.
+Runs the unit tests and UI tests on task-owned iPhone and iPad simulators (see
+[`docs/ios-testing.md`](docs/ios-testing.md)). The **iOS tests** workflow runs the
+same script on every pull request and push to `main` that changes the app or its
+notes.
+
+### Releases
+
+GitHub Actions builds, signs and uploads the App Store binary and creates the GitHub
+Release ([`ios-release.yml`](.github/workflows/ios-release.yml)). A release tag is
+`v` + the project's `MARKETING_VERSION`, exactly: bump the version to `1.0.1`, then
+push `v1.0.1`.
+
+```sh
+git tag -a v1.0.1 -m "PCM Notes 1.0.1"
+git push origin v1.0.1
+```
+
+Every App Store operation (build upload, listing, What's New, screenshots, review
+submission, public release) has its own repository variable and stays off until it
+is switched on; with them off, a tag only creates the GitHub Release. The App Store
+listing is kept in [`store/metadata/`](store/metadata/). **Run workflow** on the iOS
+Release workflow validates signing and export with App Store Connect without
+uploading anything. See [`store/README.md`](store/README.md) for the switches,
+secrets and release steps.
+
+Xcode Cloud is being removed for this app; do not re-create an Xcode Cloud workflow,
+or a tag would build and upload twice.
 
 ## 🔗 Links and support
 

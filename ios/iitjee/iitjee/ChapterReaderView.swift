@@ -39,7 +39,7 @@ struct ChapterReaderView: View {
             forKey: chapter.readingProgressKey(for: subject)
         )
         _currentPage = State(
-            initialValue: min(max(storedPage, 1), chapter.pageCount)
+            initialValue: chapter.resumePage(fromSaved: storedPage)
         )
     }
 
@@ -90,17 +90,92 @@ struct ChapterReaderView: View {
     }
 }
 
+/// Page arithmetic behind the reader controls. In the iPad two-page spread the
+/// first page stands alone like a book cover, then pages pair up: 2–3, 4–5, …
+struct ReaderPagination: Equatable {
+    var currentPage: Int
+    var pageCount: Int
+    var spreadMode: Bool
+
+    /// First page of the spread that shows `currentPage`.
+    var spreadStart: Int {
+        guard currentPage > 1 else { return 1 }
+        return currentPage.isMultiple(of: 2) ? currentPage : currentPage - 1
+    }
+
+    /// First page of the chapter's last spread.
+    var lastSpreadStart: Int {
+        guard pageCount > 1 else { return 1 }
+        return pageCount.isMultiple(of: 2) ? pageCount : pageCount - 1
+    }
+
+    var canGoBack: Bool {
+        currentPage > 1
+    }
+
+    var canGoForward: Bool {
+        spreadMode ? spreadStart < lastSpreadStart : currentPage < pageCount
+    }
+
+    /// The page Previous moves to.
+    var previousPage: Int {
+        guard spreadMode else { return currentPage - 1 }
+        return spreadStart <= 2 ? 1 : spreadStart - 2
+    }
+
+    /// The page Next moves to.
+    var nextPage: Int {
+        guard spreadMode else { return currentPage + 1 }
+        return spreadStart == 1
+            ? min(2, pageCount)
+            : min(spreadStart + 2, pageCount)
+    }
+
+    /// The visible counter, e.g. "3 / 9" or "2–3 / 9" for a spread.
+    var counterLabel: String {
+        guard spreadMode, spreadStart > 1 else {
+            return "\(currentPage) / \(pageCount)"
+        }
+
+        let spreadEnd = min(spreadStart + 1, pageCount)
+        return "\(spreadStart)–\(spreadEnd) / \(pageCount)"
+    }
+
+    /// The spoken slider position, e.g. "Page 3 of 9".
+    var positionLabel: String {
+        guard spreadMode, spreadStart > 1 else {
+            return "Page \(currentPage) of \(pageCount)"
+        }
+
+        let spreadEnd = min(spreadStart + 1, pageCount)
+        return "Pages \(spreadStart) through \(spreadEnd) of \(pageCount)"
+    }
+
+    /// The page for a slider position, kept within the chapter.
+    func page(forSliderValue value: Double) -> Int {
+        min(max(Int(value.rounded()), 1), max(pageCount, 1))
+    }
+}
+
 private struct ReaderControlBar: View {
     @Binding var currentPage: Int
     let pageCount: Int
     let accent: Color
     let spreadMode: Bool
 
+    private var pagination: ReaderPagination {
+        ReaderPagination(
+            currentPage: currentPage,
+            pageCount: pageCount,
+            spreadMode: spreadMode
+        )
+    }
+
     private var sliderValue: Binding<Double> {
         Binding {
             Double(currentPage)
         } set: { newValue in
-            currentPage = min(max(Int(newValue.rounded()), 1), max(pageCount, 1))
+            currentPage = pagination.page(forSliderValue: newValue)
         }
     }
 
@@ -109,9 +184,9 @@ private struct ReaderControlBar: View {
             pageButton(
                 symbol: "chevron.left",
                 label: "Previous page",
-                isDisabled: currentPage <= 1
+                isDisabled: !pagination.canGoBack
             ) {
-                moveBackward()
+                currentPage = pagination.previousPage
             }
 
             Slider(
@@ -121,10 +196,10 @@ private struct ReaderControlBar: View {
             )
             .tint(accent)
             .accessibilityLabel("Page position")
-            .accessibilityValue(pagePositionLabel)
+            .accessibilityValue(pagination.positionLabel)
             .accessibilityIdentifier("reader.pageSlider")
 
-            Text(pageCounterLabel)
+            Text(pagination.counterLabel)
                 .font(.caption.monospacedDigit().weight(.bold))
                 .foregroundStyle(.secondary)
                 .frame(minWidth: spreadMode ? 78 : 54, alignment: .trailing)
@@ -132,11 +207,9 @@ private struct ReaderControlBar: View {
             pageButton(
                 symbol: "chevron.right",
                 label: "Next page",
-                isDisabled: spreadMode
-                    ? spreadStart >= lastSpreadStart
-                    : currentPage >= pageCount
+                isDisabled: !pagination.canGoForward
             ) {
-                moveForward()
+                currentPage = pagination.nextPage
             }
         }
         .padding(.horizontal, 12)
@@ -159,54 +232,6 @@ private struct ReaderControlBar: View {
         .buttonStyle(.plain)
         .disabled(isDisabled)
         .accessibilityLabel(label)
-    }
-
-    private var spreadStart: Int {
-        guard currentPage > 1 else { return 1 }
-        return currentPage.isMultiple(of: 2) ? currentPage : currentPage - 1
-    }
-
-    private var lastSpreadStart: Int {
-        guard pageCount > 1 else { return 1 }
-        return pageCount.isMultiple(of: 2) ? pageCount : pageCount - 1
-    }
-
-    private var pageCounterLabel: String {
-        guard spreadMode, spreadStart > 1 else {
-            return "\(currentPage) / \(pageCount)"
-        }
-
-        let spreadEnd = min(spreadStart + 1, pageCount)
-        return "\(spreadStart)–\(spreadEnd) / \(pageCount)"
-    }
-
-    private var pagePositionLabel: String {
-        guard spreadMode, spreadStart > 1 else {
-            return "Page \(currentPage) of \(pageCount)"
-        }
-
-        let spreadEnd = min(spreadStart + 1, pageCount)
-        return "Pages \(spreadStart) through \(spreadEnd) of \(pageCount)"
-    }
-
-    private func moveBackward() {
-        guard spreadMode else {
-            currentPage -= 1
-            return
-        }
-
-        currentPage = spreadStart <= 2 ? 1 : spreadStart - 2
-    }
-
-    private func moveForward() {
-        guard spreadMode else {
-            currentPage += 1
-            return
-        }
-
-        currentPage = spreadStart == 1
-            ? min(2, pageCount)
-            : min(spreadStart + 2, pageCount)
     }
 }
 
