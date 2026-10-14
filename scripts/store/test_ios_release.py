@@ -1834,10 +1834,40 @@ class ReleaseNotesTests(unittest.TestCase):
                 self.assertEqual(raised.exception.code, 2)
 
     def test_repository_notes_parse(self) -> None:
-        text = (ROOT / "RELEASE_NOTES.md").read_text(encoding="utf-8")
+        # Read the file the way the release does: a missing RELEASE_NOTES.md means
+        # GitHub's generated notes, so it must not fail the offline tests that the
+        # iOS Release workflow runs before building.
+        text = release_notes.read_notes()
+        if text is None:
+            self.skipTest("RELEASE_NOTES.md does not exist; releases use generated notes")
         self.assertIsNone(release_notes.section_for(text, "v0.0.0-not-a-release"))
         titles = [line[3:].strip() for line in text.splitlines() if line.startswith("## ")]
         self.assertEqual(len(titles), len(set(titles)), "RELEASE_NOTES.md repeats a section")
+
+    def run_repository_check(self, text: str | None) -> unittest.TestResult:
+        """Run test_repository_notes_parse on `text` (None: no RELEASE_NOTES.md)."""
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            release_notes, "NOTES", Path(tmp) / "RELEASE_NOTES.md"
+        ):
+            if text is not None:
+                release_notes.NOTES.write_text(text, encoding="utf-8")
+            result = unittest.TestResult()
+            ReleaseNotesTests("test_repository_notes_parse").run(result)
+        return result
+
+    def test_repository_check_skips_a_missing_notes_file(self) -> None:
+        # Before, the check read the file unconditionally, so without it the
+        # release's offline tests failed, and with them the build and the GitHub
+        # Release, although a missing file only means generated notes.
+        result = self.run_repository_check(None)
+        self.assertEqual((result.testsRun, result.errors, result.failures), (1, [], []))
+        self.assertEqual(len(result.skipped), 1)
+
+    def test_repository_check_still_rejects_a_repeated_section(self) -> None:
+        result = self.run_repository_check(self.TEXT + "\n## v1.0.0\n\nAgain.\n")
+        self.assertEqual((result.testsRun, result.errors), (1, []))
+        self.assertEqual(len(result.failures), 1)
+        self.assertIn("repeats a section", result.failures[0][1])
 
 
 class PrintGatesTests(unittest.TestCase):
