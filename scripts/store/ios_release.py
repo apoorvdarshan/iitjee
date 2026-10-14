@@ -7,7 +7,9 @@ key=value lines to $GITHUB_OUTPUT when it is set):
   gates         Validate the IOS_* repository variables and resolve what this
                 run may do. Missing values mean off; invalid values fail.
   preflight     Read-only check, before anything is built, that the App Store
-                version this release edits exists and is in an editable state.
+                version this release edits exists, is in a state that can take
+                its listing, What's New, screenshots and review submission, and
+                has a localization for every repository locale.
   build-number  Next CFBundleVersion: max(project value, highest ASC build + 1).
   wait-build    Poll App Store Connect until the build uploaded by THIS run is
                 processed (VALID, unexpired, matching app/version/build number).
@@ -32,6 +34,7 @@ from typing import Any, Callable, Mapping
 
 ROOT = Path(__file__).resolve().parents[2]
 PBXPROJ = ROOT / "ios" / "iitjee" / "iitjee.xcodeproj" / "project.pbxproj"
+METADATA_DIR = ROOT / "store" / "metadata"
 BUNDLE_ID = "com.apoorvdarshan.iitjee"
 # Release tags are v<MARKETING_VERSION> exactly, e.g. v1.0.1 for MARKETING_VERSION 1.0.1.
 TAG_PREFIX = "v"
@@ -233,14 +236,26 @@ def evaluate_builds(
     build = matches[0]
     attrs = build.get("attributes") or {}
     uploaded = attrs.get("uploadedDate")
-    if uploaded and parse_asc_date(uploaded) < uploaded_after - UPLOAD_CLOCK_SKEW_SECONDS:
-        raise ReleaseError(
-            f"build {build_number} was uploaded at {uploaded}, before this run's upload; "
-            "refusing to use an older build"
-        )
+    if uploaded:
+        try:
+            uploaded_at = parse_asc_date(uploaded)
+        except (AttributeError, TypeError, ValueError):
+            raise ReleaseError(
+                f"build {build_number} has an unreadable upload date {uploaded!r}; "
+                "refusing a build that cannot be shown to be this run's"
+            ) from None
+        if uploaded_at < uploaded_after - UPLOAD_CLOCK_SKEW_SECONDS:
+            raise ReleaseError(
+                f"build {build_number} was uploaded at {uploaded}, before this run's upload; "
+                "refusing to use an older build"
+            )
     state = attrs.get("processingState")
     if state in {"FAILED", "INVALID"}:
         raise ReleaseError(f"App Store Connect processing ended in {state} for build {build_number}")
+    if not uploaded:
+        # Fail closed: without an upload date the build cannot be shown to be this
+        # run's, so it is never used. Keep polling; the deadline still applies.
+        return BuildState.WAITING, f"build {build_number} has no upload date yet", None
     if state != "VALID":
         return BuildState.WAITING, f"processing state {state or 'unknown'}", None
     if attrs.get("expired"):
@@ -370,28 +385,51 @@ def preflight_problems(
     version: dict[str, Any] | None,
     *,
     version_string: str,
-    edits_metadata: bool,
+    text: bool,
+    screenshots: bool,
     submit: bool,
-    editable_states: set[str],
+    text_states: set[str],
+    screenshot_states: set[str],
     submittable_states: set[str],
+    missing_locales: list[str] | tuple[str, ...] = (),
 ) -> list[str]:
-    """Why the App Store version cannot take this release's edits (empty when it can)."""
+    """Why the App Store version cannot take this release (empty when it can).
+
+    `text` covers the listing and What's New. A fresh run always uploads a new
+    build, so it needs states in which its edits can actually be made; reruns of
+    a later job ("Re-run failed jobs") never come back here."""
     if version is None:
         return [
-            f"App Store Connect has no iOS version {version_string}; create it in App Store "
-            "Connect before tagging (the pipeline never creates versions)"
+            f"App Store Connect has no iOS version {version_string}; create the "
+            f"{version_string} App Store version in App Store Connect (Prepare for "
+            "Submission) before tagging. The pipeline never creates versions"
         ]
     state = (version.get("attributes") or {}).get("appStoreState") or ""
+    shown = state or "in an unknown state"
     problems = []
-    if edits_metadata and state not in editable_states:
+    if text and state not in text_states:
         problems.append(
-            f"version {version_string} is {state or 'in an unknown state'}, so its listing, "
-            f"What's New and screenshots cannot be edited (editable: {', '.join(sorted(editable_states))})"
+            f"version {version_string} is {shown}, so its listing and What's New cannot be "
+            f"edited (editable: {', '.join(sorted(text_states))})"
         )
-    # A version already waiting for review is accepted only for an idempotent rerun
-    # of the same build; asc_release.py checks that build before doing anything.
-    if submit and state not in submittable_states | {"WAITING_FOR_REVIEW"}:
-        problems.append(f"version {version_string} cannot be submitted for review (state {state})")
+    if screenshots and state not in screenshot_states:
+        problems.append(
+            f"version {version_string} is {shown}, so its screenshots cannot be replaced "
+            f"(editable: {', '.join(sorted(screenshot_states))})"
+        )
+    if submit and state == "WAITING_FOR_REVIEW":
+        problems.append(
+            f"version {version_string} is already WAITING_FOR_REVIEW with an earlier build; "
+            "this run would upload a new build that can never replace it. To finish the run "
+            "that submitted it, use Re-run failed jobs on that run"
+        )
+    elif submit and state not in submittable_states:
+        problems.append(f"version {version_string} cannot be submitted for review (state {shown})")
+    if missing_locales:
+        problems.append(
+            f"version {version_string} has no {', '.join(missing_locales)} localization; add "
+            "those languages to the version in App Store Connect first"
+        )
     return problems
 
 
@@ -414,18 +452,34 @@ def cmd_preflight(args: argparse.Namespace) -> None:
     asc_release, client = asc_client()
     app_id = asc_release.find_app(client, BUNDLE_ID)
     version = asc_release.find_ios_app_store_version(client, app_id, args.version)
+    text = args.listing or args.whats_new
+    missing_locales: list[str] = []
+    if version is not None and (text or args.screenshots):
+        # Listing and What's New go to every repository locale; screenshots go to
+        # the primary one. Each needs its localization on the version.
+        locales = set(asc_release.listing_locales(METADATA_DIR)) if text else set()
+        if args.screenshots:
+            locales.add(asc_release.PRIMARY_LOCALE)
+        collection = f"/appStoreVersions/{version['id']}/appStoreVersionLocalizations"
+        missing_locales = [
+            locale for locale in sorted(locales)
+            if asc_release.find_localization(client, collection, locale) is None
+        ]
     problems = preflight_problems(
         version,
         version_string=args.version,
-        edits_metadata=args.edits_metadata,
+        text=text,
+        screenshots=args.screenshots,
         submit=args.submit,
-        editable_states=asc_release.EDITABLE_VERSION_STATES,
+        text_states=asc_release.TEXT_EDITABLE_VERSION_STATES,
+        screenshot_states=asc_release.SCREENSHOT_EDITABLE_VERSION_STATES,
         submittable_states=asc_release.SUBMITTABLE_VERSION_STATES,
+        missing_locales=missing_locales,
     )
     if problems:
         raise ReleaseError("; ".join(problems))
     state = (version.get("attributes") or {}).get("appStoreState")
-    print(f"App Store version {args.version} exists ({state}); nothing was changed")
+    print(f"App Store version {args.version} exists ({state}) and can take this release; nothing was changed")
 
 
 def cmd_build_number(_: argparse.Namespace) -> None:
@@ -478,8 +532,9 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("gates").set_defaults(func=cmd_gates)
     preflight = sub.add_parser("preflight")
     preflight.add_argument("--version", required=True)
-    preflight.add_argument("--edits-metadata", action="store_true",
-                           help="listing, What's New or screenshots will be uploaded")
+    preflight.add_argument("--listing", action="store_true", help="the listing will be uploaded")
+    preflight.add_argument("--whats-new", action="store_true", help="What's New will be uploaded")
+    preflight.add_argument("--screenshots", action="store_true", help="screenshots will be uploaded")
     preflight.add_argument("--submit", action="store_true", help="the version will be submitted for review")
     preflight.set_defaults(func=cmd_preflight)
     sub.add_parser("build-number").set_defaults(func=cmd_build_number)

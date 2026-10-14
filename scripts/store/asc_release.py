@@ -7,10 +7,17 @@ marketing mockups in marketing/mockups/. Each operation only runs when its switc
 is on (see store/README.md); with every switch off this script does nothing.
 
 Submitting for review covers the App Store version and any Ready-to-Submit
-in-app purchases listed in store/catalog/products.json. As of the 2026 workflow,
-subscriptions attach to the review submission through the `subscriptionVersion`
-relationship on Review Submission Items; consumables (the tip jar) go through
-`inAppPurchaseSubmissions`."""
+in-app purchases listed in store/catalog/products.json. They all join one draft
+review submission as Review Submission Items (subscriptions through the
+`subscriptionVersion` relationship, in-app purchases such as the tip jar through
+`inAppPurchaseVersion`) only after this run's build is rechecked, and reach App
+Review together with a single submit. Apple deprecated the standalone
+`inAppPurchaseSubmissions` endpoint, which sent a product to review on its own.
+
+Reruns are idempotent: only fields that differ are sent, and once the version is
+in a draft review submission (READY_FOR_REVIEW) or waiting for review, whatever
+can no longer change is only compared with the repository; a difference stops
+the run."""
 from __future__ import annotations
 
 import argparse
@@ -29,6 +36,7 @@ from typing import Any, Callable, NamedTuple
 
 ROOT = Path(__file__).resolve().parents[2]
 ASC_BASE = "https://api.appstoreconnect.apple.com/v1"
+ASC_V2_BASE = "https://api.appstoreconnect.apple.com/v2"
 DEFAULT_BUNDLE_ID = "com.apoorvdarshan.iitjee"
 # PCM Notes: JEE & NEET. Every call is pinned to this App Store Connect app.
 APP_STORE_APP_ID = "6792598227"
@@ -43,12 +51,43 @@ EDITABLE_VERSION_STATES = {
     "INVALID_BINARY",
 }
 # READY_FOR_REVIEW means the version already sits in a draft review submission
-# (for example after a failed submit); it can still be submitted.
+# (for example after a failed submit). It can still be submitted, and its text
+# (listing, What's New, app information) can still change; its screenshots cannot.
 SUBMITTABLE_VERSION_STATES = EDITABLE_VERSION_STATES | {"READY_FOR_REVIEW"}
+TEXT_EDITABLE_VERSION_STATES = EDITABLE_VERSION_STATES | {"READY_FOR_REVIEW"}
+SCREENSHOT_EDITABLE_VERSION_STATES = EDITABLE_VERSION_STATES
+# A rerun ("Re-run failed jobs") can find the version further along than the
+# first attempt left it. In these states it only checks, read-only, that App
+# Store Connect already holds the repository's values, and stops on a difference.
+TEXT_FROZEN_VERSION_STATES = {"WAITING_FOR_REVIEW"}
+SCREENSHOT_FROZEN_VERSION_STATES = {"READY_FOR_REVIEW", "WAITING_FOR_REVIEW"}
 # App information (name, subtitle, privacy URL) gets an editable copy while a new
 # version is being prepared; the live copy cannot change.
-EDITABLE_APP_INFO_STATES = EDITABLE_VERSION_STATES
+EDITABLE_APP_INFO_STATES = TEXT_EDITABLE_VERSION_STATES
 LIVE_VERSION_STATES = {"READY_FOR_SALE", "READY_FOR_DISTRIBUTION"}
+# App information records that belong to the live (or a replaced) version.
+SETTLED_APP_INFO_STATES = LIVE_VERSION_STATES | {"REPLACED_WITH_NEW_INFO", "REPLACED_WITH_NEW_VERSION"}
+EDIT, VERIFY = "edit", "verify"
+
+
+def metadata_access(state: str, *, screenshots: bool = False) -> str | None:
+    """EDIT when a version in `state` takes the change, VERIFY when it is frozen
+    but a rerun may confirm App Store Connect already matches, else None."""
+    editable = SCREENSHOT_EDITABLE_VERSION_STATES if screenshots else TEXT_EDITABLE_VERSION_STATES
+    frozen = SCREENSHOT_FROZEN_VERSION_STATES if screenshots else TEXT_FROZEN_VERSION_STATES
+    if state in editable:
+        return EDIT
+    if state in frozen:
+        return VERIFY
+    return None
+
+
+def same_text(current: object, wanted: str) -> bool:
+    """Compare stored text with the repository's, ignoring line endings and outer whitespace."""
+    def normalize(value: object) -> str:
+        return str(value or "").replace("\r\n", "\n").strip()
+
+    return normalize(current) == normalize(wanted)
 
 
 class ScreenshotSet(NamedTuple):
@@ -341,13 +380,19 @@ def app_info_state(info: dict[str, Any]) -> str:
 
 
 def upload_app_info(
-    client: AscClient, *, app_id: str, locale: str, metadata_dir: Path
+    client: AscClient,
+    *,
+    app_id: str,
+    locale: str,
+    metadata_dir: Path,
+    frozen_state: str | None = None,
 ) -> None:
     """Name, subtitle and privacy URL live on the app information, not the version.
 
-    While a new version is being prepared, App Store Connect keeps an editable copy
-    of the app information; only fields that differ from it are sent. Without an
-    editable copy nothing can change, so differing values stop the run."""
+    While a new version is being prepared, App Store Connect keeps a copy of the
+    app information for it next to the live one; only fields that differ from that
+    copy are sent. When the copy cannot change (no new version, or `frozen_state`
+    for a version already submitted), differing values stop the run."""
     loc_dir = metadata_dir / "ios" / locale
     wanted = {
         field: value
@@ -357,19 +402,25 @@ def upload_app_info(
     if not wanted:
         return
     infos = iter_collection(client, f"/apps/{app_id}/appInfos")
-    editable = [info for info in infos if app_info_state(info) in EDITABLE_APP_INFO_STATES]
-    if len(editable) > 1:
-        fail(f"ambiguous: {len(editable)} editable app information records")
-    target = editable[0] if editable else (infos[0] if infos else None)
+    pending = [info for info in infos if app_info_state(info) not in SETTLED_APP_INFO_STATES]
+    if len(pending) > 1:
+        fail(f"ambiguous: {len(pending)} app information records for a new version")
+    live = [info for info in infos if app_info_state(info) in LIVE_VERSION_STATES]
+    target = (pending or live or infos or [None])[0]
     if target is None:
         fail("app has no appInfos")
     loc = find_localization(client, f"/appInfos/{target['id']}/appInfoLocalizations", locale)
     current = (loc or {}).get("attributes") or {}
-    changed = {field: value for field, value in wanted.items() if (current.get(field) or "") != value}
+    changed = {field: value for field, value in wanted.items() if not same_text(current.get(field), value)}
     if not changed:
         print(f"  app information ({locale}) already matches the repository")
         return
-    if not editable or loc is None:
+    if frozen_state:
+        fail(
+            f"{', '.join(sorted(changed))} ({locale}) differ from App Store Connect, but the "
+            f"version is already {frozen_state}, so its app information can no longer change"
+        )
+    if app_info_state(target) not in EDITABLE_APP_INFO_STATES or loc is None:
         fail(
             f"{', '.join(sorted(changed))} ({locale}) differ from App Store Connect, but no "
             "editable app information exists for this locale; create the new version (and "
@@ -410,11 +461,18 @@ def upload_listing(
     metadata_dir: Path,
     include_listing: bool = True,
     include_whats_new: bool = False,
+    frozen_state: str | None = None,
 ) -> None:
-    """Update one locale. Listing text and What's New are separate gates."""
+    """Update one locale. Listing text and What's New are separate gates.
+
+    Only fields that differ from App Store Connect are sent. With `frozen_state`
+    (the version is already submitted) nothing is sent: any difference stops."""
     loc_dir = metadata_dir / "ios" / locale
     if include_listing:
-        upload_app_info(client, app_id=app_id, locale=locale, metadata_dir=metadata_dir)
+        upload_app_info(
+            client, app_id=app_id, locale=locale, metadata_dir=metadata_dir,
+            frozen_state=frozen_state,
+        )
 
     version_loc = localization_for_locale(
         client, f"/appStoreVersions/{version_id}/appStoreVersionLocalizations", locale
@@ -422,28 +480,38 @@ def upload_listing(
     fields = (LISTING_FIELDS if include_listing else ()) + (
         (WHATS_NEW_FIELD,) if include_whats_new else ()
     )
-    version_attrs: dict[str, str] = {}
+    wanted: dict[str, str] = {}
     for field, filename, _ in fields:
         value = read_text(loc_dir / filename)
         if value:
-            version_attrs[field] = value
-    if include_whats_new and "whatsNew" in version_attrs:
+            wanted[field] = value
+    if include_whats_new and "whatsNew" in wanted:
         check_whats_new_is_new(
             client, app_id=app_id, version_id=version_id, locale=locale,
-            text=version_attrs["whatsNew"],
+            text=wanted["whatsNew"],
         )
-    if version_attrs:
-        client.patch(
-            f"/appStoreVersionLocalizations/{version_loc['id']}",
-            {
-                "data": {
-                    "type": "appStoreVersionLocalizations",
-                    "id": version_loc["id"],
-                    "attributes": version_attrs,
-                }
-            },
+    current = version_loc.get("attributes") or {}
+    changed = {field: value for field, value in wanted.items() if not same_text(current.get(field), value)}
+    if not changed:
+        if wanted:
+            print(f"  version localization ({locale}) already matches the repository")
+        return
+    if frozen_state:
+        fail(
+            f"{', '.join(sorted(changed))} ({locale}) differ from App Store Connect, but the "
+            f"version is already {frozen_state}, so they can no longer change"
         )
-        print(f"  updated version localization ({locale}): {', '.join(version_attrs)}")
+    client.patch(
+        f"/appStoreVersionLocalizations/{version_loc['id']}",
+        {
+            "data": {
+                "type": "appStoreVersionLocalizations",
+                "id": version_loc["id"],
+                "attributes": changed,
+            }
+        },
+    )
+    print(f"  updated version localization ({locale}): {', '.join(changed)}")
 
 
 def png_size(path: Path) -> tuple[int, int]:
@@ -486,12 +554,21 @@ def screenshot_sets_for_localization(
     return payload.get("data") or []
 
 
-def ensure_screenshot_set(
+def find_screenshot_set(
     client: AscClient, version_loc_id: str, display_type: str
-) -> dict[str, Any]:
+) -> dict[str, Any] | None:
     for item in screenshot_sets_for_localization(client, version_loc_id):
         if (item.get("attributes") or {}).get("screenshotDisplayType") == display_type:
             return item
+    return None
+
+
+def ensure_screenshot_set(
+    client: AscClient, version_loc_id: str, display_type: str
+) -> dict[str, Any]:
+    existing = find_screenshot_set(client, version_loc_id, display_type)
+    if existing is not None:
+        return existing
     created = client.post(
         "/appScreenshotSets",
         {
@@ -601,23 +678,39 @@ def wait_for_screenshot_processing(
 
 
 def upload_screenshot_set(
-    client: AscClient, version_loc_id: str, spec: ScreenshotSet, root: Path = ROOT
+    client: AscClient,
+    version_loc_id: str,
+    spec: ScreenshotSet,
+    root: Path = ROOT,
+    *,
+    frozen_state: str | None = None,
 ) -> bool:
-    """Replace one display type's screenshots. Returns False when already current."""
+    """Replace one display type's screenshots. Returns False when already current.
+
+    With `frozen_state` (screenshots can no longer change) nothing is written: a
+    set that already matches passes, anything else stops."""
     pngs = screenshot_files(spec, root)
     if not pngs:
         fail(f"no PNG screenshots in {root / spec.directory}")
     if len(pngs) > APP_SCREENSHOT_SET_MAX:
         fail(f"too many PNGs ({len(pngs)}) for {spec.display_type} (max {APP_SCREENSHOT_SET_MAX})")
 
-    shot_set = ensure_screenshot_set(client, version_loc_id, spec.display_type)
-    set_id = shot_set["id"]
-    existing = list_screenshots(client, set_id)
+    if frozen_state:
+        shot_set = find_screenshot_set(client, version_loc_id, spec.display_type)
+    else:
+        shot_set = ensure_screenshot_set(client, version_loc_id, spec.display_type)
+    existing = list_screenshots(client, shot_set["id"]) if shot_set else []
     wanted = [hashlib.md5(path.read_bytes()).hexdigest() for path in pngs]  # noqa: S324
     live = [(shot.get("attributes") or {}).get("sourceFileChecksum") for shot in existing]
     if live == wanted:
         print(f"  {spec.display_type}: the {len(pngs)} screenshots already match")
         return False
+    if frozen_state:
+        fail(
+            f"{spec.display_type} screenshots differ from App Store Connect, but the version "
+            f"is already {frozen_state}, so its screenshots can no longer change"
+        )
+    set_id = shot_set["id"]
 
     # Old ASC ids still on the set; pop front when deleting for capacity or final cleanup.
     pending_old_ids = [shot["id"] for shot in existing]
@@ -646,14 +739,19 @@ def upload_screenshot_set(
 
 
 def upload_screenshots(
-    client: AscClient, *, version_id: str, locale: str = PRIMARY_LOCALE, root: Path = ROOT
+    client: AscClient,
+    *,
+    version_id: str,
+    locale: str = PRIMARY_LOCALE,
+    root: Path = ROOT,
+    frozen_state: str | None = None,
 ) -> None:
     # Other languages fall back to the primary locale's screenshots.
     version_loc = localization_for_locale(
         client, f"/appStoreVersions/{version_id}/appStoreVersionLocalizations", locale
     )
     for spec in SCREENSHOT_SETS:
-        upload_screenshot_set(client, version_loc["id"], spec, root)
+        upload_screenshot_set(client, version_loc["id"], spec, root, frozen_state=frozen_state)
 
 
 def iter_collection(client: AscClient, path: str) -> list[dict[str, Any]]:
@@ -714,16 +812,32 @@ SUBMITTABLE_PRODUCT_STATES = {
     "DEVELOPER_REJECTED",
     "READY_FOR_REVIEW",
 }
+# In-app purchase version states that can still join a review submission
+# (READY_FOR_REVIEW: already in a draft, e.g. this run's on a rerun).
+SUBMITTABLE_IAP_VERSION_STATES = {
+    "PREPARE_FOR_SUBMISSION",
+    "READY_FOR_REVIEW",
+    "DEVELOPER_REJECTED",
+    "REJECTED",
+}
 
 
-def get_or_create_draft_submission(client: AscClient, app_id: str) -> str:
-    """Return the app's READY_FOR_REVIEW draft review submission, creating one."""
+def find_draft_submission(client: AscClient, app_id: str) -> str | None:
+    """The app's READY_FOR_REVIEW draft review submission, if there is one."""
     existing = client.get(
         f"/apps/{app_id}/reviewSubmissions?"
         + urllib.parse.urlencode({"filter[state]": "READY_FOR_REVIEW", "limit": "5"})
     )
     for row in existing.get("data") or []:
         return row["id"]
+    return None
+
+
+def get_or_create_draft_submission(client: AscClient, app_id: str) -> str:
+    """Return the app's READY_FOR_REVIEW draft review submission, creating one."""
+    existing = find_draft_submission(client, app_id)
+    if existing is not None:
+        return existing
     submission = client.post(
         "/reviewSubmissions",
         {
@@ -746,12 +860,12 @@ def draft_item_relationships(client: AscClient, submission_id: str) -> list[dict
     return iter_collection(
         client,
         f"/reviewSubmissions/{submission_id}/items"
-        "?limit=50&include=subscriptionVersion,appStoreVersion",
+        "?limit=50&include=subscriptionVersion,appStoreVersion,inAppPurchaseVersion",
     )
 
 
 def draft_item_version_ids(client: AscClient, submission_id: str) -> set[str]:
-    """Return the subscription/app version ids already attached to a draft."""
+    """Return the subscription/in-app purchase/app version ids already in a draft."""
     ids: set[str] = set()
     for item in draft_item_relationships(client, submission_id):
         relationships = item.get("relationships") or {}
@@ -811,6 +925,21 @@ def current_subscription_version(
     return max(candidates, key=lambda v: v["attributes"]["version"])["id"]
 
 
+def current_in_app_purchase_version(client: AscClient, iap_id: str) -> str | None:
+    """Return the in-app purchase's draft version to submit, if any.
+
+    App Store Connect keeps at most one version of an in-app purchase in flight;
+    approved and replaced versions are never submitted again."""
+    versions = iter_collection(client, f"{ASC_V2_BASE}/inAppPurchases/{iap_id}/versions?limit=200")
+    drafts = [
+        v for v in versions
+        if (v.get("attributes") or {}).get("state") in SUBMITTABLE_IAP_VERSION_STATES
+    ]
+    if not drafts:
+        return None
+    return max(drafts, key=lambda v: (v.get("attributes") or {}).get("version") or 0)["id"]
+
+
 def submit_in_app_purchases(
     client: AscClient,
     app_id: str,
@@ -818,16 +947,18 @@ def submit_in_app_purchases(
     intended_ids: set[str] | None = None,
     submission_id: str | None = None,
 ) -> ProductSubmitResult:
-    """Attach Ready-to-Submit subscriptions / IAPs to App Review.
+    """Attach Ready-to-Submit subscriptions / IAPs to the draft review submission.
 
-    Subscriptions are added to the app's review submission through the
-    `subscriptionVersion` relationship on Review Submission Items — not the
-    `subscription` relationship, which the API rejects. Consumables (the PCM
-    Notes tip jar) use the separate `inAppPurchaseSubmissions` endpoint.
+    Both join the draft as Review Submission Items: subscriptions through the
+    `subscriptionVersion` relationship (not `subscription`, which the API
+    rejects), in-app purchases such as the PCM Notes tip jar through
+    `inAppPurchaseVersion`. Nothing reaches App Review until the draft is
+    submitted, so the caller rechecks the build first and submits once.
 
     Only products listed in `store/catalog/products.json` are considered, so an
     unrelated Ready-to-Submit product is not dragged into this release. Approved
-    products are never resubmitted.
+    products are never resubmitted. Without a `submission_id`, an existing draft
+    is reused and a new one is created only when a product has to be attached.
     """
     if intended_ids is None:
         intended_ids = intended_product_ids()
@@ -837,16 +968,35 @@ def submit_in_app_purchases(
         return ProductSubmitResult(submission_id or "", 0, False)
 
     if submission_id is None:
-        submission_id = get_or_create_draft_submission(client, app_id)
+        submission_id = find_draft_submission(client, app_id)
 
     # Idempotency: a retry reuses the same draft, so skip anything already
     # attached instead of posting a duplicate that App Store Connect rejects.
-    already_attached = draft_item_version_ids(client, submission_id)
+    already_attached = draft_item_version_ids(client, submission_id) if submission_id else set()
 
     submitted = 0
     added_items = False
     has_products = False
     failures: list[str] = []
+
+    def attach(relationship: str, resource_type: str, version_id: str) -> None:
+        nonlocal submission_id
+        if submission_id is None:
+            submission_id = get_or_create_draft_submission(client, app_id)
+        client.post(
+            "/reviewSubmissionItems",
+            {
+                "data": {
+                    "type": "reviewSubmissionItems",
+                    "relationships": {
+                        "reviewSubmission": {
+                            "data": {"type": "reviewSubmissions", "id": submission_id}
+                        },
+                        relationship: {"data": {"type": resource_type, "id": version_id}},
+                    },
+                }
+            },
+        )
 
     for group in iter_collection(
         client, f"/apps/{app_id}/subscriptionGroups?limit=200"
@@ -871,28 +1021,7 @@ def submit_in_app_purchases(
                 print(f"  subscription {name}: already attached (idempotent)")
                 continue
             try:
-                client.post(
-                    "/reviewSubmissionItems",
-                    {
-                        "data": {
-                            "type": "reviewSubmissionItems",
-                            "relationships": {
-                                "reviewSubmission": {
-                                    "data": {
-                                        "type": "reviewSubmissions",
-                                        "id": submission_id,
-                                    }
-                                },
-                                "subscriptionVersion": {
-                                    "data": {
-                                        "type": "subscriptionVersions",
-                                        "id": version_id,
-                                    }
-                                },
-                            },
-                        }
-                    },
-                )
+                attach("subscriptionVersion", "subscriptionVersions", version_id)
             except SystemExit:
                 failures.append(f"subscription {name} ({pid})")
                 continue
@@ -909,34 +1038,33 @@ def submit_in_app_purchases(
         if attrs.get("state") != "READY_TO_SUBMIT":
             continue
         name = attrs.get("name") or iap["id"]
+        version_id = current_in_app_purchase_version(client, iap["id"])
+        if not version_id:
+            failures.append(f"in-app purchase {name} ({pid}): no version to submit")
+            continue
+        if version_id in already_attached:
+            submitted += 1
+            has_products = True
+            print(f"  in-app purchase {name}: already attached (idempotent)")
+            continue
         try:
-            client.post(
-                "/inAppPurchaseSubmissions",
-                {
-                    "data": {
-                        "type": "inAppPurchaseSubmissions",
-                        "relationships": {
-                            "inAppPurchaseV2": {
-                                "data": {"type": "inAppPurchases", "id": iap["id"]}
-                            }
-                        },
-                    }
-                },
-            )
+            attach("inAppPurchaseVersion", "inAppPurchaseVersions", version_id)
         except SystemExit:
             failures.append(f"in-app purchase {name} ({pid})")
             continue
         submitted += 1
-        print(f"  in-app purchase {name}: submitted for review")
+        added_items = True
+        has_products = True
+        print(f"  in-app purchase {name}: attached to review submission")
 
-    print(f"  in-app purchases / subscriptions submitted: {submitted}")
+    print(f"  in-app purchases / subscriptions in the review submission: {submitted}")
     if failures:
         raise ProductSubmitError(
             "these required products were not added to App Review: "
             + "; ".join(failures)
             + ". Resolve them in App Store Connect and rerun the release."
         )
-    return ProductSubmitResult(submission_id, submitted, added_items, has_products)
+    return ProductSubmitResult(submission_id or "", submitted, added_items, has_products)
 
 
 def submit_for_review(
@@ -1055,8 +1183,13 @@ def select_build(
     version_string: str,
     build_number: str,
 ) -> None:
-    """Explicitly select this run's build for the version, then read it back."""
+    """Explicitly select this run's build for the version, then read it back.
+
+    A rerun that finds this build already selected changes nothing."""
     verify_build(client, build_id, version_string, build_number)
+    if attached_build_id(client, version_id) == build_id:
+        print(f"  build {build_number} ({build_id}) is already selected for version {version_string}")
+        return
     client.request(
         "PATCH",
         f"/appStoreVersions/{version_id}/relationships/build",
@@ -1066,8 +1199,13 @@ def select_build(
     print(f"  selected build {build_number} ({build_id}) for version {version_string}")
 
 
-def set_release_type(client: AscClient, version_id: str, *, public_release: bool) -> None:
+def set_release_type(
+    client: AscClient, version_id: str, *, public_release: bool, current: str | None = None
+) -> None:
     release_type = RELEASE_TYPE_PUBLIC if public_release else RELEASE_TYPE_MANUAL
+    if current == release_type:
+        print(f"  release type is already {release_type}")
+        return
     client.patch(
         f"/appStoreVersions/{version_id}",
         {
@@ -1195,17 +1333,61 @@ def main() -> None:
     app_id = find_app(client, args.bundle_id)
     version = get_ios_app_store_version(client, app_id, args.version)
     version_id = version["id"]
-    state = (version.get("attributes") or {}).get("appStoreState") or ""
+    version_attrs = version.get("attributes") or {}
+    state = version_attrs.get("appStoreState") or ""
     print(
         f"ASC app={app_id} version={args.version} id={version_id} state={state}"
     )
-    edits_metadata = do_listing or do_whats_new or do_screenshots
+    do_text = do_listing or do_whats_new
+    # EDIT uploads what differs; VERIFY (a rerun that finds the version already in
+    # review, or screenshots already in a draft) only compares, read-only.
+    text_access = metadata_access(state) if do_text else None
+    shot_access = metadata_access(state, screenshots=True) if do_screenshots else None
+    blocked = [
+        what for what, on, access in (
+            ("listing/What's New", do_text, text_access),
+            ("screenshots", do_screenshots, shot_access),
+        )
+        if on and access is None
+    ]
+    if blocked:
+        fail(
+            f"version {args.version!r} is not editable for {' and '.join(blocked)} "
+            f"(state={state}); expected one of: {', '.join(sorted(EDITABLE_VERSION_STATES))}"
+        )
+    text_frozen = state if text_access == VERIFY else None
+    shots_frozen = state if shot_access == VERIFY else None
+
+    def sync_metadata() -> None:
+        if do_text:
+            parts = [name for name, on in (("listing", do_listing), ("What's New", do_whats_new)) if on]
+            verb = "checking" if text_frozen else "uploading"
+            for locale in locales:
+                print(f"{verb} ASC {' + '.join(parts)} ({locale})…")
+                upload_listing(
+                    client,
+                    app_id=app_id,
+                    version_id=version_id,
+                    locale=locale,
+                    metadata_dir=args.metadata_dir,
+                    include_listing=do_listing,
+                    include_whats_new=do_whats_new,
+                    frozen_state=text_frozen,
+                )
+        if do_screenshots:
+            verb = "checking" if shots_frozen else "uploading"
+            print(f"{verb} ASC screenshots ({PRIMARY_LOCALE})…")
+            upload_screenshots(client, version_id=version_id, frozen_state=shots_frozen)
 
     if state == "WAITING_FOR_REVIEW":
-        if do_submit and not edits_metadata:
-            # A rerun after a successful submit: only accept it if review holds
-            # exactly this run's build.
+        # A rerun after a successful submit ("Re-run failed jobs"): nothing on the
+        # version can change any more. Accept it only when review holds exactly
+        # this run's build and App Store Connect already has the repository's
+        # listing, What's New and screenshots; then catch up on late products.
+        if do_submit:
             confirm_selected_build(client, version_id, args.build_id)
+        sync_metadata()
+        if do_submit:
             print(
                 "ASC submit skipped — version already WAITING_FOR_REVIEW (idempotent)"
             )
@@ -1227,50 +1409,29 @@ def main() -> None:
                         "version; remove it in App Store Connect and rerun"
                     )
                 submit_product_draft(client, result.submission_id)
-            print("ASC release step finished")
-            return
-        if edits_metadata:
-            fail(
-                f"cannot update listing/What's New/screenshots while version {args.version!r} "
-                "is WAITING_FOR_REVIEW"
-            )
-        do_submit = False
-
-    if edits_metadata:
-        if state not in EDITABLE_VERSION_STATES:
-            fail(
-                f"version {args.version!r} is not editable for metadata (state={state}); "
-                f"expected one of: {', '.join(sorted(EDITABLE_VERSION_STATES))}"
-            )
+        print("ASC release step finished")
+        return
 
     if do_submit and state not in SUBMITTABLE_VERSION_STATES:
         fail(
             f"version {args.version!r} cannot be submitted for review (state={state})"
         )
 
-    if do_listing or do_whats_new:
-        parts = [name for name, on in (("listing", do_listing), ("What's New", do_whats_new)) if on]
-        for locale in locales:
-            print(f"uploading ASC {' + '.join(parts)} ({locale})…")
-            upload_listing(
-                client,
-                app_id=app_id,
-                version_id=version_id,
-                locale=locale,
-                metadata_dir=args.metadata_dir,
-                include_listing=do_listing,
-                include_whats_new=do_whats_new,
-            )
-
-    if do_screenshots:
-        print(f"uploading ASC screenshots ({PRIMARY_LOCALE})…")
-        upload_screenshots(client, version_id=version_id)
+    sync_metadata()
 
     if do_submit:
         print("selecting this run's build…")
         select_build(client, version_id, args.build_id, args.version, args.build_number)
-        set_release_type(client, version_id, public_release=do_public)
-        print("submitting in-app purchases / subscriptions for review…")
+        set_release_type(
+            client, version_id, public_release=do_public, current=version_attrs.get("releaseType")
+        )
+        # Recheck before the review submission is touched: the selection must
+        # still be this run's processed build. Products and the version are only
+        # attached to the draft after this, and nothing reaches App Review until
+        # the single submit below.
+        verify_build(client, args.build_id, args.version, args.build_number)
+        confirm_selected_build(client, version_id, args.build_id)
+        print("adding in-app purchases / subscriptions to the review submission…")
         submission_id = get_or_create_draft_submission(client, app_id)
         try:
             result = submit_in_app_purchases(
@@ -1281,10 +1442,6 @@ def main() -> None:
             # blocks the whole submission rather than letting the version enter
             # review without it.
             fail(f"{exc} Not submitting the app version.")
-        # Recheck immediately before submitting: the selection must still be
-        # this run's processed build.
-        verify_build(client, args.build_id, args.version, args.build_number)
-        confirm_selected_build(client, version_id, args.build_id)
         print("submitting for App Store review…")
         submit_for_review(
             client, app_id, version_id, state, submission_id=submission_id

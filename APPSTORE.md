@@ -189,7 +189,7 @@ Live App Store Connect state verified on 21 July 2026:
 - The age-rating questionnaire is complete with a calculated global rating of **4+**, no category override, and Apple-managed regional equivalents.
 - Xcode Cloud's enabled `Default` workflow performs a clean, required App Store-eligible iOS archive for tags beginning with `v`.
 
-Update (October 2026): App Store builds now come from GitHub Actions (`.github/workflows/ios-release.yml`); Xcode Cloud's `Default` workflow is being removed and must not be re-created.
+Update (October 2026): App Store builds now come from GitHub Actions (`.github/workflows/ios-release.yml`); Xcode Cloud's `Default` workflow and product were removed on 2026-10-14 and must not be re-created.
 
 Required before pushing the first release tag:
 

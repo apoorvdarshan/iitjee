@@ -1,0 +1,38 @@
+# Dependabot version updates. Dependabot alerts are enabled in the repository
+# settings and report vulnerable dependencies as soon as they are known; this
+# file adds routine version bumps so the pinned versions (including the
+# commit-SHA-pinned GitHub Actions) do not go stale.
+#
+# Monthly and grouped into one pull request per ecosystem: the repository is
+# private and its iOS tests run on paid macOS runners, so every GitHub Actions or
+# Swift package bump costs one macOS test run on the pull request and another on
+# main.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # The hash-pinned App Store Connect tooling (requirements-store.txt, compiled
+  # from requirements-store.in) that the release and store-check jobs install.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      store-tooling:
+        patterns: ["*"]
+
+  # RevenueCat, pinned in the Xcode project's Package.resolved.
+  - package-ecosystem: swift
+    directory: /ios/iitjee
+    schedule:
+      interval: monthly
+    groups:
+      swift-packages:
+        patterns: ["*"]
