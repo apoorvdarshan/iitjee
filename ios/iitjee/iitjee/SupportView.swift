@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 struct SupportView: View {
@@ -9,6 +10,9 @@ struct SupportView: View {
     private let appStoreListing = URL(string: "https://apps.apple.com/app/id6792598227")!
     private let appStoreReview = URL(string: "https://apps.apple.com/app/id6792598227?action=write-review")!
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.requestReview) private var requestReview
+    @Environment(\.openURL) private var openURL
+    @AppStorage(ReviewPrompt.lastRequestKey) private var lastReviewRequest: Double = 0
 
     var body: some View {
         ZStack {
@@ -127,13 +131,17 @@ struct SupportView: View {
                     annotation: "it really helps"
                 )
 
-                NotebookActionRow(
-                    title: "Rate PCM Notes",
-                    detail: "Leave a rating or review on the App Store",
-                    symbol: "star",
-                    color: AppPalette.chemistry,
-                    destination: appStoreReview
-                )
+                Button(action: rate) {
+                    NotebookRowLabel(
+                        title: "Rate PCM Notes",
+                        detail: "Leave a rating or review on the App Store",
+                        symbol: "star",
+                        trailingSymbol: "star.bubble",
+                        color: AppPalette.chemistry
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Asks for your App Store rating")
                 .accessibilityIdentifier("support.rate")
 
                 ShareLink(
@@ -153,6 +161,18 @@ struct SupportView: View {
                 .accessibilityHint("Opens the share sheet")
                 .accessibilityIdentifier("support.share")
             }
+        }
+    }
+
+    /// Shows Apple's in-app rating prompt, or the App Store review page when the
+    /// prompt was already requested recently (see `ReviewPrompt`).
+    private func rate() {
+        let now = Date()
+        if ReviewPrompt.shouldRequestInAppPrompt(lastRequest: lastReviewRequest, now: now) {
+            lastReviewRequest = now.timeIntervalSince1970
+            requestReview()
+        } else {
+            openURL(appStoreReview)
         }
     }
 
@@ -210,7 +230,21 @@ private struct NotebookActionRow: View {
     }
 }
 
-/// The look shared by the Support tab's link and share rows.
+/// When the Rate button uses Apple's in-app rating prompt. iOS shows that prompt at
+/// most three times a year and may silently skip it, so after one request the
+/// button opens the App Store review page instead until `interval` has passed;
+/// the button always visibly does something.
+enum ReviewPrompt {
+    static let lastRequestKey = "support.lastReviewRequest"
+    static let interval: TimeInterval = 122 * 24 * 60 * 60
+
+    /// `lastRequest` is seconds since 1970, or 0 when the prompt was never requested.
+    static func shouldRequestInAppPrompt(lastRequest: Double, now: Date) -> Bool {
+        lastRequest <= 0 || now.timeIntervalSince1970 - lastRequest >= interval
+    }
+}
+
+/// The look shared by the Support tab's link, share and rate rows.
 private struct NotebookRowLabel: View {
     let title: String
     let detail: String
