@@ -6,6 +6,6 @@
   },
   "devDependencies": {
     "sharp": "^0.34.5",
-    "wrangler": "^4.110.0"
+    "wrangler": "^4.151.0"
   }
 }
