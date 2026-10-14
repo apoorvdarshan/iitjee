@@ -1,6 +1,7 @@
 # Offline checks of the iOS release tooling: switch handling, build waiting and
-# selection, listing and screenshot inputs, the in-app purchase catalog and the
-# pinned Python dependencies. Never contacts App Store Connect.
+# selection, listing and screenshot inputs, the in-app purchase catalog, the
+# pinned Python dependencies, and that a release without RELEASE_NOTES.md still
+# passes its pre-build checks. Never contacts App Store Connect.
 name: Store release checks
 
 on:
@@ -94,3 +95,24 @@ jobs:
                         scripts/store/export_listing.py scripts/release_notes.py; do
             python3 "$script" --help > /dev/null
           done
+
+      # A missing RELEASE_NOTES.md means GitHub's generated notes, so the checks the
+      # iOS Release workflow runs before building must pass without it too. On a
+      # copy of this checkout without the file, run them as the release does: the
+      # offline tests without the repository listing and screenshot files, then
+      # the notes for a tag (to stdout before the build, to a file for the GitHub
+      # Release; an empty file means generated notes).
+      - name: Check a release still passes without RELEASE_NOTES.md
+        run: |
+          set -euo pipefail
+          tree="$RUNNER_TEMP/without-release-notes"
+          cp -R "$GITHUB_WORKSPACE" "$tree"
+          rm -f "$tree/RELEASE_NOTES.md"
+          cd "$tree"
+          STORE_TESTS_SKIP_REPOSITORY_FILES=1 python3 -m unittest scripts/store/test_ios_release.py
+          python3 scripts/release_notes.py v0.0.0 > /dev/null
+          python3 scripts/release_notes.py v0.0.0 --out "$RUNNER_TEMP/release-notes.md"
+          if [ -s "$RUNNER_TEMP/release-notes.md" ]; then
+            echo "error: expected empty notes (GitHub's generated notes) without RELEASE_NOTES.md" >&2
+            exit 1
+          fi

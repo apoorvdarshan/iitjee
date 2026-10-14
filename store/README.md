@@ -196,13 +196,16 @@ RevenueCat switch.
 | [`scripts/store/print_gates.py`](../scripts/store/print_gates.py) | Prints the switches as the release reads them (`INVALID` for values that fail a run) |
 | [`scripts/store/redact_logs.py`](../scripts/store/redact_logs.py) | Removes the App Store Connect key and issuer IDs from build logs before they are kept as an artifact |
 | [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, preflight, build wait timeout/failure/ambiguity/mismatch/old build/missing upload date, selection read-back and recheck before any review write, token refresh, listing, What's New (strict only when its switch is on), screenshots, products, idempotent reruns, log redaction, release notes, the printed switches |
-| [`scripts/release_notes.py`](../scripts/release_notes.py) | GitHub Release notes from `RELEASE_NOTES.md` (generated notes when the tag has no section) |
+| [`scripts/release_notes.py`](../scripts/release_notes.py) | GitHub Release notes from `RELEASE_NOTES.md` (generated notes when the tag has no section or the file is missing) |
 
 The **Store release checks** workflow runs the offline tests, the catalog check and
 a dry run of the listing and screenshots on every pull request that touches this
-tooling. Every iOS Release run also runs the offline tests first, except the ones
-that check the repository's listing and screenshot files
-(`STORE_TESTS_SKIP_REPOSITORY_FILES=1`). Release jobs install
+tooling, then reruns the release's offline tests and release-notes step on a copy
+of the checkout without `RELEASE_NOTES.md`, which must pass because a missing
+file only means generated notes. Every iOS Release run also runs the offline
+tests first, except the ones that check the repository's listing and screenshot
+files (`STORE_TESTS_SKIP_REPOSITORY_FILES=1`); the check that `RELEASE_NOTES.md`
+repeats no section runs only when the file exists. Release jobs install
 [`requirements-store.txt`](../requirements-store.txt) (PyJWT, hash-pinned) into a
 virtual environment only when they talk to App Store Connect, and run the store
 scripts unbuffered (`python3 -u`) so the build wait's progress shows live.

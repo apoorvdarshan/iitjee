@@ -3,10 +3,9 @@
 # file adds routine version bumps so the pinned versions (including the
 # commit-SHA-pinned GitHub Actions) do not go stale.
 #
-# Monthly and grouped into one pull request per ecosystem: the repository is
-# private and its iOS tests run on paid macOS runners, so every GitHub Actions or
-# Swift package bump costs one macOS test run on the pull request and another on
-# main.
+# Monthly and grouped into one pull request per ecosystem: a Swift package bump,
+# or a GitHub Actions bump that touches ios-tests.yml, runs the iOS unit and UI
+# tests on a macOS runner, once on the pull request and again on main.
 
 version: 2
 updates:
