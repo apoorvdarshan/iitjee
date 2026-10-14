@@ -112,7 +112,6 @@ jobs:
             /scripts/store/
             /scripts/release_notes.py
             /store/
-            /marketing/mockups/
             /ios/iitjee/iitjee.xcodeproj/
             /ios/iitjee/PCMNotes.storekit
             /ios/iitjee/iitjee/TipStore.swift
@@ -538,7 +537,6 @@ jobs:
           sparse-checkout: |
             /scripts/store/
             /store/
-            /marketing/mockups/
             /requirements-store.txt
 
       - name: Install store tooling

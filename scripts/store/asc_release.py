@@ -2,8 +2,8 @@
 """App Store Connect listing, What's New, screenshots and submit-for-review (gated in CI).
 
 The listing lives in the repository: store/metadata/ios/<locale>/*.txt holds every
-App Store locale (exported from the live listing), and the screenshots are the
-marketing mockups in marketing/mockups/. Each operation only runs when its switch
+App Store locale (exported from the live listing), and the screenshots are in
+store/metadata/screenshots/ios/<display size>/. Each operation only runs when its switch
 is on (see store/README.md); with every switch off this script does nothing.
 
 Submitting for review covers the App Store version and any Ready-to-Submit
@@ -96,17 +96,17 @@ class ScreenshotSet(NamedTuple):
     sizes: frozenset[tuple[int, int]]
 
 
-# The marketing mockups are byte-identical to the screenshots live on the App Store
-# for 1.0, so they are uploaded as-is (no copies in store/metadata).
+# These mockups are byte-identical to the screenshots live on the App Store for 1.0,
+# so they are uploaded as-is.
 SCREENSHOT_SETS = (
     ScreenshotSet(
         "APP_IPHONE_67",
-        "marketing/mockups/iphone",
+        "store/metadata/screenshots/ios/6.7",
         frozenset({(1290, 2796), (2796, 1290), (1284, 2778), (2778, 1284)}),
     ),
     ScreenshotSet(
         "APP_IPAD_PRO_3GEN_129",
-        "marketing/mockups/ipad",
+        "store/metadata/screenshots/ios/12.9",
         frozenset({(2048, 2732), (2732, 2048)}),
     ),
 )
