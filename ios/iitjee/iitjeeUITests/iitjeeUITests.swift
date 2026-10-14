@@ -85,7 +85,7 @@ final class iitjeeUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(app.chapter("physics", 1).waitForExistence(timeout: launchTimeout))
 
-        let search = app.searchFields["Find a chapter"]
+        let search = app.searchFields.firstMatch
         if !search.waitForExistence(timeout: stepTimeout) {
             app.swipeDown()  // the search bar can sit collapsed under the navigation bar
         }
