@@ -30,6 +30,18 @@
 #   IOS_BUILD_WAIT_MINUTES   default 120  (10–300), counted from upload start,
 #                            covering upload + App Store Connect processing
 #
+# Jobs (release run): prepare → tests → build (upload) → wait-for-build →
+# app-store-connect → github-release. Waiting for the uploaded build is its own
+# job, so "Re-run failed jobs" after a listing, screenshot or review failure
+# reuses the processed build's id instead of waiting again against the original
+# upload deadline. Tag runs share one concurrency group and queue (queue: max),
+# so releases run one at a time and a waiting tag run is never dropped.
+#
+# Release notes: RELEASE_NOTES.md feeds only the GitHub Release (generated notes
+# when the tag has no section). The What's New text comes from
+# store/metadata/ios/<locale>/whats_new.txt and is checked, before the build,
+# only when IOS_UPLOAD_WHATS_NEW is on.
+#
 # Secrets
 #   APP_STORE_CONNECT_API_KEY_ID / _ISSUER_ID / _API_KEY_P8
 #       Admin-role key: build numbers, cloud-managed distribution signing,
@@ -58,11 +70,14 @@ on:
 permissions:
   contents: read
 
-# Build numbers come from App Store Connect, so tag release runs never overlap.
-# Manual validation runs get their own group and can never cancel a release run.
+# Build numbers come from App Store Connect, so tag release runs share one group
+# and run one at a time. Manual validation runs get their own group and can never
+# cancel a release run.
 concurrency:
   group: ios-release-${{ github.event_name == 'push' && 'release' || github.run_id }}
   cancel-in-progress: false
+  # Keep every waiting tag run queued; the default (single) would cancel an older pending run.
+  queue: max
 
 jobs:
   prepare:
@@ -399,12 +414,19 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/logs"
           find "${TMPDIR:-/tmp}" -maxdepth 1 -name '*.xcdistributionlogs' -exec cp -R {} "$RUNNER_TEMP/logs/" \; 2>/dev/null || true
+          # xcodebuild and altool echo their command lines into these logs. Artifacts are
+          # not masked like the console, so replace the key and issuer IDs before upload.
+          if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ]; then
+            grep -rlIF -e "$ASC_KEY_ID" -e "$ASC_ISSUER_ID" "$RUNNER_TEMP/logs" 2>/dev/null | while IFS= read -r file; do
+              perl -pi -e 's/\Q$ENV{ASC_KEY_ID}\E/<ASC_KEY_ID>/g; s/\Q$ENV{ASC_ISSUER_ID}\E/<ASC_ISSUER_ID>/g' "$file"
+            done
+          fi
 
       - name: Keep build logs
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ios-release-logs-${{ github.run_id }}
+          name: ios-release-logs-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/logs
           retention-days: 7
           if-no-files-found: ignore
@@ -415,16 +437,72 @@ jobs:
           [ -n "${SIGNING_KEYCHAIN:-}" ] && security delete-keychain "$SIGNING_KEYCHAIN" 2>/dev/null || true
           rm -rf "$RUNNER_TEMP/asc-keys" "$RUNNER_TEMP/signing.p12" "$RUNNER_TEMP/export" "$RUNNER_TEMP/wwdr-g3.cer"
 
-  app-store-connect:
-    needs: [prepare, build]
+  # Its own job, so "Re-run failed jobs" after a later App Store step fails keeps
+  # this result instead of waiting again against the original upload deadline.
+  wait-for-build:
+    needs: [prepare, tests, build]
     if: >-
       !cancelled() && needs.prepare.result == 'success' &&
       needs.prepare.outputs.mode == 'release' &&
-      (needs.prepare.outputs.upload_build == 'true' || needs.prepare.outputs.asc == 'true') &&
-      (needs.prepare.outputs.upload_build != 'true' || needs.build.result == 'success')
+      needs.prepare.outputs.upload_build == 'true' &&
+      needs.tests.result == 'success' && needs.build.result == 'success'
     runs-on: ubuntu-latest
-    # Covers IOS_BUILD_WAIT_MINUTES (max 300) plus listing, screenshots and submission.
-    timeout-minutes: 345
+    # Covers IOS_BUILD_WAIT_MINUTES (max 300), counted from upload start.
+    timeout-minutes: 310
+    outputs:
+      build_id: ${{ steps.wait.outputs.build_id }}
+    env:
+      MARKETING_VERSION: ${{ needs.prepare.outputs.marketing_version }}
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_API_KEY_P8: ${{ secrets.APP_STORE_CONNECT_API_KEY_P8 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/store/
+            /requirements-store.txt
+
+      - name: Install store tooling
+        run: |
+          python3 -m venv "$RUNNER_TEMP/store-tools"
+          "$RUNNER_TEMP/store-tools/bin/python" -m pip install --disable-pip-version-check \
+            --require-hashes -r requirements-store.txt
+          echo "$RUNNER_TEMP/store-tools/bin" >> "$GITHUB_PATH"
+
+      - name: Wait for App Store Connect to process this build
+        id: wait
+        env:
+          BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
+          STARTED_AT: ${{ needs.build.outputs.upload_started_at }}
+          WAIT_MINUTES: ${{ needs.prepare.outputs.wait_minutes }}
+          POLL_SECONDS: ${{ needs.prepare.outputs.poll_seconds }}
+        run: |
+          python3 scripts/store/ios_release.py wait-build \
+            --version "$MARKETING_VERSION" \
+            --build "$BUILD_NUMBER" \
+            --started-at "$STARTED_AT" \
+            --wait-minutes "$WAIT_MINUTES" \
+            --poll-seconds "$POLL_SECONDS"
+
+  app-store-connect:
+    needs: [prepare, tests, build, wait-for-build]
+    # With IOS_UPLOAD_BUILD on, only after this run's build is uploaded and processed;
+    # with it off, listing/What's New/screenshots run on their own (submit needs a build).
+    if: >-
+      !cancelled() && needs.prepare.result == 'success' &&
+      needs.prepare.outputs.mode == 'release' &&
+      needs.prepare.outputs.asc == 'true' &&
+      ((needs.prepare.outputs.upload_build == 'true' &&
+        needs.tests.result == 'success' && needs.build.result == 'success' &&
+        needs.wait-for-build.result == 'success') ||
+       (needs.prepare.outputs.upload_build != 'true' &&
+        needs.wait-for-build.result == 'skipped'))
+    runs-on: ubuntu-latest
+    # Listing, screenshots (each set waits up to 10 min for processing) and submission.
+    timeout-minutes: 60
     env:
       MARKETING_VERSION: ${{ needs.prepare.outputs.marketing_version }}
       APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
@@ -448,31 +526,14 @@ jobs:
             --require-hashes -r requirements-store.txt
           echo "$RUNNER_TEMP/store-tools/bin" >> "$GITHUB_PATH"
 
-      - name: Wait for App Store Connect to process this build
-        id: wait
-        if: needs.prepare.outputs.upload_build == 'true'
-        env:
-          BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
-          STARTED_AT: ${{ needs.build.outputs.upload_started_at }}
-          WAIT_MINUTES: ${{ needs.prepare.outputs.wait_minutes }}
-          POLL_SECONDS: ${{ needs.prepare.outputs.poll_seconds }}
-        run: |
-          python3 scripts/store/ios_release.py wait-build \
-            --version "$MARKETING_VERSION" \
-            --build "$BUILD_NUMBER" \
-            --started-at "$STARTED_AT" \
-            --wait-minutes "$WAIT_MINUTES" \
-            --poll-seconds "$POLL_SECONDS"
-
       - name: Listing / What's New / screenshots / review (gated)
-        if: needs.prepare.outputs.asc == 'true'
         env:
           UPLOAD_LISTING: ${{ needs.prepare.outputs.listing }}
           UPLOAD_WHATS_NEW: ${{ needs.prepare.outputs.whats_new }}
           UPLOAD_SCREENSHOTS: ${{ needs.prepare.outputs.screenshots }}
           SUBMIT_IOS_REVIEW: ${{ needs.prepare.outputs.submit }}
           PUBLIC_RELEASE: ${{ needs.prepare.outputs.public_release }}
-          BUILD_ID: ${{ steps.wait.outputs.build_id }}
+          BUILD_ID: ${{ needs.wait-for-build.outputs.build_id }}
           BUILD_NUMBER: ${{ needs.prepare.outputs.build_number }}
         run: |
           set -euo pipefail
@@ -483,15 +544,16 @@ jobs:
           python3 scripts/store/asc_release.py "${args[@]}"
 
   github-release:
-    needs: [prepare, tests, build, app-store-connect]
+    needs: [prepare, tests, build, wait-for-build, app-store-connect]
     # Only when every enabled step succeeded: an uploaded build needs passing
-    # tests and a successful build, and any App Store step needs its job to pass.
+    # tests, a successful build and a processed build, and any App Store step
+    # needs its job to pass.
     if: >-
       !cancelled() && github.event_name == 'push' && needs.prepare.result == 'success' &&
       (needs.prepare.outputs.upload_build != 'true' ||
-       (needs.tests.result == 'success' && needs.build.result == 'success')) &&
-      ((needs.prepare.outputs.upload_build != 'true' && needs.prepare.outputs.asc != 'true') ||
-       needs.app-store-connect.result == 'success')
+       (needs.tests.result == 'success' && needs.build.result == 'success' &&
+        needs.wait-for-build.result == 'success')) &&
+      (needs.prepare.outputs.asc != 'true' || needs.app-store-connect.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

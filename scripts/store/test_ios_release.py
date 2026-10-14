@@ -641,6 +641,23 @@ class AscCliTests(unittest.TestCase):
             code, output = self.run_cli({"UPLOAD_WHATS_NEW": "true"}, "--metadata-dir", tmp)
             self.assertEqual(code, 0, output)
 
+    def test_whats_new_off_never_blocks_on_its_text(self) -> None:
+        # With What's New upload off, a missing or overlong whats_new.txt must not
+        # stop a release; with it on, the same text fails before anything is built.
+        for whats_new in (None, "w" * 4001):
+            with self.subTest(whats_new=whats_new and len(whats_new)), tempfile.TemporaryDirectory() as tmp:
+                loc = write_listing(Path(tmp))
+                if whats_new is not None:
+                    (loc / "whats_new.txt").write_text(whats_new + "\n")
+                code, output = self.run_cli({"UPLOAD_LISTING": "true"}, "--metadata-dir", tmp)
+                self.assertEqual(code, 0, output)
+                self.assertIn("whats_new=False", output)
+                code, output = self.run_cli(
+                    {"UPLOAD_LISTING": "true", "UPLOAD_WHATS_NEW": "true"}, "--metadata-dir", tmp
+                )
+                self.assertEqual(code, 1, output)
+                self.assertIn("whats_new.txt", output)
+
     def test_listing_limits_and_required_fields_are_enforced(self) -> None:
         cases = {
             "name": {"name.txt": "N" * 31},
@@ -1219,6 +1236,22 @@ class ReleaseNotesTests(unittest.TestCase):
 
     def test_missing_section_falls_back_to_generated_notes(self) -> None:
         self.assertIsNone(release_notes.section_for(self.TEXT, "v1.0.3"))
+
+    def test_cli_without_a_section_succeeds_with_empty_notes(self) -> None:
+        # The release still gets a GitHub Release (--generate-notes) when the tag
+        # has no section, so the pre-build check must not fail on it.
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
+            release_notes, "NOTES", Path(tmp) / "RELEASE_NOTES.md"
+        ):
+            release_notes.NOTES.write_text(self.TEXT, encoding="utf-8")
+            out = Path(tmp) / "notes.md"
+            stdout, stderr = io.StringIO(), io.StringIO()
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                release_notes.main(["v1.0.3"])
+                release_notes.main(["v1.0.3", "--out", str(out)])
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn("generated notes", stderr.getvalue())
+            self.assertEqual(out.read_text(encoding="utf-8"), "")
 
     def test_empty_section_is_an_error(self) -> None:
         with self.assertRaises(ValueError):
