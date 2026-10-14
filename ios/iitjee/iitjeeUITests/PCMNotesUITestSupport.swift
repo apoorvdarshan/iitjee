@@ -61,15 +61,17 @@ extension XCUIApplication {
         descendants(matching: .any).matching(NSPredicate(format: "label == %@", label)).firstMatch
     }
 
-    /// Scrolls the current screen until `element` can be tapped.
+    /// Scrolls the current screen until `element` can be tapped. Each `isHittable`
+    /// check takes an accessibility snapshot, so it stops as soon as it can.
     func reveal(_ element: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
-        for _ in 0..<12 where !element.isHittable {
-            swipeUp()
+        if element.isHittable { return }
+        for upward in [true, false] {
+            for _ in 0..<12 {
+                if upward { swipeUp() } else { swipeDown() }
+                if element.isHittable { return }
+            }
         }
-        for _ in 0..<12 where !element.isHittable {
-            swipeDown()
-        }
-        XCTAssertTrue(element.isHittable, "Cannot reach \(element.identifier)", file: file, line: line)
+        XCTFail("Cannot reach \(element.identifier)", file: file, line: line)
     }
 
     /// Opens a chapter and waits until its PDF has reported its pages.
