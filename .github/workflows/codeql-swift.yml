@@ -59,6 +59,20 @@ jobs:
             /chemistry/
             /mathematics/
 
+      # Swift Package Manager evaluates package manifests in a sandbox, which fails
+      # under CodeQL's build tracer ("Bad CPU type in executable" from sandbox-exec).
+      # So the pinned packages are resolved first, outside the tracer, and the traced
+      # build below reuses them without resolving again.
+      - name: Resolve the pinned Swift packages
+        run: |
+          xcodebuild -version
+          xcodebuild -resolvePackageDependencies \
+            -project ios/iitjee/iitjee.xcodeproj \
+            -scheme iitjee \
+            -derivedDataPath "$RUNNER_TEMP/codeql-build" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/codeql-packages" \
+            -onlyUsePackageVersionsFromResolvedFile
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
         with:
@@ -68,7 +82,6 @@ jobs:
 
       - name: Build the app under CodeQL
         run: |
-          xcodebuild -version
           xcodebuild build \
             -project ios/iitjee/iitjee.xcodeproj \
             -scheme iitjee \
@@ -76,7 +89,8 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/codeql-build" \
             -clonedSourcePackagesDirPath "$RUNNER_TEMP/codeql-packages" \
-            -onlyUsePackageVersionsFromResolvedFile \
+            -disableAutomaticPackageResolution \
+            -skipPackageUpdates \
             CODE_SIGNING_ALLOWED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO
 
