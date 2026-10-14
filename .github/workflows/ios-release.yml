@@ -46,6 +46,8 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - ci/ios-release-and-tests
   workflow_dispatch:
     inputs:
       marketing_version:
