@@ -745,6 +745,10 @@ body[data-subject="mathematics"] {
   --link-color: var(--ink);
 }
 
+.link-instagram {
+  --link-color: var(--pink);
+}
+
 .link-kofi {
   --link-color: #b93654;
 }

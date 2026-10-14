@@ -208,16 +208,16 @@ final class iitjeeUITests: XCTestCase {
 
         app.openTab("Support")
 
-        let studyEmail = app.descendants(matching: .any)["support.email.study"]
-        let creatorEmail = app.descendants(matching: .any)["support.email.creator"]
+        let email = app.descendants(matching: .any)["support.email"]
         let xProfile = app.descendants(matching: .any)["support.x"]
+        let instagramProfile = app.descendants(matching: .any)["support.instagram"]
 
-        XCTAssertTrue(studyEmail.waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(creatorEmail.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(email.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(xProfile.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(instagramProfile.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(app.staticTexts["ad13dtu@gmail.com"].exists)
-        XCTAssertTrue(app.staticTexts["apoorvdarshan@gmail.com"].exists)
         XCTAssertTrue(app.staticTexts["@apoorvdarshan"].exists)
+        XCTAssertTrue(app.staticTexts["@apoorvcodes"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["tip.disclosure"].waitForExistence(timeout: stepTimeout))
 
         let prices = ["small": "Small Tip, ₹49", "medium": "Chai Tip, ₹99",

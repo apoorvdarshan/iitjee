@@ -1,13 +1,11 @@
 import SwiftUI
 
 struct SupportView: View {
-    private let studySupportEmail = URL(
+    private let supportEmail = URL(
         string: "mailto:ad13dtu@gmail.com?subject=PCM%20Notes%20Support"
     )!
-    private let creatorEmail = URL(
-        string: "mailto:apoorvdarshan@gmail.com?subject=PCM%20Notes%20Contact"
-    )!
     private let xProfile = URL(string: "https://x.com/apoorvdarshan")!
+    private let instagramProfile = URL(string: "https://www.instagram.com/apoorvcodes/")!
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
@@ -85,28 +83,18 @@ struct SupportView: View {
                 )
 
                 NotebookActionRow(
-                    title: "Study support",
+                    title: "Email support",
                     detail: "ad13dtu@gmail.com",
                     symbol: "envelope",
                     color: AppPalette.support,
-                    destination: studySupportEmail
+                    destination: supportEmail
                 )
-                .accessibilityIdentifier("support.email.study")
-
-                NotebookActionRow(
-                    title: "Contact Apoorv",
-                    detail: "apoorvdarshan@gmail.com",
-                    symbol: "envelope.open",
-                    color: AppPalette.about,
-                    destination: creatorEmail
-                )
-                .accessibilityIdentifier("support.email.creator")
-
+                .accessibilityIdentifier("support.email")
             }
 
             VStack(alignment: .leading, spacing: 0) {
                 DoodleSectionTitle(
-                    title: "On X",
+                    title: "Follow along",
                     color: AppPalette.mathematicsSecondary,
                     annotation: "updates + messages"
                 )
@@ -119,6 +107,15 @@ struct SupportView: View {
                     destination: xProfile
                 )
                 .accessibilityIdentifier("support.x")
+
+                NotebookActionRow(
+                    title: "Instagram",
+                    detail: "@apoorvcodes",
+                    symbol: "camera",
+                    color: AppPalette.about,
+                    destination: instagramProfile
+                )
+                .accessibilityIdentifier("support.instagram")
             }
         }
     }
