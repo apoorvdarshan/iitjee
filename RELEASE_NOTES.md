@@ -4,7 +4,8 @@ Reviewed notes for GitHub Releases of PCM Notes. A release tag is
 `v<MARKETING_VERSION>` exactly (for example `v1.0.1`). When this file has a
 `## v1.0.1` section, the iOS Release workflow publishes it as that tag's GitHub
 Release notes; without one, GitHub's generated notes are used. A section that
-exists but is empty fails the release before anything is built.
+exists but is empty, or a second section for the same tag, fails the release
+before anything is built.
 
 The App Store's What's New text is kept separately, per language, in
 `store/metadata/ios/<locale>/whats_new.txt`.

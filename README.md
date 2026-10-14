@@ -120,8 +120,9 @@ Release workflow validates signing and export with App Store Connect without
 uploading anything. See [`store/README.md`](store/README.md) for the switches,
 secrets and release steps.
 
-Xcode Cloud is being removed for this app; do not re-create an Xcode Cloud workflow,
-or a tag would build and upload twice.
+Xcode Cloud no longer builds this app (its workflow and product were removed on
+2026-10-14); do not re-create an Xcode Cloud workflow, or a tag would build and
+upload twice.
 
 ## 🔗 Links and support
 
