@@ -73,9 +73,6 @@ fi
 iphone_id="$(xcrun simctl create 'PCM Notes CI iPhone' "$iphone_type" "$runtime")"
 ipad_id="$(xcrun simctl create 'PCM Notes CI iPad' "$ipad_type" "$runtime")"
 echo "Simulators: iPhone $iphone_type ($iphone_id), iPad $ipad_type ($ipad_id) on $runtime"
-# Boot both while the app builds, instead of one after the other between test runs.
-xcrun simctl boot "$iphone_id"
-xcrun simctl boot "$ipad_id"
 
 common=(
   -project ios/iitjee/iitjee.xcodeproj
@@ -99,12 +96,20 @@ xcodebuild build-for-testing "${common[@]}" \
   CODE_SIGNING_ALLOWED=NO \
   2>&1 | tee "$results/build.log"
 
+# Boot the iPad while the iPhone tests run, so its run does not start with a cold
+# boot. (Booting during the build instead starves the build of CPU.)
+xcrun simctl boot "$ipad_id" &
+ipad_boot=$!
+
 status=0
 xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
   -destination "platform=iOS Simulator,id=$iphone_id" \
   -skip-testing:"$ipad_only" \
   -resultBundlePath "$results/iPhone.xcresult" \
   2>&1 | tee "$results/iphone.log" || status=1
+
+# If the early boot failed, xcodebuild boots the iPad itself.
+wait "$ipad_boot" || echo "warning: early iPad boot failed; xcodebuild will boot it" >&2
 
 xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
   -destination "platform=iOS Simulator,id=$ipad_id" \
