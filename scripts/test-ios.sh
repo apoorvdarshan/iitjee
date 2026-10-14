@@ -73,6 +73,9 @@ fi
 iphone_id="$(xcrun simctl create 'PCM Notes CI iPhone' "$iphone_type" "$runtime")"
 ipad_id="$(xcrun simctl create 'PCM Notes CI iPad' "$ipad_type" "$runtime")"
 echo "Simulators: iPhone $iphone_type ($iphone_id), iPad $ipad_type ($ipad_id) on $runtime"
+# Boot both while the app builds, instead of one after the other between test runs.
+xcrun simctl boot "$iphone_id"
+xcrun simctl boot "$ipad_id"
 
 common=(
   -project ios/iitjee/iitjee.xcodeproj
