@@ -11,7 +11,7 @@ from __future__ import annotations
 import importlib
 import random
 import unittest
-from unittest import mock
+import unittest.mock
 
 TARGETS = ("fuzz_release_notes", "fuzz_release_gates", "fuzz_build_selection", "fuzz_test_summary")
 RUNS = 3000
@@ -81,7 +81,7 @@ class FuzzTargetsTest(unittest.TestCase):
             (summary, "check", skips_pass),
         )
         for module, name, replacement in broken:
-            with self.subTest(target=module.__name__), mock.patch.object(module, name, replacement):
+            with self.subTest(target=module.__name__), unittest.mock.patch.object(module, name, replacement):
                 self.assertIsNotNone(first_failure(module), f"{module.__name__} missed a broken {name}")
 
 
