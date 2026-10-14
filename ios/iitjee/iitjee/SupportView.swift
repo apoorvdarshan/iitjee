@@ -6,6 +6,8 @@ struct SupportView: View {
     )!
     private let xProfile = URL(string: "https://x.com/apoorvdarshan")!
     private let instagramProfile = URL(string: "https://www.instagram.com/apoorvcodes/")!
+    private let appStoreListing = URL(string: "https://apps.apple.com/app/id6792598227")!
+    private let appStoreReview = URL(string: "https://apps.apple.com/app/id6792598227?action=write-review")!
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
@@ -117,6 +119,40 @@ struct SupportView: View {
                 )
                 .accessibilityIdentifier("support.instagram")
             }
+
+            VStack(alignment: .leading, spacing: 0) {
+                DoodleSectionTitle(
+                    title: "Spread the word",
+                    color: AppPalette.chemistry,
+                    annotation: "it really helps"
+                )
+
+                NotebookActionRow(
+                    title: "Rate PCM Notes",
+                    detail: "Leave a rating or review on the App Store",
+                    symbol: "star",
+                    color: AppPalette.chemistry,
+                    destination: appStoreReview
+                )
+                .accessibilityIdentifier("support.rate")
+
+                ShareLink(
+                    item: appStoreListing,
+                    subject: Text("PCM Notes"),
+                    message: Text("Handwritten Physics, Chemistry and Maths notes for JEE and NEET, offline on iPhone and iPad.")
+                ) {
+                    NotebookRowLabel(
+                        title: "Share PCM Notes",
+                        detail: "Send the App Store link to a friend",
+                        symbol: "square.and.arrow.up",
+                        trailingSymbol: "arrowshape.turn.up.right",
+                        color: AppPalette.chemistry
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the share sheet")
+                .accessibilityIdentifier("support.share")
+            }
         }
     }
 
@@ -161,38 +197,57 @@ private struct NotebookActionRow: View {
 
     var body: some View {
         Link(destination: destination) {
-            HStack(spacing: 14) {
-                Image(systemName: symbol)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(color)
-                    .frame(width: 30)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.leading)
-                }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "arrow.up.right")
-                    .font(.callout.weight(.bold))
-                    .foregroundStyle(color)
-                    .rotationEffect(.degrees(5))
-            }
-            .padding(.vertical, 15)
-            .contentShape(Rectangle())
-            .overlay(alignment: .bottom) {
-                DoodleRule(color: color)
-            }
+            NotebookRowLabel(
+                title: title,
+                detail: detail,
+                symbol: symbol,
+                trailingSymbol: "arrow.up.right",
+                color: color
+            )
         }
         .buttonStyle(.plain)
         .accessibilityHint("Opens an external link")
+    }
+}
+
+/// The look shared by the Support tab's link and share rows.
+private struct NotebookRowLabel: View {
+    let title: String
+    let detail: String
+    let symbol: String
+    let trailingSymbol: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: symbol)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 30)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: trailingSymbol)
+                .font(.callout.weight(.bold))
+                .foregroundStyle(color)
+                .rotationEffect(.degrees(5))
+        }
+        .padding(.vertical, 15)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) {
+            DoodleRule(color: color)
+        }
     }
 }
 

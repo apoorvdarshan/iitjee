@@ -211,10 +211,14 @@ final class iitjeeUITests: XCTestCase {
         let email = app.descendants(matching: .any)["support.email"]
         let xProfile = app.descendants(matching: .any)["support.x"]
         let instagramProfile = app.descendants(matching: .any)["support.instagram"]
+        let rate = app.descendants(matching: .any)["support.rate"]
+        let share = app.descendants(matching: .any)["support.share"]
 
         XCTAssertTrue(email.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(xProfile.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(instagramProfile.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(rate.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(share.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(app.staticTexts["ad13dtu@gmail.com"].exists)
         XCTAssertTrue(app.staticTexts["@apoorvdarshan"].exists)
         XCTAssertTrue(app.staticTexts["@apoorvcodes"].exists)
