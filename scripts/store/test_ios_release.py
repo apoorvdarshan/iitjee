@@ -1140,10 +1140,10 @@ class ScreenshotTests(unittest.TestCase):
                 width, height = sorted(spec.sizes)[0]
                 (root / spec.directory / "01.png").write_bytes(png_bytes(width, height))
             quiet(asc_release.validate_screenshots, root)
-            (root / "marketing/mockups/iphone/02.png").write_bytes(png_bytes(1179, 2556))
+            (root / "store/metadata/screenshots/ios/6.7/02.png").write_bytes(png_bytes(1179, 2556))
             with self.assertRaises(SystemExit):
                 quiet(asc_release.validate_screenshots, root)
-            for path in (root / "marketing/mockups/iphone").glob("*.png"):
+            for path in (root / "store/metadata/screenshots/ios/6.7").glob("*.png"):
                 path.unlink()
             with self.assertRaises(SystemExit):
                 quiet(asc_release.validate_screenshots, root)
