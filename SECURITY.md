@@ -9,7 +9,7 @@ fixed before they are disclosed.
 [private vulnerability reporting](https://github.com/apoorvdarshan/iitjee/security/advisories/new).
 The report is visible only to the maintainer.
 
-**Alternative:** email **ad13dtu@gmail.com** (or **apoorvdarshan@gmail.com**)
+**Alternative:** email **ad13dtu@gmail.com**
 with "PCM Notes security" in the subject.
 
 Please include:
