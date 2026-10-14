@@ -5,7 +5,6 @@
 //  Created by Apoorv Darshan on 20/07/26.
 //
 
-import RevenueCat
 import SwiftUI
 
 @main
@@ -13,8 +12,8 @@ struct iitjeeApp: App {
     @StateObject private var tipStore: TipStore
 
     init() {
-        RevenueCatConfiguration.configure()
-        _tipStore = StateObject(wrappedValue: TipStore())
+        let purchaser = Self.makeTipPurchaser()
+        _tipStore = StateObject(wrappedValue: TipStore(purchaser: purchaser))
     }
 
     var body: some Scene {
@@ -25,5 +24,17 @@ struct iitjeeApp: App {
                     await tipStore.start()
                 }
         }
+    }
+
+    /// RevenueCat for every real launch; a local tip store only for Debug
+    /// Simulator test launches (see TestEnvironment).
+    private static func makeTipPurchaser() -> any TipPurchasing {
+        #if DEBUG
+        if let testPurchaser = TestEnvironment.tipPurchaser() {
+            return testPurchaser
+        }
+        #endif
+        RevenueCatConfiguration.configure()
+        return RevenueCatTipPurchasing()
     }
 }

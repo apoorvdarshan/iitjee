@@ -50,7 +50,7 @@ enum LegalDocument: String, Identifiable {
         }
     }
 
-    fileprivate var sections: [LegalSectionContent] {
+    var sections: [LegalSectionContent] {
         switch self {
         case .privacy:
             [
@@ -122,7 +122,7 @@ enum LegalDocument: String, Identifiable {
     }
 }
 
-private struct LegalSectionContent: Identifiable {
+struct LegalSectionContent: Identifiable {
     let title: String
     let body: String
 

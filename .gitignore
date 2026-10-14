@@ -31,3 +31,7 @@ xcuserdata/
 *.xcuserstate
 *.xccheckout
 *.xcscmblueprint
+
+# Python
+__pycache__/
+*.pyc

@@ -9,23 +9,22 @@ import XCTest
 
 final class iitjeeUITestsLaunchTests: XCTestCase {
 
-    override class var runsForEachTargetApplicationUIConfiguration: Bool {
-        true
-    }
-
     override func setUpWithError() throws {
         continueAfterFailure = false
     }
 
+    /// A fresh launch opens Physics straight into its chapter index.
     @MainActor
     func testLaunch() throws {
-        let app = XCUIApplication()
+        let app = XCUIApplication.pcmNotes()
         app.launch()
 
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
-        // XCUIAutomation Documentation
-        // https://developer.apple.com/documentation/xcuiautomation
+        let physicsTab = app.tabBars.buttons["Physics"]
+        XCTAssertTrue(physicsTab.waitForExistence(timeout: launchTimeout))
+        XCTAssertTrue(physicsTab.isSelected, "Physics is the first tab")
+        XCTAssertTrue(app.navigationBars["PCM Notes"].exists)
+        XCTAssertTrue(app.element(labeled: "Chapter index, 23 total").waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(app.chapter("physics", 1).isHittable)
 
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"

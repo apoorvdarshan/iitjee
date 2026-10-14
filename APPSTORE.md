@@ -2,6 +2,8 @@
 
 App Store Connect submission details for PCM Notes v1.0, build 1. Each field is in a code block for easy copy-paste.
 
+This file records the 1.0 submission. The live listing is now kept in `store/metadata/ios/<locale>/`, which the release pipeline uploads (see `store/README.md`).
+
 ## App Name
 
     PCM Notes: JEE & NEET
@@ -186,6 +188,8 @@ Live App Store Connect state verified on 21 July 2026:
 - App Privacy is published with **Purchases → Purchase History** used for **App Functionality** and **Analytics**, not linked to identity, and not used for tracking.
 - The age-rating questionnaire is complete with a calculated global rating of **4+**, no category override, and Apple-managed regional equivalents.
 - Xcode Cloud's enabled `Default` workflow performs a clean, required App Store-eligible iOS archive for tags beginning with `v`.
+
+Update (October 2026): App Store builds now come from GitHub Actions (`.github/workflows/ios-release.yml`); Xcode Cloud's `Default` workflow is being removed and must not be re-created.
 
 Required before pushing the first release tag:
 

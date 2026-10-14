@@ -1,0 +1,177 @@
+# Store release automation
+
+GitHub Actions builds, signs and uploads PCM Notes to the App Store, keeps the App
+Store listing in this repository, and creates the GitHub Release for each tag.
+
+**Nothing reaches the App Store unless its switch is on.** A `v*` tag runs
+[`ios-release.yml`](../.github/workflows/ios-release.yml); every App Store
+operation is behind its own repository Variable, and all of them default to off.
+
+**Xcode Cloud is being removed for PCM Notes** (its `Default` workflow is deleted
+in App Store Connect once this pipeline has passed validation). Xcode Cloud
+triggers live in App Store Connect, not in this repo, so a GitHub switch cannot
+stop them: never re-create an Xcode Cloud workflow for this app, or a tag would
+build and upload twice.
+
+## Release flow (`v*` tag)
+
+```
+vX.Y.Z tag ─► resolve switches (the tag must equal MARKETING_VERSION exactly: v1.0.1 ⇔ 1.0.1)
+  └─ IOS_RELEASE_AUTOMATION off ─► GitHub Release only
+  └─ on:
+       listing / What's New / screenshots / review on
+                    ─► check the repo's listing files and that the App Store version
+                       exists and is editable (read-only) — before anything is built
+       IOS_UPLOAD_BUILD ─► iOS tests (unit + UI, iPhone and iPad simulators)
+                        ─► next build number from App Store Connect
+                        ─► archive Release ─► verify app id/version/build and that every
+                           tracked note page is bundled
+                        ─► cloud-signed export + upload
+                        ─► wait until THIS build is VALID (poll 30 s, up to 120 min from upload start)
+       IOS_UPLOAD_LISTING / IOS_UPLOAD_WHATS_NEW / IOS_UPLOAD_SCREENSHOTS
+                        ─► version metadata for every locale in store/metadata/ios/
+       IOS_SUBMIT_REVIEW ─► select this run's build, read it back, set release type
+                         ─► recheck build + selection ─► submit the version and any
+                            Ready-to-Submit in-app purchases
+  └─ GitHub Release (only if every enabled step succeeded)
+```
+
+A manual **Run workflow** (`workflow_dispatch`) is a validation run: it archives,
+signs, exports and validates the IPA with App Store Connect (`altool
+--validate-app`), and never uploads, edits the listing, submits or creates a GitHub
+Release. Apple refuses versions it has already approved, so fill in the optional
+**marketing_version** input with the next version (e.g. `1.0.1`); the build is
+validated as that version without changing the project.
+
+Submission stops instead of continuing when the build times out, fails
+processing, is expired, is ambiguous, belongs to another app or version, was
+uploaded before this run, or is not the build selected on the version. An older
+build is never substituted. The wait covers build processing only, not App Review
+or the public release.
+
+## Switches
+
+Repository **Variables** (Settings → Secrets and variables → Actions → Variables).
+Missing means off. Any value other than `true/false/yes/no/on/off/1/0` fails the
+run, even when the master switch is off. Copy the names from
+[`gates.env.example`](gates.env.example).
+
+| Variable | When `true` |
+|----------|-------------|
+| `IOS_RELEASE_AUTOMATION` | Master switch. When off, every App Store operation below is skipped and the tag only creates the GitHub Release |
+| `IOS_UPLOAD_BUILD` | Run the iOS tests, then build, sign and upload the binary to App Store Connect and wait until it is processed |
+| `IOS_UPLOAD_LISTING` | Name, subtitle, privacy URL, description, keywords, promotional text, marketing and support URLs for every locale in `store/metadata/ios/` |
+| `IOS_UPLOAD_WHATS_NEW` | What's New (`store/metadata/ios/<locale>/whats_new.txt`, required for every locale; refused if it still repeats the live version's text) |
+| `IOS_UPLOAD_SCREENSHOTS` | iPhone 6.7" (`APP_IPHONE_67`) and iPad 12.9" (`APP_IPAD_PRO_3GEN_129`) screenshots from `marketing/mockups/` |
+| `IOS_SUBMIT_REVIEW` | Select this run's build and submit the version **and** any Ready-to-Submit products from `catalog/products.json` for review. Requires `IOS_UPLOAD_BUILD` |
+| `IOS_PUBLIC_RELEASE` | Release automatically after approval. Off = you release it by hand. Requires `IOS_SUBMIT_REVIEW` |
+| `IOS_BUILD_POLL_SECONDS` | Poll interval, default 30 (10–600) |
+| `IOS_BUILD_WAIT_MINUTES` | Total wait from upload start, default 120 (10–300) |
+
+Listing, What's New and screenshot uploads need the App Store version to exist in
+App Store Connect in an editable state (for example *Prepare for Submission*); the
+pipeline never creates versions, and checks this before building.
+
+## Secrets
+
+| Secret | Used for |
+|--------|----------|
+| `APP_STORE_CONNECT_API_KEY_ID` | Admin-role App Store Connect API key: build numbers, cloud-managed distribution signing, upload, build readiness, listing, review |
+| `APP_STORE_CONNECT_ISSUER_ID` | API key issuer |
+| `APP_STORE_CONNECT_API_KEY_P8` | API private key (`.p8` body) |
+| `IOS_DEV_SIGNING_P12_BASE64` | CI Apple Development identity (base64 `.p12`; certificate "Apple Development: Created via API", ID `NVNGDQGCKK`, expires 2027-10-14) that signs the archive. App Store signing happens at export with Apple's cloud-managed distribution certificate |
+| `IOS_DEV_SIGNING_P12_PASSWORD` | Password for that `.p12` |
+
+The same CI identity signs the archives of Fud AI, Verceltics, Abysm, Quit All,
+Scowld and Sesslet: Apple allows one API-created development certificate per API
+key, and its private key exists only in those repositories' `IOS_DEV_SIGNING_*`
+secrets. **Rotation:** before it expires (2027-10-14) or if it is revoked, revoke
+it (App Store Connect API, `DELETE /v1/certificates/<id>`), create a new one
+(`certificateType: DEVELOPMENT`), and replace both `IOS_DEV_SIGNING_*` secrets in
+every one of those repositories. Then run **iOS Release → Run workflow** to
+validate.
+
+## Listing metadata (the repository is the source of truth)
+
+```
+store/metadata/ios/<locale>/
+  name.txt  subtitle.txt  privacy_url.txt            (app information)
+  description.txt  keywords.txt  promotional_text.txt
+  marketing_url.txt  support_url.txt  whats_new.txt  (version)
+```
+
+`en-US` (the primary and only locale today) was exported from the live 1.0 listing
+with [`export_listing.py`](../scripts/store/export_listing.py), which only reads
+App Store Connect. Edit these files and turn on `IOS_UPLOAD_LISTING` to publish
+them; after editing the listing in App Store Connect by hand, run the exporter to
+bring the repository back in line. To add a language, add it in App Store Connect
+and add a `store/metadata/ios/<locale>/` directory. Character limits (name and
+subtitle 30, keywords 100, promotional text 170, description and What's New 4000)
+are checked before anything is uploaded. `APPSTORE.md` records the 1.0 submission
+and is not read by the pipeline.
+
+Before releasing a new version with `IOS_UPLOAD_WHATS_NEW`, write its notes in
+`whats_new.txt` (1.0 had none). Upload is refused while the file still holds the
+live version's What's New.
+
+## Screenshots
+
+The App Store screenshots are the marketing mockups, byte-identical to the ones
+live for 1.0: `marketing/mockups/iphone/*.png` (1290×2796, iPhone 6.7") and
+`marketing/mockups/ipad/*.png` (2048×2732, iPad 12.9"), uploaded in file-name order
+to the primary locale (other locales fall back to it). Sizes are checked before
+upload, a set that already matches (by checksum) is left alone, and a changed set
+is replaced and waited on until App Store Connect has processed it. With the
+switch on and no PNGs in a directory, the run fails with a clear message.
+
+## In-app purchases
+
+[`catalog/products.json`](catalog/products.json) lists the four consumable tips
+(`com.apoorvdarshan.iitjee.tip.small|medium|large|generous`). With
+`IOS_SUBMIT_REVIEW` on, products from this catalog that App Store Connect shows as
+*Ready to Submit* go to review with the version; approved products (all four
+today) are never resubmitted, and products not in the catalog are ignored.
+[`validate_catalog.py`](../scripts/store/validate_catalog.py) keeps the catalog in
+line with `TipProductID` in `TipStore.swift` and `ios/iitjee/PCMNotes.storekit`.
+RevenueCat records the tips; there is nothing to sync, so there is no
+RevenueCat switch.
+
+## Scripts
+
+| Script | Role |
+|--------|------|
+| [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | Switches, read-only preflight, build number, wait for this run's build |
+| [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | Listing, What's New, screenshots, build selection, review submission |
+| [`scripts/store/export_listing.py`](../scripts/store/export_listing.py) | Read-only export of the live listing into `store/metadata/` |
+| [`scripts/store/validate_catalog.py`](../scripts/store/validate_catalog.py) | Catalog ↔ app ↔ StoreKit configuration check |
+| [`scripts/store/print_gates.py`](../scripts/store/print_gates.py) | Prints the switches |
+| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, build wait timeout/failure/ambiguity/mismatch/old build, selection read-back, token refresh, listing, screenshots, products |
+| [`scripts/release_notes.py`](../scripts/release_notes.py) | GitHub Release notes from `RELEASE_NOTES.md` (generated notes when the tag has no section) |
+
+The **Store release checks** workflow runs the offline tests, the catalog check and
+a dry run of the listing and screenshots on every pull request that touches this
+tooling. Release jobs install [`requirements-store.txt`](../requirements-store.txt)
+(PyJWT, hash-pinned) only when they talk to App Store Connect.
+
+## Releasing
+
+1. Bump `MARKETING_VERSION` in the Xcode project (every target) to the new version.
+2. Create that version in App Store Connect if the listing, What's New, screenshots
+   or review will be uploaded, and update `store/metadata/ios/<locale>/whats_new.txt`.
+3. Optionally add a `## vX.Y.Z` section to `RELEASE_NOTES.md`.
+4. Run **iOS Release → Run workflow** with `marketing_version` = the new version
+   to validate signing and export (nothing is uploaded).
+5. Turn on only the switches you want (start with `IOS_RELEASE_AUTOMATION` +
+   `IOS_UPLOAD_BUILD`; leave `IOS_SUBMIT_REVIEW` and `IOS_PUBLIC_RELEASE` off until
+   you intend to submit).
+6. Push the tag: `git tag -a vX.Y.Z -m "PCM Notes X.Y.Z" && git push origin vX.Y.Z`.
+
+## Dry run
+
+```bash
+python3 -m unittest scripts/store/test_ios_release.py
+python3 scripts/store/validate_catalog.py
+UPLOAD_LISTING=true UPLOAD_SCREENSHOTS=true SUBMIT_IOS_REVIEW=true \
+  python3 scripts/store/asc_release.py --dry-run --build-id DRY-RUN --build-number 1
+python3 scripts/release_notes.py v1.0.1
+```
