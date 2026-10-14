@@ -12,18 +12,14 @@ final class iPadReaderUITests: XCTestCase {
         }
     }
 
+    /// Switches to the two-page spread, pages through it in pairs, and finds both
+    /// the layout and the reading position kept when the chapter is reopened.
     @MainActor
     func testIPadTwoPageLayoutIsAvailable() throws {
         let app = XCUIApplication.pcmNotes()
         app.launch()
 
-        let firstChapter = app.chapter("physics", 1)
-        let closeReader = app.buttons["Close focus reader"]
-
-        XCTAssertTrue(firstChapter.waitForExistence(timeout: launchTimeout))
-        firstChapter.tap()
-
-        XCTAssertTrue(closeReader.waitForExistence(timeout: launchTimeout))
+        app.openChapter("physics", 1, expecting: "Page 1 of 9")
 
         let layoutMenu = app.buttons["reader.layoutMenu"]
         XCTAssertTrue(layoutMenu.waitForExistence(timeout: stepTimeout))
@@ -41,25 +37,10 @@ final class iPadReaderUITests: XCTestCase {
         )
         expectation(for: layoutChanged, evaluatedWith: layoutMenu)
         waitForExpectations(timeout: stepTimeout)
-    }
 
-    @MainActor
-    func testTwoPageSpreadPagesByPairsAndIsRemembered() throws {
-        let app = XCUIApplication.pcmNotes()
-        app.launch()
-
-        app.openChapter("physics", 1, expecting: "Page 1 of 9")
-        let layoutMenu = app.buttons["reader.layoutMenu"]
-        XCTAssertTrue(layoutMenu.waitForExistence(timeout: stepTimeout))
-        layoutMenu.tap()
-        let twoPageOption = app.descendants(matching: .any)["Two-page spread"]
-        XCTAssertTrue(twoPageOption.waitForExistence(timeout: stepTimeout))
-        twoPageOption.tap()
-        XCTAssertTrue(layoutMenu.waitForValue("Two-page spread"))
-
+        // Page 1 stands alone like a cover, then pages pair up.
         let slider = app.sliders["reader.pageSlider"]
         let next = app.buttons["Next page"]
-        // Page 1 stands alone like a cover, then pages pair up.
         XCTAssertTrue(slider.waitForValue("Page 1 of 9"))
         next.tap()
         XCTAssertTrue(slider.waitForValue("Pages 2 through 3 of 9"))
@@ -68,10 +49,8 @@ final class iPadReaderUITests: XCTestCase {
         XCTAssertTrue(slider.waitForValue("Pages 4 through 5 of 9"))
 
         app.buttons["Close focus reader"].tap()
-        let row = app.chapter("physics", 1)
-        XCTAssertTrue(row.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(app.chapter("physics", 1).waitForExistence(timeout: stepTimeout))
 
-        // Reopening keeps both the layout and the reading position.
         app.openChapter("physics", 1, expecting: "Pages 4 through 5 of 9")
         XCTAssertTrue(layoutMenu.waitForValue("Two-page spread"))
     }
