@@ -1,0 +1,86 @@
+# Static analysis (SAST) of the Swift app with GitHub CodeQL's security and quality
+# queries. CodeQL analyses the Swift it sees being compiled, so this builds the app
+# (Debug, iOS Simulator, unsigned) under CodeQL on a macOS runner, including the
+# offline-notes generator in ios/iitjee/BuildTools/. It never restores a build
+# cache, so every source file is compiled and analysed. Runs for pull requests and
+# pushes to main that change the app or the notes it bundles, weekly and by hand.
+name: CodeQL Swift
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'physics/**'
+      - 'chemistry/**'
+      - 'mathematics/**'
+      - '.github/workflows/codeql-swift.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'physics/**'
+      - 'chemistry/**'
+      - 'mathematics/**'
+      - '.github/workflows/codeql-swift.yml'
+  schedule:
+    # Weekly on Mondays.
+    - cron: '41 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-swift-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: Analyze (swift)
+    runs-on: xcode-27
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      security-events: write # upload results to code scanning
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.app/Contents/Developer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          filter: blob:none
+          sparse-checkout-cone-mode: false
+          # The app build turns these note images into the bundled chapter PDFs.
+          sparse-checkout: |
+            /ios/
+            /physics/
+            /chemistry/
+            /mathematics/
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          languages: swift
+          build-mode: manual
+          queries: security-and-quality
+
+      - name: Build the app under CodeQL
+        run: |
+          xcodebuild -version
+          xcodebuild build \
+            -project ios/iitjee/iitjee.xcodeproj \
+            -scheme iitjee \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/codeql-build" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/codeql-packages" \
+            -onlyUsePackageVersionsFromResolvedFile \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          category: /language:swift

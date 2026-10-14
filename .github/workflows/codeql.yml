@@ -1,0 +1,70 @@
+# Static analysis (SAST) with GitHub CodeQL's security and quality queries, for the
+# workflows, the website's JavaScript and the Python release, test and fuzz tooling.
+# These run on every pull request, push to main and weekly, each with a sparse
+# checkout of only the files its language lives in. The Swift app is analysed by
+# codeql-swift.yml, which needs a macOS runner and a full Xcode build.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly on Mondays.
+    - cron: '17 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request supersedes its older analysis; main, scheduled and
+# manual runs are never cancelled.
+concurrency:
+  group: codeql-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write # upload results to code scanning
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            sparse-checkout: |
+              /.github/
+          # script.js, watermark.js and static-build.mjs, plus inline page scripts.
+          - language: javascript-typescript
+            sparse-checkout: |
+              /*.js
+              /*.mjs
+              /*.html
+          - language: python
+            sparse-checkout: |
+              /scripts/
+              /fuzz/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: ${{ matrix.sparse-checkout }}
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-and-quality
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@24c54180a607b1449ed407dd24f251e4e9147c8d # v4.38.3
+        with:
+          category: /language:${{ matrix.language }}
