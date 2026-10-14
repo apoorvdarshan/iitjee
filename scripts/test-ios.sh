@@ -113,5 +113,9 @@ xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
 
 python3 scripts/ios_test_summary.py "$results/iPhone.xcresult" --require-unit --require-ui || status=1
 python3 scripts/ios_test_summary.py "$results/iPad.xcresult" --require-ui || status=1
+# Line coverage of the app from the iPhone run (unit tests plus most UI tests).
+# Informational only: it never changes the result.
+echo "App code coverage (iPhone run):"
+xcrun xccov view --report --only-targets "$results/iPhone.xcresult" || true
 echo "Results: $results"
 exit "$status"
