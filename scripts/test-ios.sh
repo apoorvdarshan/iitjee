@@ -90,16 +90,13 @@ run_tests=(
 )
 
 # Both simulators share the iOS Simulator SDK and architecture, so one build serves both.
+# Each simulator boots when its tests start. Booting one while building or testing
+# on the other made the CI job 2-3 minutes slower (measured October 2026).
 xcodebuild build-for-testing "${common[@]}" \
   -destination "platform=iOS Simulator,id=$iphone_id" \
   -resultBundlePath "$results/Build.xcresult" \
   CODE_SIGNING_ALLOWED=NO \
   2>&1 | tee "$results/build.log"
-
-# Boot the iPad while the iPhone tests run, so its run does not start with a cold
-# boot. (Booting during the build instead starves the build of CPU.)
-xcrun simctl boot "$ipad_id" &
-ipad_boot=$!
 
 status=0
 xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
@@ -107,9 +104,6 @@ xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
   -skip-testing:"$ipad_only" \
   -resultBundlePath "$results/iPhone.xcresult" \
   2>&1 | tee "$results/iphone.log" || status=1
-
-# If the early boot failed, xcodebuild boots the iPad itself.
-wait "$ipad_boot" || echo "warning: early iPad boot failed; xcodebuild will boot it" >&2
 
 xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
   -destination "platform=iOS Simulator,id=$ipad_id" \
