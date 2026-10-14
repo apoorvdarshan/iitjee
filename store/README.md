@@ -206,8 +206,8 @@ that check the repository's listing and screenshot files
 [`requirements-store.txt`](../requirements-store.txt) (PyJWT, hash-pinned) into a
 virtual environment only when they talk to App Store Connect, and run the store
 scripts unbuffered (`python3 -u`) so the build wait's progress shows live.
-Dependabot proposes monthly updates for it, the pinned GitHub Actions and the
-Swift packages.
+Dependabot proposes monthly updates for it, the pinned GitHub Actions, the Swift
+packages and the website's npm tooling.
 
 ## Releasing
 

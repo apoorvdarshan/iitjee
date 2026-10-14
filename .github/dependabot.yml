@@ -36,3 +36,13 @@ updates:
     groups:
       swift-packages:
         patterns: ["*"]
+
+  # Website build and deploy tooling (sharp, wrangler) in the root package.json.
+  # No workflow builds the website, so check these locally with `npm run build`.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      website-tooling:
+        patterns: ["*"]
