@@ -9,9 +9,9 @@ struct SupportView: View {
     private let instagramProfile = URL(string: "https://www.instagram.com/apoorvcodes/")!
     private let appStoreListing = URL(string: "https://apps.apple.com/app/id6792598227")!
     private let appStoreReview = URL(string: "https://apps.apple.com/app/id6792598227?action=write-review")!
-    private let sourceRepository = URL(string: "https://github.com/apoorvdarshan/iitjee")!
-    private let bugReport = URL(string: "https://github.com/apoorvdarshan/iitjee/issues/new?template=bug_report.yml")!
-    private let featureRequest = URL(string: "https://github.com/apoorvdarshan/iitjee/issues/new?template=feature_request.yml")!
+    private let sourceRepository = URL(string: "https://github.com/apoorvdarshan/pcm-notes")!
+    private let bugReport = URL(string: "https://github.com/apoorvdarshan/pcm-notes/issues/new?template=bug_report.yml")!
+    private let featureRequest = URL(string: "https://github.com/apoorvdarshan/pcm-notes/issues/new?template=feature_request.yml")!
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.requestReview) private var requestReview
     @Environment(\.openURL) private var openURL
@@ -127,7 +127,7 @@ struct SupportView: View {
 
                 NotebookActionRow(
                     title: "Star on GitHub",
-                    detail: "apoorvdarshan/iitjee · the app's source code",
+                    detail: "apoorvdarshan/pcm-notes · the app's source code",
                     symbol: "chevron.left.forwardslash.chevron.right",
                     color: .primary,
                     destination: sourceRepository
