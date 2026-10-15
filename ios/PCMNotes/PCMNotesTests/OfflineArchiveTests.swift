@@ -1,7 +1,7 @@
 import Foundation
 import PDFKit
 import Testing
-@testable import iitjee
+@testable import PCMNotes
 
 /// The build tool turns the repository's handwritten JPEGs into one PDF per chapter
 /// (BuildTools/GenerateOfflineNotes.swift). These tests read the real app bundle,

@@ -1,6 +1,6 @@
 //
-//  iitjeeUITests.swift
-//  iitjeeUITests
+//  PCMNotesUITests.swift
+//  PCMNotesUITests
 //
 //  Created by Apoorv Darshan on 20/07/26.
 //
@@ -11,7 +11,7 @@ import XCTest
 /// and its saved progress, appearance, support with the tip jar, and About.
 /// Each test starts from a fresh launch (see `XCUIApplication.pcmNotes`) and covers
 /// one journey end to end, so CI launches the app as few times as possible.
-final class iitjeeUITests: XCTestCase {
+final class PCMNotesUITests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false

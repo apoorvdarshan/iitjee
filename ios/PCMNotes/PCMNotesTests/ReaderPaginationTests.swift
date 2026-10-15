@@ -1,5 +1,5 @@
 import Testing
-@testable import iitjee
+@testable import PCMNotes
 
 /// The reader's Previous/Next controls, slider and page counter.
 @MainActor

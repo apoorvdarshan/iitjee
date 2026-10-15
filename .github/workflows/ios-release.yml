@@ -116,9 +116,9 @@ jobs:
             /scripts/store/
             /scripts/release_notes.py
             /store/
-            /ios/iitjee/iitjee.xcodeproj/
-            /ios/iitjee/PCMNotes.storekit
-            /ios/iitjee/iitjee/TipStore.swift
+            /ios/PCMNotes/PCMNotes.xcodeproj/
+            /ios/PCMNotes/PCMNotes.storekit
+            /ios/PCMNotes/PCMNotes/TipStore.swift
             /requirements-store.txt
             /RELEASE_NOTES.md
 
@@ -293,7 +293,7 @@ jobs:
           mkdir -p "$keys"
           python3 -c 'import os,sys; open(sys.argv[1],"w").write(os.environ["ASC_KEY_P8"].replace("\\n","\n").strip()+"\n")' \
             "$keys/AuthKey_${ASC_KEY_ID}.p8"
-          keychain="$RUNNER_TEMP/iitjee-signing.keychain-db"
+          keychain="$RUNNER_TEMP/PCMNotes-signing.keychain-db"
           keychain_password="$(openssl rand -hex 24)"
           security create-keychain -p "$keychain_password" "$keychain"
           security set-keychain-settings -lut 7200 "$keychain"
@@ -324,8 +324,8 @@ jobs:
           log="$RUNNER_TEMP/logs/archive.log"
           status=0
           xcodebuild archive \
-            -project ios/iitjee/iitjee.xcodeproj \
-            -scheme iitjee \
+            -project ios/PCMNotes/PCMNotes.xcodeproj \
+            -scheme PCMNotes \
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/PCMNotes.xcarchive" \

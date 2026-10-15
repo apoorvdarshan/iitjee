@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import iitjee
+@testable import PCMNotes
 
 /// When PCM Notes asks for an App Store rating: Support's Rate button, and the
 /// automatic prompt after a good reading session.

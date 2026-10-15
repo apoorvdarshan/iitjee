@@ -188,7 +188,7 @@ submitted once. Apple's deprecated `inAppPurchaseSubmissions` endpoint, which se
 a product to review on its own, is not used. Approved products (all four today)
 are never resubmitted, and products not in the catalog are ignored.
 [`validate_catalog.py`](../scripts/store/validate_catalog.py) keeps the catalog in
-line with `TipProductID` in `TipStore.swift` and `ios/iitjee/PCMNotes.storekit`.
+line with `TipProductID` in `TipStore.swift` and `ios/PCMNotes/PCMNotes.storekit`.
 RevenueCat records the tips; there is nothing to sync, so there is no
 RevenueCat switch.
 

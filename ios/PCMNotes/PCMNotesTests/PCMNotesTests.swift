@@ -1,15 +1,15 @@
 //
-//  iitjeeTests.swift
-//  iitjeeTests
+//  PCMNotesTests.swift
+//  PCMNotesTests
 //
 //  Created by Apoorv Darshan on 20/07/26.
 //
 
 import Foundation
 import Testing
-@testable import iitjee
+@testable import PCMNotes
 
-struct iitjeeTests {
+struct PCMNotesTests {
 
     @Test func catalogMatchesTheArchive() {
         #expect(SubjectArea.physics.chapters.count == 23)

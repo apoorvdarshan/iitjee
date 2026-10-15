@@ -38,7 +38,7 @@ updates:
 
   # RevenueCat, pinned in the Xcode project's Package.resolved.
   - package-ecosystem: swift
-    directory: /ios/iitjee
+    directory: /ios/PCMNotes
     schedule:
       interval: monthly
     groups:

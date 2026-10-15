@@ -21,14 +21,14 @@ The MIT License does **not** cover the following, which remain
 - the handwritten notes: every page image in `physics/`, `chemistry/` and
   `mathematics/`, and the chapter PDFs generated from them;
 - the app icon, logos, screenshots and other images (`assets/`, `marketing/`,
-  `favicon.ico`, `ios/iitjee/iitjee/Assets.xcassets/`);
+  `favicon.ico`, `ios/PCMNotes/PCMNotes/Assets.xcassets/`);
 - the App Store listing text in `store/metadata/`; and
 - the "PCM Notes" name and branding.
 
 You may read the notes for your own revision, through the app, the website or
 this repository. Selling, republishing, mirroring or redistributing them, or
 bundling them in another app or website, needs written permission from the
-author. The website's [Terms of Use](https://iitjee.apoorvdarshan.com/terms.html)
+author. The website's [Terms of Use](https://pcm-notes.apoorvdarshan.com/terms.html)
 describe permitted use of the notes in full.
 
 If you fork or build on the code, replace the notes, name and branding with

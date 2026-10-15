@@ -1,5 +1,5 @@
 import Testing
-@testable import iitjee
+@testable import PCMNotes
 
 /// Chapter search and reading progress, as the subject lists use them.
 @MainActor

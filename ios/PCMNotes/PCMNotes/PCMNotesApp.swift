@@ -1,6 +1,6 @@
 //
-//  iitjeeApp.swift
-//  iitjee
+//  PCMNotesApp.swift
+//  PCMNotes
 //
 //  Created by Apoorv Darshan on 20/07/26.
 //
@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct iitjeeApp: App {
+struct PCMNotesApp: App {
     @StateObject private var tipStore: TipStore
 
     init() {

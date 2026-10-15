@@ -1,7 +1,7 @@
 # Static analysis (SAST) of the Swift app with GitHub CodeQL's security and quality
 # queries. CodeQL analyses the Swift it sees being compiled, so this builds the app
 # (Debug, iOS Simulator, unsigned) under CodeQL on a macOS runner, including the
-# offline-notes generator in ios/iitjee/BuildTools/. It never restores a build
+# offline-notes generator in ios/PCMNotes/BuildTools/. It never restores a build
 # cache, so every source file is compiled and analysed. Runs for pull requests and
 # pushes to main that change the app or the notes it bundles, weekly and by hand.
 #
@@ -75,8 +75,8 @@ jobs:
           defaults write com.apple.dt.Xcode IDEPackageSupportDisablePluginExecutionSandbox -bool YES
           xcodebuild -version
           xcodebuild -resolvePackageDependencies \
-            -project ios/iitjee/iitjee.xcodeproj \
-            -scheme iitjee \
+            -project ios/PCMNotes/PCMNotes.xcodeproj \
+            -scheme PCMNotes \
             -derivedDataPath "$RUNNER_TEMP/codeql-build" \
             -clonedSourcePackagesDirPath "$RUNNER_TEMP/codeql-packages" \
             -onlyUsePackageVersionsFromResolvedFile
@@ -91,8 +91,8 @@ jobs:
       - name: Build the app under CodeQL
         run: |
           xcodebuild build \
-            -project ios/iitjee/iitjee.xcodeproj \
-            -scheme iitjee \
+            -project ios/PCMNotes/PCMNotes.xcodeproj \
+            -scheme PCMNotes \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath "$RUNNER_TEMP/codeql-build" \

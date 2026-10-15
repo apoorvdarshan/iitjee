@@ -1,7 +1,7 @@
 # iOS testing
 
 The **iOS tests** GitHub Actions workflow builds the Debug app once and runs the
-`iitjeeTests` unit tests and `iitjeeUITests` UI tests on iOS simulators: the unit
+`PCMNotesTests` unit tests and `PCMNotesUITests` UI tests on iOS simulators: the unit
 tests and the iPhone UI tests on an iPhone, and the iPad-only reader tests
 (`iPadReaderUITests`) on an iPad, so every test runs exactly once. It runs for
 pull requests and pushes to `main` that change the app (`ios/`), the note images it
@@ -20,7 +20,7 @@ bash scripts/test-ios.sh
 The script creates its own iPhone and iPad simulators and deletes them afterwards;
 existing simulators and devices are never touched. Builds and package checkouts
 are reused under
-`~/Library/Developer/Xcode/DerivedData/iitjee-simulator-tests`, and results go to a
+`~/Library/Developer/Xcode/DerivedData/PCMNotes-simulator-tests`, and results go to a
 new `TestResults` subdirectory (printed at the end). Override
 `IOS_TEST_DERIVED_DATA`, `IOS_TEST_PACKAGES` or `IOS_TEST_RESULTS` when needed; an
 existing result bundle is never overwritten. The run fails when any test fails, a

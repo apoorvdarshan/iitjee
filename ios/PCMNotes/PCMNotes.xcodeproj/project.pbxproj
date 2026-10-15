@@ -16,37 +16,37 @@
 			containerPortal = BAD4B0B7300D6D630023E871 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = BAD4B0BE300D6D630023E871;
-			remoteInfo = iitjee;
+			remoteInfo = PCMNotes;
 		};
 		BAD4B0D7300D6D660023E871 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BAD4B0B7300D6D630023E871 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = BAD4B0BE300D6D630023E871;
-			remoteInfo = iitjee;
+			remoteInfo = PCMNotes;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		BAD4B0BF300D6D630023E871 /* iitjee.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iitjee.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		BAD4B0CC300D6D660023E871 /* iitjeeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iitjeeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		BAD4B0D6300D6D660023E871 /* iitjeeUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iitjeeUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAD4B0BF300D6D630023E871 /* PCMNotes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PCMNotes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAD4B0CC300D6D660023E871 /* PCMNotesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PCMNotesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAD4B0D6300D6D660023E871 /* PCMNotesUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PCMNotesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		BAD4B0C1300D6D630023E871 /* iitjee */ = {
+		BAD4B0C1300D6D630023E871 /* PCMNotes */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = iitjee;
+			path = PCMNotes;
 			sourceTree = "<group>";
 		};
-		BAD4B0CF300D6D660023E871 /* iitjeeTests */ = {
+		BAD4B0CF300D6D660023E871 /* PCMNotesTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = iitjeeTests;
+			path = PCMNotesTests;
 			sourceTree = "<group>";
 		};
-		BAD4B0D9300D6D660023E871 /* iitjeeUITests */ = {
+		BAD4B0D9300D6D660023E871 /* PCMNotesUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = iitjeeUITests;
+			path = PCMNotesUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -80,9 +80,9 @@
 		BAD4B0B6300D6D630023E871 = {
 			isa = PBXGroup;
 			children = (
-				BAD4B0C1300D6D630023E871 /* iitjee */,
-				BAD4B0CF300D6D660023E871 /* iitjeeTests */,
-				BAD4B0D9300D6D660023E871 /* iitjeeUITests */,
+				BAD4B0C1300D6D630023E871 /* PCMNotes */,
+				BAD4B0CF300D6D660023E871 /* PCMNotesTests */,
+				BAD4B0D9300D6D660023E871 /* PCMNotesUITests */,
 				BAD4B0C0300D6D630023E871 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,9 +90,9 @@
 		BAD4B0C0300D6D630023E871 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				BAD4B0BF300D6D630023E871 /* iitjee.app */,
-				BAD4B0CC300D6D660023E871 /* iitjeeTests.xctest */,
-				BAD4B0D6300D6D660023E871 /* iitjeeUITests.xctest */,
+				BAD4B0BF300D6D630023E871 /* PCMNotes.app */,
+				BAD4B0CC300D6D660023E871 /* PCMNotesTests.xctest */,
+				BAD4B0D6300D6D660023E871 /* PCMNotesUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -100,9 +100,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		BAD4B0BE300D6D630023E871 /* iitjee */ = {
+		BAD4B0BE300D6D630023E871 /* PCMNotes */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BAD4B0E0300D6D660023E871 /* Build configuration list for PBXNativeTarget "iitjee" */;
+			buildConfigurationList = BAD4B0E0300D6D660023E871 /* Build configuration list for PBXNativeTarget "PCMNotes" */;
 			buildPhases = (
 				BAD4B0BB300D6D630023E871 /* Sources */,
 				BAD4B0BC300D6D630023E871 /* Frameworks */,
@@ -114,19 +114,19 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				BAD4B0C1300D6D630023E871 /* iitjee */,
+				BAD4B0C1300D6D630023E871 /* PCMNotes */,
 			);
-			name = iitjee;
+			name = PCMNotes;
 			packageProductDependencies = (
 				A1C000000000000000000003 /* RevenueCat */,
 			);
-			productName = iitjee;
-			productReference = BAD4B0BF300D6D630023E871 /* iitjee.app */;
+			productName = PCMNotes;
+			productReference = BAD4B0BF300D6D630023E871 /* PCMNotes.app */;
 			productType = "com.apple.product-type.application";
 		};
-		BAD4B0CB300D6D660023E871 /* iitjeeTests */ = {
+		BAD4B0CB300D6D660023E871 /* PCMNotesTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BAD4B0E3300D6D660023E871 /* Build configuration list for PBXNativeTarget "iitjeeTests" */;
+			buildConfigurationList = BAD4B0E3300D6D660023E871 /* Build configuration list for PBXNativeTarget "PCMNotesTests" */;
 			buildPhases = (
 				BAD4B0C8300D6D660023E871 /* Sources */,
 				BAD4B0C9300D6D660023E871 /* Frameworks */,
@@ -138,18 +138,18 @@
 				BAD4B0CE300D6D660023E871 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				BAD4B0CF300D6D660023E871 /* iitjeeTests */,
+				BAD4B0CF300D6D660023E871 /* PCMNotesTests */,
 			);
-			name = iitjeeTests;
+			name = PCMNotesTests;
 			packageProductDependencies = (
 			);
-			productName = iitjeeTests;
-			productReference = BAD4B0CC300D6D660023E871 /* iitjeeTests.xctest */;
+			productName = PCMNotesTests;
+			productReference = BAD4B0CC300D6D660023E871 /* PCMNotesTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		BAD4B0D5300D6D660023E871 /* iitjeeUITests */ = {
+		BAD4B0D5300D6D660023E871 /* PCMNotesUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = BAD4B0E6300D6D660023E871 /* Build configuration list for PBXNativeTarget "iitjeeUITests" */;
+			buildConfigurationList = BAD4B0E6300D6D660023E871 /* Build configuration list for PBXNativeTarget "PCMNotesUITests" */;
 			buildPhases = (
 				BAD4B0D2300D6D660023E871 /* Sources */,
 				BAD4B0D3300D6D660023E871 /* Frameworks */,
@@ -161,13 +161,13 @@
 				BAD4B0D8300D6D660023E871 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				BAD4B0D9300D6D660023E871 /* iitjeeUITests */,
+				BAD4B0D9300D6D660023E871 /* PCMNotesUITests */,
 			);
-			name = iitjeeUITests;
+			name = PCMNotesUITests;
 			packageProductDependencies = (
 			);
-			productName = iitjeeUITests;
-			productReference = BAD4B0D6300D6D660023E871 /* iitjeeUITests.xctest */;
+			productName = PCMNotesUITests;
+			productReference = BAD4B0D6300D6D660023E871 /* PCMNotesUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -198,7 +198,7 @@
 					};
 				};
 			};
-			buildConfigurationList = BAD4B0BA300D6D630023E871 /* Build configuration list for PBXProject "iitjee" */;
+			buildConfigurationList = BAD4B0BA300D6D630023E871 /* Build configuration list for PBXProject "PCMNotes" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -215,9 +215,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				BAD4B0BE300D6D630023E871 /* iitjee */,
-				BAD4B0CB300D6D660023E871 /* iitjeeTests */,
-				BAD4B0D5300D6D660023E871 /* iitjeeUITests */,
+				BAD4B0BE300D6D630023E871 /* PCMNotes */,
+				BAD4B0CB300D6D660023E871 /* PCMNotesTests */,
+				BAD4B0D5300D6D660023E871 /* PCMNotesUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -303,12 +303,12 @@
 /* Begin PBXTargetDependency section */
 		BAD4B0CE300D6D660023E871 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = BAD4B0BE300D6D630023E871 /* iitjee */;
+			target = BAD4B0BE300D6D630023E871 /* PCMNotes */;
 			targetProxy = BAD4B0CD300D6D660023E871 /* PBXContainerItemProxy */;
 		};
 		BAD4B0D8300D6D660023E871 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = BAD4B0BE300D6D630023E871 /* iitjee */;
+			target = BAD4B0BE300D6D630023E871 /* PCMNotes */;
 			targetProxy = BAD4B0D7300D6D660023E871 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -527,7 +527,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iitjee.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/iitjee";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PCMNotes.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PCMNotes";
 			};
 			name = Debug;
 		};
@@ -549,7 +549,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/iitjee.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/iitjee";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PCMNotes.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PCMNotes";
 			};
 			name = Release;
 		};
@@ -569,7 +569,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = iitjee;
+				TEST_TARGET_NAME = PCMNotes;
 			};
 			name = Debug;
 		};
@@ -589,14 +589,14 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = iitjee;
+				TEST_TARGET_NAME = PCMNotes;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		BAD4B0BA300D6D630023E871 /* Build configuration list for PBXProject "iitjee" */ = {
+		BAD4B0BA300D6D630023E871 /* Build configuration list for PBXProject "PCMNotes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BAD4B0DE300D6D660023E871 /* Debug */,
@@ -605,7 +605,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BAD4B0E0300D6D660023E871 /* Build configuration list for PBXNativeTarget "iitjee" */ = {
+		BAD4B0E0300D6D660023E871 /* Build configuration list for PBXNativeTarget "PCMNotes" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BAD4B0E1300D6D660023E871 /* Debug */,
@@ -614,7 +614,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BAD4B0E3300D6D660023E871 /* Build configuration list for PBXNativeTarget "iitjeeTests" */ = {
+		BAD4B0E3300D6D660023E871 /* Build configuration list for PBXNativeTarget "PCMNotesTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BAD4B0E4300D6D660023E871 /* Debug */,
@@ -623,7 +623,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		BAD4B0E6300D6D660023E871 /* Build configuration list for PBXNativeTarget "iitjeeUITests" */ = {
+		BAD4B0E6300D6D660023E871 /* Build configuration list for PBXNativeTarget "PCMNotesUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BAD4B0E7300D6D660023E871 /* Debug */,

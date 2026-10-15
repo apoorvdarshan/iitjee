@@ -1,13 +1,13 @@
 //
-//  iitjeeUITestsLaunchTests.swift
-//  iitjeeUITests
+//  PCMNotesUITestsLaunchTests.swift
+//  PCMNotesUITests
 //
 //  Created by Apoorv Darshan on 20/07/26.
 //
 
 import XCTest
 
-final class iitjeeUITestsLaunchTests: XCTestCase {
+final class PCMNotesUITestsLaunchTests: XCTestCase {
 
     override func setUpWithError() throws {
         continueAfterFailure = false

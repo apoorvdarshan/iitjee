@@ -1,7 +1,7 @@
 import Foundation
 import RevenueCat
 import Testing
-@testable import iitjee
+@testable import PCMNotes
 
 /// A scripted tip store: no StoreKit, RevenueCat or network.
 @MainActor
