@@ -3,9 +3,9 @@
 # file adds routine version bumps so the pinned versions (including the
 # commit-SHA-pinned GitHub Actions) do not go stale.
 #
-# Monthly and grouped into one pull request per ecosystem: a Swift package bump,
-# or a GitHub Actions bump that touches ios-tests.yml, runs the iOS unit and UI
-# tests on a macOS runner, once on the pull request and again on main.
+# Monthly and grouped into one pull request per ecosystem and directory: a Swift
+# package bump, or a GitHub Actions bump that touches ios-tests.yml, runs the iOS
+# unit and UI tests on a macOS runner, once on the pull request and again on main.
 
 version: 2
 updates:
@@ -25,6 +25,15 @@ updates:
       interval: monthly
     groups:
       store-tooling:
+        patterns: ["*"]
+
+  # The hash-pinned Atheris that the Fuzzing workflow installs (fuzz/requirements.txt).
+  - package-ecosystem: pip
+    directory: /fuzz
+    schedule:
+      interval: monthly
+    groups:
+      fuzz-tooling:
         patterns: ["*"]
 
   # RevenueCat, pinned in the Xcode project's Package.resolved.

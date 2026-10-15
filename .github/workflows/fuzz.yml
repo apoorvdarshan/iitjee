@@ -1,0 +1,93 @@
+# Coverage-guided fuzzing with Atheris (libFuzzer for Python) of the parsers that
+# decide what a release does: the release-notes lookup, the IOS_* release switches,
+# App Store Connect build selection and the iOS test-result checker. Each target in
+# fuzz/ asserts the safety properties in its docstring; a failure keeps the crashing
+# input as an artifact. First, the targets are replayed on fixed random inputs
+# (fuzz/test_fuzz_targets.py), which also proves each one catches a broken
+# implementation.
+#
+# Pull requests and pushes to main that touch the fuzzed code fuzz each target for
+# 60 seconds; the weekly run fuzzes each for 10 minutes.
+name: Fuzzing
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/release_notes.py'
+      - 'scripts/ios_test_summary.py'
+      - 'scripts/store/ios_release.py'
+      - 'fuzz/**'
+      - '.github/workflows/fuzz.yml'
+  pull_request:
+    paths:
+      - 'scripts/release_notes.py'
+      - 'scripts/ios_test_summary.py'
+      - 'scripts/store/ios_release.py'
+      - 'fuzz/**'
+      - '.github/workflows/fuzz.yml'
+  schedule:
+    # Weekly on Sundays.
+    - cron: '23 3 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  fuzz:
+    name: Fuzz (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [fuzz_release_notes, fuzz_release_gates, fuzz_build_selection, fuzz_test_summary]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /scripts/
+            /fuzz/
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Install the pinned Atheris
+        run: |
+          python -m venv "$RUNNER_TEMP/fuzz-tools"
+          "$RUNNER_TEMP/fuzz-tools/bin/python" -m pip install --disable-pip-version-check \
+            --require-hashes -r fuzz/requirements.txt
+          echo "$RUNNER_TEMP/fuzz-tools/bin" >> "$GITHUB_PATH"
+
+      - name: Replay the fuzz targets on fixed inputs
+        run: python -m unittest discover -s fuzz -p 'test_*.py' -v
+
+      - name: Fuzz
+        env:
+          TARGET: ${{ matrix.target }}
+          SECONDS_PER_TARGET: ${{ github.event_name == 'schedule' && '600' || '60' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/corpus/$TARGET" "$RUNNER_TEMP/fuzz-artifacts"
+          python "fuzz/$TARGET.py" \
+            -max_total_time="$SECONDS_PER_TARGET" \
+            -rss_limit_mb=2048 \
+            -print_final_stats=1 \
+            -artifact_prefix="$RUNNER_TEMP/fuzz-artifacts/$TARGET-" \
+            "$RUNNER_TEMP/corpus/$TARGET"
+
+      - name: Keep the crashing input
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/fuzz-artifacts
+          if-no-files-found: ignore
+          retention-days: 14

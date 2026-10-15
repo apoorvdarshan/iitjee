@@ -12,6 +12,12 @@
   <img alt="Swift" src="https://img.shields.io/badge/Swift-5-f05138?style=flat-square" />
   <img alt="Reader" src="https://img.shields.io/badge/reader-PDFKit-9b62ff?style=flat-square" />
   <img alt="Archive" src="https://img.shields.io/badge/archive-91%20PDFs-22b983?style=flat-square" />
+  <img alt="License: MIT (code)" src="https://img.shields.io/badge/license-MIT%20(code)-f2b632?style=flat-square" />
+</p>
+
+<p align="center">
+  <a href="https://www.bestpractices.dev/projects/15501"><img src="https://www.bestpractices.dev/projects/15501/badge" alt="OpenSSF Best Practices" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/apoorvdarshan/pcm-notes"><img src="https://api.scorecard.dev/projects/github.com/apoorvdarshan/pcm-notes/badge" alt="OpenSSF Scorecard" /></a>
 </p>
 
 ---
@@ -100,6 +106,13 @@ Runs the unit tests and UI tests on task-owned iPhone and iPad simulators (see
 same script on every pull request and push to `main` that changes the app or its
 notes.
 
+Debug builds treat compiler warnings as errors. Other checks on pull requests:
+CodeQL static analysis of the Swift app, Python tooling, website JavaScript and
+workflows; Atheris fuzzing of the release parsers in [`fuzz/`](fuzz/)
+(`python3 -m unittest discover -s fuzz -p 'test_*.py'` replays them locally);
+dependency review; and offline tests of the release tooling. OpenSSF Scorecard
+checks the repository weekly.
+
 ### Releases
 
 GitHub Actions builds, signs and uploads the App Store binary and creates the GitHub
@@ -144,11 +157,15 @@ If a user chooses one of the four optional tips, Apple processes the transaction
 
 App Store privacy label: **Purchases → Purchase History**, used for **App Functionality** and **Analytics**, **not linked to identity**, and **not used for tracking**.
 
-## 📜 Copyright
+## 🤝 Contributing
 
-PCM Notes is private, closed-source software. The source code, bundled handwritten notes, branding, and other repository materials are proprietary.
+Bug reports, corrections to the notes, feature ideas and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md). Report security vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
 
-© 2026 Apoorv Darshan. All rights reserved.
+## 📜 License
+
+The source code (the iOS app, website, scripts and tooling) is open source under the [MIT License](LICENSE).
+
+The handwritten notes, the chapter PDFs made from them, the app icon and other images, and the PCM Notes name and branding are **not** covered by the MIT License: they remain © 2026 Apoorv Darshan, all rights reserved. See [NOTICE.md](NOTICE.md) for exactly what each covers.
 
 ---
 
