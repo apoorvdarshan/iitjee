@@ -10,6 +10,22 @@ before anything is built.
 The App Store's What's New text is kept separately, per language, in
 `store/metadata/ios/<locale>/whats_new.txt`.
 
+## v1.1.0
+
+App Store version 1.1.0.
+
+- Open source under the MIT License (the handwritten notes stay all rights
+  reserved); the Support tab links to the GitHub repository, bug reports and
+  feature requests
+- Rate and Share in the Support tab; Apple's rating prompt can also appear after
+  a good reading session (after 3 days of use, at most once per version and every
+  122 days)
+- Instagram @apoorvcodes next to X, and a single support email
+- The website moved to pcm-notes.apoorvdarshan.com
+- Fixed: after a quick slide through a chapter, the reader could jump back a few
+  pages
+- RevenueCat 5.95
+
 ## v1.0.0
 
 The first edition of PCM Notes (App Store version 1.0).
