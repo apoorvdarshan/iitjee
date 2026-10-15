@@ -2,8 +2,10 @@
 # queries. CodeQL analyses the Swift it sees being compiled, so this builds the app
 # (Debug, iOS Simulator, unsigned) under CodeQL on a macOS runner, including the
 # offline-notes generator in ios/PCMNotes/BuildTools/. It never restores a build
-# cache, so every source file is compiled and analysed. Runs for pull requests and
-# pushes to main that change the app or the notes it bundles, weekly and by hand.
+# cache, so every source file is compiled and analysed. The macOS build is too slow
+# for every pull request, so it runs weekly, for each release tag and by hand;
+# codeql.yml still analyses the Python, JavaScript and workflows on every pull
+# request.
 #
 # It runs on an Intel (x64) runner with Xcode 26.6, the oldest Xcode the app
 # supports. On the Apple silicon xcode-27 runner, CodeQL's build tracer stops the
@@ -12,22 +14,10 @@
 name: CodeQL Swift
 
 on:
+  # Release tags (the same v* tags ios-release.yml ships), so every release is analyzed.
   push:
-    branches: [main]
-    paths:
-      - 'ios/**'
-      - 'physics/**'
-      - 'chemistry/**'
-      - 'mathematics/**'
-      - '.github/workflows/codeql-swift.yml'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'ios/**'
-      - 'physics/**'
-      - 'chemistry/**'
-      - 'mathematics/**'
-      - '.github/workflows/codeql-swift.yml'
+    tags:
+      - "v*"
   schedule:
     # Weekly on Mondays.
     - cron: '41 4 * * 1'
@@ -35,10 +25,6 @@ on:
 
 permissions:
   contents: read
-
-concurrency:
-  group: codeql-swift-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   analyze:

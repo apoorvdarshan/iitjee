@@ -107,8 +107,8 @@ same script on every pull request and push to `main` that changes the app or its
 notes.
 
 Debug builds treat compiler warnings as errors. Other checks on pull requests:
-CodeQL static analysis of the Swift app, Python tooling, website JavaScript and
-workflows; Atheris fuzzing of the release parsers in [`fuzz/`](fuzz/)
+CodeQL static analysis of the Python tooling, website JavaScript and workflows
+(the Swift app weekly and for each release tag); Atheris fuzzing of the release parsers in [`fuzz/`](fuzz/)
 (`python3 -m unittest discover -s fuzz -p 'test_*.py'` replays them locally);
 dependency review; and offline tests of the release tooling. OpenSSF Scorecard
 checks the repository weekly.
