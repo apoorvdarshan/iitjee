@@ -45,6 +45,11 @@
 # queue (queue: max), so releases run one at a time and a waiting tag run is
 # never dropped.
 #
+# Export compliance: the app declares ITSAppUsesNonExemptEncryption = NO in its
+# build settings. Every run that builds checks it in each configuration of the
+# app target (gates) before anything is built and in the archived app's
+# Info.plist after the archive.
+#
 # Release notes: RELEASE_NOTES.md feeds only the GitHub Release (generated notes
 # when the tag has no section or the file is missing; an empty or repeated
 # section fails before the build). The What's New text comes from
@@ -263,6 +268,7 @@ jobs:
             /physics/
             /chemistry/
             /mathematics/
+            /scripts/store/ios_release.py
             /scripts/store/redact_logs.py
 
       - name: Cache pinned Swift packages
@@ -341,7 +347,7 @@ jobs:
           grep -E '(error|warning): |\*\* ARCHIVE' "$log" || true
           [ "$status" -eq 0 ] || { tail -n 60 "$log"; echo "error: archive failed (full log in artifact)" >&2; exit "$status"; }
 
-      - name: Verify app identity and version in every bundle
+      - name: Verify app identity, version and export compliance in every bundle
         run: |
           set -euo pipefail
           apps="$RUNNER_TEMP/PCMNotes.xcarchive/Products/Applications"
@@ -363,6 +369,10 @@ jobs:
             checked=$((checked + 1))
           done < <(printf '%s\0' "$main"; find "$main" -mindepth 1 -type d \( -name '*.app' -o -name '*.appex' \) -not -path '*/Frameworks/*' -print0)
           echo "verified $BUNDLE_ID $MARKETING_VERSION ($BUILD_NUMBER) in $checked app/extension bundles"
+          # Export compliance: without ITSAppUsesNonExemptEncryption, App Store Connect
+          # asks about every build by hand and review submission fails until it is
+          # answered. YES also needs ITSEncryptionExportComplianceCode.
+          python3 scripts/store/ios_release.py export-compliance --info-plist "$main/Info.plist"
 
       - name: Verify the archive bundles every tracked note page
         run: |
