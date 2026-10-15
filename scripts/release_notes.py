@@ -48,10 +48,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--out", type=Path, help="write the notes here (an empty file means generated notes)")
     args = parser.parse_args(argv)
     text = read_notes()
+    notes: str | None = None
     try:
         notes = section_for(text, args.tag)
     except ValueError as exc:
-        parser.error(str(exc))
+        parser.error(str(exc))  # exits
     if text is None:
         print("RELEASE_NOTES.md does not exist; using generated notes", file=sys.stderr)
     elif notes is None:
