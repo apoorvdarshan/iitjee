@@ -1808,11 +1808,28 @@ class CreateVersionTests(unittest.TestCase):
         self.assertEqual(fake.calls[-1][0], "GET", "the created version must be read back")
         self.assertIn(f"created App Store version {VERSION} (PREPARE_FOR_SUBMISSION)", output)
 
-    def test_a_created_version_that_does_not_read_back_fails(self) -> None:
+    def test_a_created_version_that_does_not_read_back_fails_naming_it(self) -> None:
         fake = FakeAsc(has_version=False, creates_version=False)
         code, output = self.create(fake)
         self.assertEqual(code, 1)
-        self.assertIn(f"no IOS App Store version '{VERSION}'", output)
+        self.assertIn(f"created App Store version {VERSION}, but reading it back found 0 records", output)
+        self.assertIn("check it in App Store Connect before rerunning", output)
+        self.assertNotIn("turn on IOS_CREATE_VERSION", output)
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+
+    def test_a_created_version_that_reads_back_twice_fails_naming_it(self) -> None:
+        class Doubled(FakeAsc):
+            def post(self, path: str, body: dict) -> dict:
+                result = super().post(path, body)
+                if path == "/appStoreVersions":  # App Store Connect now lists two records for it
+                    self.other_versions = [*self.other_versions, (VERSION, "PREPARE_FOR_SUBMISSION")]
+                return result
+
+        fake = Doubled(has_version=False)
+        code, output = self.create(fake)
+        self.assertEqual(code, 1)
+        self.assertIn(f"created App Store version {VERSION}, but reading it back found 2 records", output)
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
 
     def test_the_preflight_accepts_a_version_this_step_created(self) -> None:
         fake = FakeAsc(has_version=False)
@@ -1887,6 +1904,16 @@ class CreateVersionTests(unittest.TestCase):
         self.assertEqual(code, 0, output)
         self.assertIn("would create", output)
         self.assertEqual(fake.calls, [])
+
+    def test_dry_run_rejects_a_bad_version_like_a_live_run(self) -> None:
+        for bad in ("1.0.1-beta", "v1.0.1", "1.0.1.2", "١.٠"):
+            with self.subTest(bad=bad):
+                fake = FakeAsc(has_version=False)
+                code, output = run_create_version(fake, self.ON, "--dry-run", "--version", bad)
+                self.assertEqual(code, 1)
+                self.assertIn("must look like", output)
+                self.assertNotIn("would create", output)
+                self.assertEqual(fake.calls, [])
 
 
 class RedactLogsTests(unittest.TestCase):
