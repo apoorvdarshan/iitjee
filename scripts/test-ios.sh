@@ -90,8 +90,11 @@ run_tests=(
 )
 
 # Both simulators share the iOS Simulator SDK and architecture, so one build serves both.
-# Each simulator boots when its tests start. Booting one while building or testing
-# on the other made the CI job 2-3 minutes slower (measured October 2026).
+# Each simulator boots just before its tests, and only one runs at a time: booting
+# one while building or testing on the other made the CI job 2-3 minutes slower, and
+# with the iPhone still booted the iPad's first UI test intermittently timed out
+# launching the app (both seen on CI in October 2026). `bootstatus -b` boots the
+# simulator and waits until it has finished booting, so no launch races the boot.
 xcodebuild build-for-testing "${common[@]}" \
   -destination "platform=iOS Simulator,id=$iphone_id" \
   -resultBundlePath "$results/Build.xcresult" \
@@ -99,12 +102,15 @@ xcodebuild build-for-testing "${common[@]}" \
   2>&1 | tee "$results/build.log"
 
 status=0
+xcrun simctl bootstatus "$iphone_id" -b
 xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
   -destination "platform=iOS Simulator,id=$iphone_id" \
   -skip-testing:"$ipad_only" \
   -resultBundlePath "$results/iPhone.xcresult" \
   2>&1 | tee "$results/iphone.log" || status=1
 
+xcrun simctl shutdown "$iphone_id" || true
+xcrun simctl bootstatus "$ipad_id" -b
 xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
   -destination "platform=iOS Simulator,id=$ipad_id" \
   -only-testing:"$ipad_only" \
@@ -113,5 +119,9 @@ xcodebuild test-without-building "${common[@]}" "${run_tests[@]}" \
 
 python3 scripts/ios_test_summary.py "$results/iPhone.xcresult" --require-unit --require-ui || status=1
 python3 scripts/ios_test_summary.py "$results/iPad.xcresult" --require-ui || status=1
+# Line coverage of the app from the iPhone run (unit tests plus most UI tests).
+# Informational only: it never changes the result.
+echo "App code coverage (iPhone run):"
+xcrun xccov view --report --only-targets "$results/iPhone.xcresult" || true
 echo "Results: $results"
 exit "$status"

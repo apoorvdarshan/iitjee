@@ -1,0 +1,63 @@
+name: Bug report
+description: Something in the app, the website or a note page is wrong
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Please check [existing issues](https://github.com/apoorvdarshan/pcm-notes/issues?q=is%3Aissue) first.
+        Security vulnerabilities belong in [private vulnerability reporting](https://github.com/apoorvdarshan/pcm-notes/security/advisories/new), not here.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where is the problem?
+      multiple: true
+      options:
+        - iPhone app
+        - iPad app
+        - Website
+        - Note content (a mistake on a page)
+        - Other / not sure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version, device and OS (or browser)
+      description: The app version is under About in the app.
+      placeholder: e.g. 1.0 on iPhone 16, iOS 26.1 · Safari on macOS
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Subject, chapter and page (for note problems)
+      placeholder: e.g. Chemistry, chapter 10 Ionic Equilibrium, page 14
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+    validations:
+      required: true
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshots or screen recording
+      description: Drag images or a short video here if they help.
