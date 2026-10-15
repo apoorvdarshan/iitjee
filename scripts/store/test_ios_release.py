@@ -36,6 +36,7 @@ TAG = "v1.0.1"
 VERSION = "1.0.1"
 ALL_ON = {
     "IOS_RELEASE_AUTOMATION": "true",
+    "IOS_CREATE_VERSION": "true",
     "IOS_UPLOAD_BUILD": "true",
     "IOS_UPLOAD_LISTING": "true",
     "IOS_UPLOAD_WHATS_NEW": "true",
@@ -43,8 +44,9 @@ ALL_ON = {
     "IOS_SUBMIT_REVIEW": "true",
     "IOS_PUBLIC_RELEASE": "true",
 }
-OPS = ("upload_build", "listing", "whats_new", "screenshots", "submit", "public_release")
-FLAG_NAMES = {"UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS", "SUBMIT_IOS_REVIEW", "PUBLIC_RELEASE"}
+OPS = ("create_version", "upload_build", "listing", "whats_new", "screenshots", "submit", "public_release")
+FLAG_NAMES = {"UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS", "SUBMIT_IOS_REVIEW", "PUBLIC_RELEASE",
+              "CREATE_IOS_VERSION"}
 
 
 def gates(env: dict[str, str], *, event: str = "push", ref: str = TAG) -> dict:
@@ -94,8 +96,17 @@ class GateTests(unittest.TestCase):
             self.assertTrue(result[key], key)
         self.assertTrue(result["build"])
 
+    def test_create_version_needs_only_the_master_switch(self) -> None:
+        result = gates({"IOS_RELEASE_AUTOMATION": "true", "IOS_CREATE_VERSION": "true"})
+        self.assertTrue(result["create_version"])
+        self.assertFalse(result["build"])
+        self.assertFalse(result["asc"])
+        self.assertFalse(gates({"IOS_CREATE_VERSION": "true"})["create_version"])
+        self.assertFalse(gates(ALL_ON, event="workflow_dispatch", ref="main")["create_version"])
+
     def test_invalid_values_are_rejected_even_when_master_is_off(self) -> None:
-        for name in ("IOS_RELEASE_AUTOMATION", "IOS_SUBMIT_REVIEW", "IOS_UPLOAD_WHATS_NEW", "IOS_UPLOAD_SCREENSHOTS"):
+        for name in ("IOS_RELEASE_AUTOMATION", "IOS_CREATE_VERSION", "IOS_SUBMIT_REVIEW", "IOS_UPLOAD_WHATS_NEW",
+                     "IOS_UPLOAD_SCREENSHOTS"):
             with self.subTest(name=name), self.assertRaisesRegex(ios_release.ReleaseError, name):
                 gates({name: "maybe"})
         with self.assertRaisesRegex(ios_release.ReleaseError, "IOS_UPLOAD_BUILD"):
@@ -203,6 +214,7 @@ class GateTests(unittest.TestCase):
         self.assertEqual(written["build"], "true")
         self.assertEqual(written["marketing_version"], "1.0.1")
         self.assertEqual(written["upload_build"], "false")
+        self.assertEqual(written["create_version"], "false")
 
     def test_cli_exits_non_zero_on_a_bad_switch(self) -> None:
         env = {"GITHUB_EVENT_NAME": "push", "GITHUB_REF_NAME": TAG, "IOS_SUBMIT_REVIEW": "maybe"}
@@ -588,7 +600,9 @@ class PreflightTests(unittest.TestCase):
         )
 
     def test_missing_version_fails_before_anything_is_built(self) -> None:
-        self.assertRegex(" ".join(self.problems(None)), f"create the {VERSION} App Store version")
+        problems = " ".join(self.problems(None))
+        self.assertRegex(problems, f"create the {VERSION} App Store version")
+        self.assertIn("IOS_CREATE_VERSION", problems)
 
     def test_live_or_in_review_version_cannot_take_listing_edits(self) -> None:
         for state in ("READY_FOR_SALE", "WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE"):
@@ -1435,8 +1449,17 @@ class FakeAsc:
     def __init__(self, *, state: str = "PREPARE_FOR_SUBMISSION", attached: str | None = "OLD",
                  revert_on_read: int | None = None, release_type: str | None = None,
                  screenshots: dict[str, list[str]] | None = None, differ: tuple[str, ...] = (),
-                 ready_tips: tuple[str, ...] = (), drafts: tuple[str, ...] = ("SUB1",)) -> None:
+                 ready_tips: tuple[str, ...] = (), drafts: tuple[str, ...] = ("SUB1",),
+                 app_id: str = APP, has_version: bool = True,
+                 other_versions: list[tuple[str, str]] | None = None, creates_version: bool = True) -> None:
         self.state = state
+        self.app_id = app_id
+        # False: App Store Connect has no VERSION yet (POST /appStoreVersions adds it,
+        # unless `creates_version` is False and the new version never reads back).
+        self.has_version = has_version
+        self.creates_version = creates_version
+        # The app's other IOS versions as (versionString, appStoreState); the first is V0.
+        self.other_versions = [("1.0", "READY_FOR_SALE")] if other_versions is None else other_versions
         self.attached = attached
         self.revert_on_read = revert_on_read  # this read of the selection, and later ones, show OLD
         self.release_type = release_type
@@ -1456,6 +1479,7 @@ class FakeAsc:
         self.drafts = list(drafts)
         self.items: list[dict] = []
         self.calls: list[tuple[str, str]] = []
+        self.bodies: list[tuple[str, str, dict]] = []
 
     def writes(self) -> list[tuple[str, str]]:
         return [call for call in self.calls if call[0] != "GET"]
@@ -1468,15 +1492,16 @@ class FakeAsc:
         base, _, query = path.partition("?")
         params = urllib.parse.parse_qs(query)
         if base == "/apps":
-            return {"data": [{"id": APP, "attributes": {"bundleId": asc_release.DEFAULT_BUNDLE_ID}}]}
-        if base == f"/apps/{APP}/appStoreVersions":
-            attrs = {"versionString": VERSION, "appStoreState": self.state}
-            if self.release_type:
-                attrs["releaseType"] = self.release_type
-            return {"data": [
-                {"id": "V0", "attributes": {"versionString": "1.0", "appStoreState": "READY_FOR_SALE"}},
-                {"id": "V1", "attributes": attrs},
-            ]}
+            return {"data": [{"id": self.app_id, "attributes": {"bundleId": asc_release.DEFAULT_BUNDLE_ID}}]}
+        if base == f"/apps/{self.app_id}/appStoreVersions":
+            rows = [{"id": "V0" if i == 0 else f"V0-{i}", "attributes": {"versionString": number, "appStoreState": state}}
+                    for i, (number, state) in enumerate(self.other_versions)]
+            if self.has_version:
+                attrs = {"versionString": VERSION, "appStoreState": self.state}
+                if self.release_type:
+                    attrs["releaseType"] = self.release_type
+                rows.append({"id": "V1", "attributes": attrs})
+            return {"data": rows}
         if base == "/builds/B9":
             return {"data": build_row("B9"), "included": [pre_row()]}
         if base == "/appStoreVersions/V1/build":
@@ -1525,6 +1550,12 @@ class FakeAsc:
 
     def post(self, path: str, body: dict) -> dict:
         self.calls.append(("POST", path))
+        self.bodies.append(("POST", path, body))
+        if path == "/appStoreVersions":
+            if self.creates_version:
+                self.has_version = True
+                self.state = "PREPARE_FOR_SUBMISSION"
+            return {"data": {"id": "V1"}}
         if path == "/reviewSubmissions":
             self.drafts.append("SUB-NEW")
             return {"data": {"id": "SUB-NEW"}}
@@ -1722,6 +1753,142 @@ class RerunTests(LiveFlowCase):
         self.assertEqual(fake.writes(), [])
 
 
+def run_create_version(fake: FakeAsc, env: dict[str, str], *args: str) -> tuple[int, str]:
+    """asc_release.py --create-version against FakeAsc; returns (exit code, output)."""
+    out = io.StringIO()
+    full_env = {k: v for k, v in os.environ.items() if k not in FLAG_NAMES}
+    full_env.update(env)
+    code = 0
+    with mock.patch.dict(os.environ, full_env, clear=True), mock.patch.object(
+        sys, "argv", ["asc_release.py", "--create-version", *args]
+    ), mock.patch.object(asc_release, "client_from_environment", return_value=fake), \
+            redirect_stdout(out), redirect_stderr(out):
+        try:
+            asc_release.main()
+        except SystemExit as exc:
+            code = exc.code if isinstance(exc.code, int) else 1
+    return code, out.getvalue()
+
+
+class CreateVersionTests(unittest.TestCase):
+    """--create-version (IOS_CREATE_VERSION): add the tag's App Store version only when it is missing."""
+
+    ON = {"CREATE_IOS_VERSION": "true"}
+
+    def create(self, fake: FakeAsc, flags: dict[str, str] | None = None, version: str = VERSION) -> tuple[int, str]:
+        return run_create_version(fake, self.ON if flags is None else flags, "--version", version)
+
+    def test_switch_off_makes_no_calls(self) -> None:
+        for flags in ({}, {"CREATE_IOS_VERSION": "false"}):
+            with self.subTest(flags=flags):
+                fake = FakeAsc(has_version=False)
+                code, output = self.create(fake, flags)
+                self.assertEqual(code, 0, output)
+                self.assertIn("skipped", output)
+                self.assertEqual(fake.calls, [])
+
+    def test_existing_version_is_left_alone(self) -> None:
+        for state in ("PREPARE_FOR_SUBMISSION", "READY_FOR_REVIEW", "WAITING_FOR_REVIEW"):
+            with self.subTest(state=state):
+                fake = FakeAsc(state=state)
+                code, output = self.create(fake)
+                self.assertEqual(code, 0, output)
+                self.assertIn(f"already exists ({state})", output)
+                self.assertEqual(fake.writes(), [])
+
+    def test_missing_version_is_created_for_this_app_and_read_back(self) -> None:
+        fake = FakeAsc(has_version=False)
+        code, output = self.create(fake)
+        self.assertEqual(code, 0, output)
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+        body = fake.bodies[0][2]["data"]
+        self.assertEqual(body["type"], "appStoreVersions")
+        self.assertEqual(body["attributes"], {"platform": "IOS", "versionString": VERSION})
+        self.assertEqual(body["relationships"]["app"]["data"], {"type": "apps", "id": APP})
+        self.assertEqual(fake.calls[-1][0], "GET", "the created version must be read back")
+        self.assertIn(f"created App Store version {VERSION} (PREPARE_FOR_SUBMISSION)", output)
+
+    def test_a_created_version_that_does_not_read_back_fails(self) -> None:
+        fake = FakeAsc(has_version=False, creates_version=False)
+        code, output = self.create(fake)
+        self.assertEqual(code, 1)
+        self.assertIn(f"no IOS App Store version '{VERSION}'", output)
+
+    def test_the_preflight_accepts_a_version_this_step_created(self) -> None:
+        fake = FakeAsc(has_version=False)
+        code, output = self.create(fake)
+        self.assertEqual(code, 0, output)
+        out = io.StringIO()
+        with mock.patch.object(ios_release, "asc_client", return_value=(asc_release, fake)), \
+                redirect_stdout(out), redirect_stderr(out):
+            ios_release.main(["preflight", "--version", VERSION, "--whats-new", "--screenshots", "--submit"])
+        self.assertIn("can take this release", out.getvalue())
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+
+    def test_another_version_on_its_way_blocks_creation(self) -> None:
+        for state in ("PREPARE_FOR_SUBMISSION", "WAITING_FOR_REVIEW", "IN_REVIEW", "PENDING_DEVELOPER_RELEASE", ""):
+            with self.subTest(state=state):
+                fake = FakeAsc(has_version=False, other_versions=[("0.9", "REPLACED_WITH_NEW_VERSION"), ("1.0", state)])
+                code, output = self.create(fake)
+                self.assertEqual(code, 1)
+                self.assertIn(f"is still {state or 'in an unknown state'}", output)
+                self.assertIn("nothing was changed", output)
+                self.assertEqual(fake.writes(), [])
+
+    def test_version_not_newer_than_an_existing_one_is_refused(self) -> None:
+        for existing in ("1.1", "1.0.10", "2"):
+            with self.subTest(existing=existing):
+                fake = FakeAsc(has_version=False, other_versions=[(existing, "READY_FOR_SALE")])
+                code, output = self.create(fake)
+                self.assertEqual(code, 1)
+                self.assertIn(f"not newer than the existing version {existing}", output)
+                self.assertEqual(fake.writes(), [])
+
+    def test_older_finished_versions_allow_creation(self) -> None:
+        for state in sorted(asc_release.FINISHED_VERSION_STATES):
+            with self.subTest(state=state):
+                fake = FakeAsc(has_version=False, other_versions=[("0.9", "REPLACED_WITH_NEW_VERSION"), ("1.0", state)])
+                code, output = self.create(fake)
+                self.assertEqual(code, 0, output)
+                self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+        fake = FakeAsc(has_version=False, other_versions=[])
+        code, output = self.create(fake)
+        self.assertEqual(code, 0, output)
+        self.assertEqual(fake.writes(), [("POST", "/appStoreVersions")])
+
+    def test_other_app_or_bad_version_fails_without_writing(self) -> None:
+        fake = FakeAsc(app_id="1234567890", has_version=False)
+        code, output = self.create(fake)
+        self.assertEqual(code, 1)
+        self.assertIn(f"expected PCM Notes ({APP})", output)
+        self.assertEqual(fake.writes(), [])
+        fake = FakeAsc(has_version=False)
+        with mock.patch.object(asc_release, "find_app", return_value="1234567890"):
+            code, output = self.create(fake)
+        self.assertEqual(code, 1)
+        self.assertIn(f"expected {APP}", output)
+        self.assertEqual(fake.writes(), [])
+        for bad in ("1.0.1-beta", "v1.0.1", "1.0.1.2", "١.٠"):
+            with self.subTest(bad=bad):
+                fake = FakeAsc(has_version=False)
+                code, output = self.create(fake, version=bad)
+                self.assertEqual(code, 1)
+                self.assertIn("must look like", output)
+                self.assertEqual(fake.calls, [])
+        fake = FakeAsc(has_version=False)
+        code, output = run_create_version(fake, self.ON)
+        self.assertEqual(code, 1)
+        self.assertIn("needs --version", output)
+        self.assertEqual(fake.calls, [])
+
+    def test_dry_run_makes_no_calls(self) -> None:
+        fake = FakeAsc(has_version=False)
+        code, output = run_create_version(fake, self.ON, "--dry-run", "--version", VERSION)
+        self.assertEqual(code, 0, output)
+        self.assertIn("would create", output)
+        self.assertEqual(fake.calls, [])
+
+
 class RedactLogsTests(unittest.TestCase):
     KEY = "AB12CD34EF"
     ISSUER = "69a6de7e-0b7f-47e3-e053-5b8c7c11a4d1"
@@ -1884,6 +2051,7 @@ class PrintGatesTests(unittest.TestCase):
         self.assertIn("IOS_RELEASE_AUTOMATION=true", output)
         self.assertIn("IOS_UPLOAD_BUILD=false\n", output)
         self.assertIn("IOS_UPLOAD_LISTING=false (unset)", output)
+        self.assertIn("IOS_CREATE_VERSION=false (unset)", output)
         self.assertIn("IOS_BUILD_POLL_SECONDS=45", output)
         self.assertIn("IOS_BUILD_WAIT_MINUTES=120 (default)", output)
         self.assertIn("every store operation is off", output)
@@ -1914,6 +2082,8 @@ class PrintGatesTests(unittest.TestCase):
     def test_live_operations_are_called_out(self) -> None:
         output = self.printed({"IOS_RELEASE_AUTOMATION": "true", "IOS_UPLOAD_BUILD": "true"})
         self.assertIn("WARNING: live App Store operations are on: IOS_UPLOAD_BUILD", output)
+        output = self.printed({"IOS_RELEASE_AUTOMATION": "true", "IOS_CREATE_VERSION": "true"})
+        self.assertIn("WARNING: live App Store operations are on: IOS_CREATE_VERSION", output)
 
 
 class CatalogTests(unittest.TestCase):
