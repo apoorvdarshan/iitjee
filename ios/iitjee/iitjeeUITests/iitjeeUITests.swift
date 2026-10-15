@@ -140,7 +140,7 @@ final class iitjeeUITests: XCTestCase {
         previous.tap()
         XCTAssertTrue(pageSlider.waitForValue("Page 2 of 9"))
 
-        pageSlider.adjust(toNormalizedSliderPosition: 1)
+        pageSlider.dragSliderToEnd(from: 1 / 8) // page 2 of 9
         XCTAssertTrue(pageSlider.waitForValue("Page 9 of 9"))
         XCTAssertFalse(next.isEnabled, "the last page has nothing after it")
         previous.tap()

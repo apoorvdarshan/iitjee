@@ -114,4 +114,16 @@ extension XCUIElement {
         )
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
     }
+
+    /// Drags a slider's thumb from `fraction` (0...1) of its range to past the end of the
+    /// track and holds it there, so the slider settles on its maximum.
+    /// `adjust(toNormalizedSliderPosition: 1)` ends its drag exactly at the end of the
+    /// track, and on CI the slider sometimes stopped one step short of it.
+    func dragSliderToEnd(from fraction: CGFloat) {
+        // iOS keeps the thumb's centre about half a thumb (16 points) inside each end.
+        let inset = 16 / frame.width
+        let thumb = coordinate(withNormalizedOffset: CGVector(dx: inset + fraction * (1 - 2 * inset), dy: 0.5))
+        let pastEnd = coordinate(withNormalizedOffset: CGVector(dx: 1, dy: 0.5)).withOffset(CGVector(dx: 60, dy: 0))
+        thumb.press(forDuration: 0.1, thenDragTo: pastEnd, withVelocity: .slow, thenHoldForDuration: 0.3)
+    }
 }
