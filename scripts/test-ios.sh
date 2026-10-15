@@ -93,6 +93,13 @@ run_tests=(
   -collect-test-diagnostics never
 )
 
+# CI sets IOS_COMPILATION_CACHE to a directory it restores and saves, so
+# unchanged Swift and C files reuse earlier compiler outputs. The tests always run.
+cache_settings=()
+if [ -n "${IOS_COMPILATION_CACHE:-}" ]; then
+  cache_settings=(COMPILATION_CACHE_ENABLE_CACHING=YES "COMPILATION_CACHE_CAS_PATH=$IOS_COMPILATION_CACHE")
+fi
+
 # Both simulators share the iOS Simulator SDK and architecture, so one build serves both.
 # Each simulator boots just before its tests, and only one runs at a time: booting
 # one while building or testing on the other made the CI job 2-3 minutes slower, and
@@ -102,6 +109,7 @@ run_tests=(
 xcodebuild build-for-testing "${common[@]}" \
   -destination "platform=iOS Simulator,id=$iphone_id" \
   -resultBundlePath "$results/Build.xcresult" \
+  ${cache_settings[@]+"${cache_settings[@]}"} \
   CODE_SIGNING_ALLOWED=NO \
   2>&1 | tee "$results/build.log"
 
