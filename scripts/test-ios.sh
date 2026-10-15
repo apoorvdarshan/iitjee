@@ -83,10 +83,14 @@ common=(
   -onlyUsePackageVersionsFromResolvedFile
   -enableCodeCoverage YES
 )
+# -collect-test-diagnostics never: otherwise xcodebuild can spend 10 minutes after
+# the tests finish timing out while collecting simulator diagnostics. Failure
+# screenshots and logs are still kept in the result bundles.
 run_tests=(
   -destination-timeout 120
   -parallel-testing-enabled NO
   -maximum-concurrent-test-simulator-destinations 1
+  -collect-test-diagnostics never
 )
 
 # Both simulators share the iOS Simulator SDK and architecture, so one build serves both.
