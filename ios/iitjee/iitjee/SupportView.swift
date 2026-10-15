@@ -1,14 +1,20 @@
+import StoreKit
 import SwiftUI
 
 struct SupportView: View {
-    private let studySupportEmail = URL(
+    private let supportEmail = URL(
         string: "mailto:ad13dtu@gmail.com?subject=PCM%20Notes%20Support"
     )!
-    private let creatorEmail = URL(
-        string: "mailto:apoorvdarshan@gmail.com?subject=PCM%20Notes%20Contact"
-    )!
     private let xProfile = URL(string: "https://x.com/apoorvdarshan")!
+    private let instagramProfile = URL(string: "https://www.instagram.com/apoorvcodes/")!
+    private let appStoreListing = URL(string: "https://apps.apple.com/app/id6792598227")!
+    private let appStoreReview = URL(string: "https://apps.apple.com/app/id6792598227?action=write-review")!
+    private let sourceRepository = URL(string: "https://github.com/apoorvdarshan/pcm-notes")!
+    private let bugReport = URL(string: "https://github.com/apoorvdarshan/pcm-notes/issues/new?template=bug_report.yml")!
+    private let featureRequest = URL(string: "https://github.com/apoorvdarshan/pcm-notes/issues/new?template=feature_request.yml")!
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.requestReview) private var requestReview
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         ZStack {
@@ -85,28 +91,53 @@ struct SupportView: View {
                 )
 
                 NotebookActionRow(
-                    title: "Study support",
+                    title: "Email support",
                     detail: "ad13dtu@gmail.com",
                     symbol: "envelope",
                     color: AppPalette.support,
-                    destination: studySupportEmail
+                    destination: supportEmail
                 )
-                .accessibilityIdentifier("support.email.study")
+                .accessibilityIdentifier("support.email")
 
                 NotebookActionRow(
-                    title: "Contact Apoorv",
-                    detail: "apoorvdarshan@gmail.com",
-                    symbol: "envelope.open",
-                    color: AppPalette.about,
-                    destination: creatorEmail
+                    title: "Report a bug",
+                    detail: "Open an issue on GitHub",
+                    symbol: "ladybug",
+                    color: AppPalette.support,
+                    destination: bugReport
                 )
-                .accessibilityIdentifier("support.email.creator")
+                .accessibilityIdentifier("support.bug")
 
+                NotebookActionRow(
+                    title: "Request a feature",
+                    detail: "Suggest an idea on GitHub",
+                    symbol: "lightbulb",
+                    color: AppPalette.support,
+                    destination: featureRequest
+                )
+                .accessibilityIdentifier("support.feature")
             }
 
             VStack(alignment: .leading, spacing: 0) {
                 DoodleSectionTitle(
-                    title: "On X",
+                    title: "Open source",
+                    color: .primary,
+                    annotation: "MIT licence"
+                )
+
+                NotebookActionRow(
+                    title: "Star on GitHub",
+                    detail: "apoorvdarshan/pcm-notes · the app's source code",
+                    symbol: "chevron.left.forwardslash.chevron.right",
+                    color: .primary,
+                    destination: sourceRepository
+                )
+                .accessibilityIdentifier("support.github")
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
+                DoodleSectionTitle(
+                    title: "Follow along",
                     color: AppPalette.mathematicsSecondary,
                     annotation: "updates + messages"
                 )
@@ -119,7 +150,66 @@ struct SupportView: View {
                     destination: xProfile
                 )
                 .accessibilityIdentifier("support.x")
+
+                NotebookActionRow(
+                    title: "Instagram",
+                    detail: "@apoorvcodes",
+                    symbol: "camera",
+                    color: AppPalette.about,
+                    destination: instagramProfile
+                )
+                .accessibilityIdentifier("support.instagram")
             }
+
+            VStack(alignment: .leading, spacing: 0) {
+                DoodleSectionTitle(
+                    title: "Spread the word",
+                    color: AppPalette.chemistry,
+                    annotation: "it really helps"
+                )
+
+                Button(action: rate) {
+                    NotebookRowLabel(
+                        title: "Rate PCM Notes",
+                        detail: "Leave a rating or review on the App Store",
+                        symbol: "star",
+                        trailingSymbol: "star.bubble",
+                        color: AppPalette.chemistry
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Asks for your App Store rating")
+                .accessibilityIdentifier("support.rate")
+
+                ShareLink(
+                    item: appStoreListing,
+                    subject: Text("PCM Notes"),
+                    message: Text("Handwritten Physics, Chemistry and Maths notes for JEE and NEET, offline on iPhone and iPad.")
+                ) {
+                    NotebookRowLabel(
+                        title: "Share PCM Notes",
+                        detail: "Send the App Store link to a friend",
+                        symbol: "square.and.arrow.up",
+                        trailingSymbol: "arrowshape.turn.up.right",
+                        color: AppPalette.chemistry
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the share sheet")
+                .accessibilityIdentifier("support.share")
+            }
+        }
+    }
+
+    /// Shows Apple's in-app rating prompt, or the App Store review page when the
+    /// prompt was already requested recently (see `ReviewPrompt`).
+    private func rate() {
+        let lastRequest = UserDefaults.standard.double(forKey: ReviewPrompt.Key.lastRequest)
+        if ReviewPrompt.shouldRequestInAppPrompt(lastRequest: lastRequest, now: Date()) {
+            ReviewPrompt.recordRequest()
+            requestReview()
+        } else {
+            openURL(appStoreReview)
         }
     }
 
@@ -164,38 +254,57 @@ private struct NotebookActionRow: View {
 
     var body: some View {
         Link(destination: destination) {
-            HStack(spacing: 14) {
-                Image(systemName: symbol)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(color)
-                    .frame(width: 30)
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(.primary)
-
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.leading)
-                }
-
-                Spacer(minLength: 8)
-
-                Image(systemName: "arrow.up.right")
-                    .font(.callout.weight(.bold))
-                    .foregroundStyle(color)
-                    .rotationEffect(.degrees(5))
-            }
-            .padding(.vertical, 15)
-            .contentShape(Rectangle())
-            .overlay(alignment: .bottom) {
-                DoodleRule(color: color)
-            }
+            NotebookRowLabel(
+                title: title,
+                detail: detail,
+                symbol: symbol,
+                trailingSymbol: "arrow.up.right",
+                color: color
+            )
         }
         .buttonStyle(.plain)
         .accessibilityHint("Opens an external link")
+    }
+}
+
+/// The look shared by the Support tab's link, share and rate rows.
+private struct NotebookRowLabel: View {
+    let title: String
+    let detail: String
+    let symbol: String
+    let trailingSymbol: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: symbol)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(color)
+                .frame(width: 30)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.leading)
+            }
+
+            Spacer(minLength: 8)
+
+            Image(systemName: trailingSymbol)
+                .font(.callout.weight(.bold))
+                .foregroundStyle(color)
+                .rotationEffect(.degrees(5))
+        }
+        .padding(.vertical, 15)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) {
+            DoodleRule(color: color)
+        }
     }
 }
 

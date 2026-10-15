@@ -70,8 +70,7 @@ This file records the 1.0 submission. The live listing is now kept in `store/met
     Support: https://iitjee.apoorvdarshan.com/#support
     Privacy Policy: https://iitjee.apoorvdarshan.com/privacy.html
     Terms of Use: https://iitjee.apoorvdarshan.com/terms.html
-    Contact 1: ad13dtu@gmail.com
-    Contact 2: apoorvdarshan@gmail.com
+    Contact: ad13dtu@gmail.com
 
 ## What's New (v1.0)
 
@@ -175,8 +174,8 @@ equivalent regional ratings automatically.
     Privacy Policy and Terms of Use are available as native pages inside the
     About tab. The same documents are available at the URLs above.
     Support email: ad13dtu@gmail.com
-    Alternate email: apoorvdarshan@gmail.com
     X: @apoorvdarshan
+    Instagram: @apoorvcodes
 
 ## Final Submission Checklist
 

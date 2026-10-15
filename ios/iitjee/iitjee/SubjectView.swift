@@ -1,9 +1,11 @@
+import StoreKit
 import SwiftUI
 
 struct SubjectScene: View {
     let subject: SubjectArea
 
     @State private var selectedChapter: Chapter?
+    @Environment(\.requestReview) private var requestReview
 
     var body: some View {
         NavigationStack {
@@ -14,8 +16,20 @@ struct SubjectScene: View {
         }
         .tint(subject.accent)
         .fullScreenCover(item: $selectedChapter) { chapter in
-            ChapterReaderView(subject: subject, chapter: chapter)
+            ChapterReaderView(subject: subject, chapter: chapter, onClose: askForRating)
                 .id(chapter.id)
+        }
+    }
+
+    /// After a good reading session, request the App Store rating prompt when
+    /// `ReviewPrompt` allows it, once the reader has finished closing and the
+    /// chapter list is showing.
+    private func askForRating(afterGoodSession goodSession: Bool) {
+        guard goodSession, ReviewPrompt.shouldAutoRequest() else { return }
+        ReviewPrompt.recordRequest()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(700))
+            requestReview()
         }
     }
 }

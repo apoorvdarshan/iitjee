@@ -39,5 +39,4 @@ PCM Notes is an independent revision resource. It is not affiliated with or endo
 Support: https://iitjee.apoorvdarshan.com/#support
 Privacy Policy: https://iitjee.apoorvdarshan.com/privacy.html
 Terms of Use: https://iitjee.apoorvdarshan.com/terms.html
-Contact 1: ad13dtu@gmail.com
-Contact 2: apoorvdarshan@gmail.com
+Contact: ad13dtu@gmail.com
