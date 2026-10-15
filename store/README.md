@@ -17,7 +17,8 @@ app, or a tag would build and upload twice.
 
 ```
 vX.Y.Z tag ─► offline store-tooling tests ─► resolve switches (the tag must equal
-              MARKETING_VERSION exactly: v1.0.1 ⇔ 1.0.1)
+              MARKETING_VERSION exactly: v1.0.1 ⇔ 1.0.1; a run that builds also
+              checks the project declares export compliance)
   └─ IOS_RELEASE_AUTOMATION off ─► GitHub Release only
   └─ on:
        IOS_CREATE_VERSION ─► create the tag's App Store version if it is missing
@@ -30,8 +31,8 @@ vX.Y.Z tag ─► offline store-tooling tests ─► resolve switches (the tag m
                        anything is built
        IOS_UPLOAD_BUILD ─► iOS tests (unit + UI, iPhone and iPad simulators)
                         ─► next build number from App Store Connect
-                        ─► archive Release ─► verify app id/version/build and that every
-                           tracked note page is bundled
+                        ─► archive Release ─► verify app id/version/build, export
+                           compliance, and that every tracked note page is bundled
                         ─► cloud-signed export + upload
                         ─► wait-for-build job: wait until THIS build is VALID
                            (poll 30 s, up to 120 min from upload start)
@@ -176,6 +177,28 @@ upload, a set that already matches (by checksum) is left alone, and a changed se
 is replaced and waited on until App Store Connect has processed it. With the
 switch on and no PNGs in a directory, the run fails with a clear message.
 
+## Export compliance
+
+The app declares its export compliance answer in its build settings
+(`INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO` in the app target's Debug
+and Release configurations, so every build's `Info.plist` carries
+`ITSAppUsesNonExemptEncryption = false`). Without it, App Store Connect asks
+about each build by hand, and review submission fails with
+`usesNonExemptEncryption` missing (HTTP 409).
+
+`NO` is right while the app only uses exempt encryption: HTTPS (RevenueCat's
+network calls), the Keychain and Apple's system crypto. The app itself encrypts
+nothing; RevenueCat also hashes data and verifies signed server responses,
+which are exempt too. If the app ever adds its own encryption, set it to `YES`
+and add `INFOPLIST_KEY_ITSEncryptionExportComplianceCode` with the code App
+Store Connect issues for the app's encryption documentation.
+
+Every run that builds (release or validation) checks it twice:
+`ios_release.py gates` reads the project before anything is built, and
+`ios_release.py export-compliance` reads the archived app's `Info.plist` right
+after the archive. A missing key, mixed or unknown values, or `YES` without the
+code fails the run.
+
 ## In-app purchases
 
 [`catalog/products.json`](catalog/products.json) lists the four consumable tips
@@ -196,13 +219,13 @@ RevenueCat switch.
 
 | Script | Role |
 |--------|------|
-| [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | Switches, read-only preflight, build number, wait for this run's build |
+| [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | Switches, export compliance (project and archive), read-only preflight, build number, wait for this run's build |
 | [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | Version creation (`--create-version`), listing, What's New, screenshots, build selection, review submission |
 | [`scripts/store/export_listing.py`](../scripts/store/export_listing.py) | Read-only export of the live listing into `store/metadata/` |
 | [`scripts/store/validate_catalog.py`](../scripts/store/validate_catalog.py) | Catalog ↔ app ↔ StoreKit configuration check |
 | [`scripts/store/print_gates.py`](../scripts/store/print_gates.py) | Prints the switches as the release reads them (`INVALID` for values that fail a run) |
 | [`scripts/store/redact_logs.py`](../scripts/store/redact_logs.py) | Removes the App Store Connect key and issuer IDs from build logs before they are kept as an artifact |
-| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, version creation (left alone when it exists, refused while another version is in flight or not newer), preflight, build wait timeout/failure/ambiguity/mismatch/old build/missing upload date, selection read-back and recheck before any review write, token refresh, listing, What's New (strict only when its switch is on), screenshots, products, idempotent reruns, log redaction, release notes, the printed switches |
+| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, export compliance (project and archived `Info.plist`), version creation (left alone when it exists, refused while another version is in flight or not newer), preflight, build wait timeout/failure/ambiguity/mismatch/old build/missing upload date, selection read-back and recheck before any review write, token refresh, listing, What's New (strict only when its switch is on), screenshots, products, idempotent reruns, log redaction, release notes, the printed switches |
 | [`scripts/release_notes.py`](../scripts/release_notes.py) | GitHub Release notes from `RELEASE_NOTES.md` (generated notes when the tag has no section or the file is missing) |
 
 The **Store release checks** workflow runs the offline tests, the catalog check and
