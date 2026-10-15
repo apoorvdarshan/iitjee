@@ -95,6 +95,9 @@ extension XCUIApplication {
     }
 }
 
+// On a busy CI simulator a single accessibility snapshot has taken over 9 seconds,
+// using up a wait whose condition was already true (October 2026). The waits below
+// take one more look when they time out, so a slow snapshot alone can't fail them.
 @MainActor
 extension XCUIElement {
     /// Waits until the accessibility value is exactly `value`.
@@ -104,6 +107,7 @@ extension XCUIElement {
             object: self
         )
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+            || (exists && self.value as? String == value)
     }
 
     /// Waits until the accessibility label is exactly `label`.
@@ -113,6 +117,7 @@ extension XCUIElement {
             object: self
         )
         return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
+            || (exists && self.label == label)
     }
 
     /// Drags a slider's thumb from `fraction` (0...1) of its range to past the end of the
