@@ -402,7 +402,7 @@ private struct LocalPDFView: UIViewRepresentable {
         if context.coordinator.loadedLayout != readingLayout {
             context.coordinator.loadedLayout = readingLayout
             configure(pdfView, for: readingLayout)
-            refit(pdfView)
+            refit(pdfView, coordinator: context.coordinator)
         }
 
         guard
@@ -413,6 +413,7 @@ private struct LocalPDFView: UIViewRepresentable {
         let targetIndex = min(max(currentPage - 1, 0), max(document.pageCount - 1, 0))
         if document.index(for: visiblePage) != targetIndex,
            let targetPage = document.page(at: targetIndex) {
+            context.coordinator.requestedPage = targetIndex + 1
             pdfView.go(to: targetPage)
         }
     }
@@ -437,7 +438,7 @@ private struct LocalPDFView: UIViewRepresentable {
 
         let targetIndex = min(max(currentPage - 1, 0), max(document.pageCount - 1, 0))
 
-        refit(pdfView, targetIndex: targetIndex)
+        refit(pdfView, coordinator: coordinator, targetIndex: targetIndex)
     }
 
     private func configure(_ pdfView: PDFView, for layout: PDFReadingLayout) {
@@ -453,7 +454,7 @@ private struct LocalPDFView: UIViewRepresentable {
         pdfView.autoScales = true
     }
 
-    private func refit(_ pdfView: PDFView, targetIndex: Int? = nil) {
+    private func refit(_ pdfView: PDFView, coordinator: Coordinator, targetIndex: Int? = nil) {
         let fallbackIndex = min(
             max(currentPage - 1, 0),
             max((pdfView.document?.pageCount ?? 1) - 1, 0)
@@ -466,7 +467,9 @@ private struct LocalPDFView: UIViewRepresentable {
                 pdfView.autoScales = true
             }
 
-            if let targetPage = pdfView.document?.page(at: targetIndex ?? fallbackIndex) {
+            let index = targetIndex ?? fallbackIndex
+            if let targetPage = pdfView.document?.page(at: index) {
+                coordinator.requestedPage = index + 1
                 pdfView.go(to: targetPage)
             }
         }
@@ -476,6 +479,9 @@ private struct LocalPDFView: UIViewRepresentable {
         var parent: LocalPDFView
         var loadedURL: URL?
         var loadedLayout: PDFReadingLayout?
+        /// The page the reader last asked the PDF view to show, until the view shows it or
+        /// the reader scrolls it out of full view.
+        var requestedPage: Int?
         private var pageObserver: NSObjectProtocol?
 
         init(parent: LocalPDFView) {
@@ -488,26 +494,39 @@ private struct LocalPDFView: UIViewRepresentable {
                 object: pdfView,
                 queue: .main
             ) { [weak self, weak pdfView] _ in
-                guard
-                    let self,
-                    let pdfView,
-                    let document = pdfView.document,
-                    let page = pdfView.currentPage
-                else { return }
-
-                let visiblePage = document.index(for: page) + 1
-                let documentPageCount = document.pageCount
-
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-
-                    if parent.currentPage != visiblePage {
-                        parent.currentPage = visiblePage
-                    }
-                    if parent.pageCount != documentPageCount {
-                        parent.pageCount = documentPageCount
-                    }
+                // Read the view when this runs, not when the notification was posted, so a
+                // page passed on the way to a jump never overwrites the page jumped to.
+                DispatchQueue.main.async { [weak self, weak pdfView] in
+                    guard let self, let pdfView else { return }
+                    syncPage(from: pdfView)
                 }
+            }
+        }
+
+        private func syncPage(from pdfView: PDFView) {
+            guard
+                let document = pdfView.document,
+                let page = pdfView.currentPage
+            else { return }
+
+            let visiblePage = document.index(for: page) + 1
+            if parent.pageCount != document.pageCount {
+                parent.pageCount = document.pageCount
+            }
+
+            // PDFKit reports the page at the top of the view. At the end of a chapter the view
+            // cannot scroll the last page to the top, so it reports the page above it even
+            // though the requested page is fully on screen. Keep the requested page then.
+            if let requestedPage,
+               requestedPage != visiblePage,
+               let requested = document.page(at: requestedPage - 1),
+               pdfView.showsAll(of: requested) {
+                return
+            }
+
+            requestedPage = nil
+            if parent.currentPage != visiblePage {
+                parent.currentPage = visiblePage
             }
         }
 
@@ -521,6 +540,14 @@ private struct LocalPDFView: UIViewRepresentable {
         deinit {
             stopObserving()
         }
+    }
+}
+
+private extension PDFView {
+    /// Whether the whole of `page` is inside the view.
+    func showsAll(of page: PDFPage) -> Bool {
+        let frame = convert(page.bounds(for: displayBox), from: page)
+        return bounds.insetBy(dx: -1, dy: -1).contains(frame)
     }
 }
 

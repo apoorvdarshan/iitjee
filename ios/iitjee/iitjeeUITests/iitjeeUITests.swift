@@ -145,6 +145,11 @@ final class iitjeeUITests: XCTestCase {
         XCTAssertFalse(next.isEnabled, "the last page has nothing after it")
         previous.tap()
         XCTAssertTrue(pageSlider.waitForValue("Page 8 of 9"))
+        next.tap()
+        XCTAssertTrue(pageSlider.waitForValue("Page 9 of 9"), "Next page must reach the last page too")
+        XCTAssertFalse(next.isEnabled, "the reader must stay on the last page")
+        previous.tap()
+        XCTAssertTrue(pageSlider.waitForValue("Page 8 of 9"))
 
         closeReader.tap()
 
