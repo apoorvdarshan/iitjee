@@ -20,6 +20,9 @@ vX.Y.Z tag ─► offline store-tooling tests ─► resolve switches (the tag m
               MARKETING_VERSION exactly: v1.0.1 ⇔ 1.0.1)
   └─ IOS_RELEASE_AUTOMATION off ─► GitHub Release only
   └─ on:
+       IOS_CREATE_VERSION ─► create the tag's App Store version if it is missing
+                             (after the offline file checks, before the read-only
+                             check and before anything is built)
        listing / What's New / screenshots / review on
                     ─► check the repo's files for the switches that are on, and that
                        the App Store version exists, can take those edits and the
@@ -100,6 +103,7 @@ run, even when the master switch is off (the printed switch summary shows it as
 | Variable | When `true` |
 |----------|-------------|
 | `IOS_RELEASE_AUTOMATION` | Master switch. When off, every App Store operation below is skipped and the tag only creates the GitHub Release |
+| `IOS_CREATE_VERSION` | Create the tag's App Store version (*Prepare for Submission*) when App Store Connect does not have it, before the read-only check below. An existing version is left alone. Refuses, before anything is built and without changing anything, when another version is still on its way to the store (anything but *Ready for Distribution*, replaced or removed), the tag is not newer than every existing version, or the bundle id resolves to another app. Tag runs only, never validation runs |
 | `IOS_UPLOAD_BUILD` | Run the iOS tests, then build, sign and upload the binary to App Store Connect and wait until it is processed |
 | `IOS_UPLOAD_LISTING` | Name, subtitle, privacy URL, description, keywords, promotional text, marketing and support URLs for every locale in `store/metadata/ios/` |
 | `IOS_UPLOAD_WHATS_NEW` | What's New (`store/metadata/ios/<locale>/whats_new.txt`, required for every locale; refused if it still repeats the live version's text) |
@@ -113,8 +117,11 @@ Listing, What's New, screenshot uploads and review submission need the App Store
 version to exist in App Store Connect in a state that can take them (*Prepare for
 Submission* takes everything; *Ready for Review* takes text and the submission,
 not screenshots), with a localization for every locale in `store/metadata/ios/`.
-The pipeline never creates versions; it checks all of this, read-only, before
-building. A new run never submits a version already *Waiting for Review*: its new
+With `IOS_CREATE_VERSION` on, the tag run creates a missing version itself;
+otherwise create it in App Store Connect before tagging. The run checks all of
+this, read-only, before building. A version created by a run whose later steps
+fail stays in *Prepare for Submission*, and the next run for the same tag reuses
+it. A new run never submits a version already *Waiting for Review*: its new
 build could not replace the one in review.
 
 ## Secrets
@@ -190,12 +197,12 @@ RevenueCat switch.
 | Script | Role |
 |--------|------|
 | [`scripts/store/ios_release.py`](../scripts/store/ios_release.py) | Switches, read-only preflight, build number, wait for this run's build |
-| [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | Listing, What's New, screenshots, build selection, review submission |
+| [`scripts/store/asc_release.py`](../scripts/store/asc_release.py) | Version creation (`--create-version`), listing, What's New, screenshots, build selection, review submission |
 | [`scripts/store/export_listing.py`](../scripts/store/export_listing.py) | Read-only export of the live listing into `store/metadata/` |
 | [`scripts/store/validate_catalog.py`](../scripts/store/validate_catalog.py) | Catalog ↔ app ↔ StoreKit configuration check |
 | [`scripts/store/print_gates.py`](../scripts/store/print_gates.py) | Prints the switches as the release reads them (`INVALID` for values that fail a run) |
 | [`scripts/store/redact_logs.py`](../scripts/store/redact_logs.py) | Removes the App Store Connect key and issuer IDs from build logs before they are kept as an artifact |
-| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, preflight, build wait timeout/failure/ambiguity/mismatch/old build/missing upload date, selection read-back and recheck before any review write, token refresh, listing, What's New (strict only when its switch is on), screenshots, products, idempotent reruns, log redaction, release notes, the printed switches |
+| [`scripts/store/test_ios_release.py`](../scripts/store/test_ios_release.py) | Offline tests: disabled/invalid switches, tag mismatch, validation mode, version creation (left alone when it exists, refused while another version is in flight or not newer), preflight, build wait timeout/failure/ambiguity/mismatch/old build/missing upload date, selection read-back and recheck before any review write, token refresh, listing, What's New (strict only when its switch is on), screenshots, products, idempotent reruns, log redaction, release notes, the printed switches |
 | [`scripts/release_notes.py`](../scripts/release_notes.py) | GitHub Release notes from `RELEASE_NOTES.md` (generated notes when the tag has no section or the file is missing) |
 
 The **Store release checks** workflow runs the offline tests, the catalog check and
@@ -215,15 +222,17 @@ packages and the website's npm tooling.
 ## Releasing
 
 1. Bump `MARKETING_VERSION` in the Xcode project (every target) to the new version.
-2. If the listing, What's New, screenshots or review will be uploaded, create the
-   X.Y.Z App Store version in App Store Connect first (it stays in *Prepare for
-   Submission*); the pipeline never creates versions and stops before building
-   without it. Update `store/metadata/ios/<locale>/whats_new.txt`.
+2. If the listing, What's New, screenshots or review will be uploaded, the X.Y.Z
+   App Store version must exist. With `IOS_CREATE_VERSION` on, the tag run
+   creates it; otherwise create it in App Store Connect first (it stays in
+   *Prepare for Submission*). The run stops before building without it. Update
+   `store/metadata/ios/<locale>/whats_new.txt`.
 3. Optionally add one `## vX.Y.Z` section to `RELEASE_NOTES.md`.
 4. Run **iOS Release → Run workflow** with `marketing_version` = the new version
    to validate signing and export (nothing is uploaded).
 5. Turn on only the switches you want (start with `IOS_RELEASE_AUTOMATION` +
-   `IOS_UPLOAD_BUILD`; leave `IOS_SUBMIT_REVIEW` and `IOS_PUBLIC_RELEASE` off until
+   `IOS_UPLOAD_BUILD`, plus `IOS_CREATE_VERSION` if the run should create the
+   App Store version; leave `IOS_SUBMIT_REVIEW` and `IOS_PUBLIC_RELEASE` off until
    you intend to submit).
 6. Push the tag: `git tag -a vX.Y.Z -m "PCM Notes X.Y.Z" && git push origin vX.Y.Z`.
 

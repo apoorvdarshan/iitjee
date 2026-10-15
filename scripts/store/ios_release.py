@@ -44,6 +44,7 @@ FALSE_VALUES = {"", "0", "false", "no", "off"}
 
 MASTER = "IOS_RELEASE_AUTOMATION"
 OPERATION_SWITCHES = (
+    ("IOS_CREATE_VERSION", "create_version"),
     ("IOS_UPLOAD_BUILD", "upload_build"),
     ("IOS_UPLOAD_LISTING", "listing"),
     ("IOS_UPLOAD_WHATS_NEW", "whats_new"),
@@ -400,9 +401,9 @@ def preflight_problems(
     a later job ("Re-run failed jobs") never come back here."""
     if version is None:
         return [
-            f"App Store Connect has no iOS version {version_string}; create the "
-            f"{version_string} App Store version in App Store Connect (Prepare for "
-            "Submission) before tagging. The pipeline never creates versions"
+            f"App Store Connect has no iOS version {version_string}; turn on "
+            f"IOS_CREATE_VERSION, or create the {version_string} App Store version in "
+            "App Store Connect (Prepare for Submission) before tagging"
         ]
     state = (version.get("attributes") or {}).get("appStoreState") or ""
     shown = state or "in an unknown state"
