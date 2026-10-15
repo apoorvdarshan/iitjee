@@ -4,6 +4,11 @@
 # offline-notes generator in ios/iitjee/BuildTools/. It never restores a build
 # cache, so every source file is compiled and analysed. Runs for pull requests and
 # pushes to main that change the app or the notes it bundles, weekly and by hand.
+#
+# It runs on an Intel (x64) runner with Xcode 26.6, the oldest Xcode the app
+# supports. On the Apple silicon xcode-27 runner, CodeQL's build tracer stops the
+# Swift compiler from starting its macro plugins (@TaskLocal, SwiftUI's @State)
+# and Swift Package Manager's sandbox ("Bad CPU type in executable").
 name: CodeQL Swift
 
 on:
@@ -38,13 +43,13 @@ concurrency:
 jobs:
   analyze:
     name: Analyze (swift)
-    runs-on: xcode-27
-    timeout-minutes: 90
+    runs-on: macos-26-intel
+    timeout-minutes: 120
     permissions:
       contents: read
       security-events: write # upload results to code scanning
     env:
-      DEVELOPER_DIR: /Applications/Xcode_27.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
