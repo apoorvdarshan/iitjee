@@ -1,4 +1,4 @@
-# iOS tests: the iitjeeTests unit tests and iitjeeUITests UI tests on iOS
+# iOS tests: the PCMNotesTests unit tests and PCMNotesUITests UI tests on iOS
 # simulators (Debug, unsigned). Never archives, signs, uploads or calls App Store
 # Connect. The iOS Release workflow also calls it before uploading a build.
 name: iOS tests

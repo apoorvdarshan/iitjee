@@ -692,12 +692,12 @@ def write_listing(root: Path, locale: str = "en-US", **overrides: str) -> Path:
     files = {
         "name.txt": "PCM Notes: JEE & NEET",
         "subtitle.txt": "Handwritten Exam Revision",
-        "privacy_url.txt": "https://iitjee.apoorvdarshan.com/privacy",
+        "privacy_url.txt": "https://pcm-notes.apoorvdarshan.com/privacy",
         "description.txt": "Handwritten notes.",
         "keywords.txt": "jee,neet",
         "promotional_text.txt": "Promo",
-        "marketing_url.txt": "https://iitjee.apoorvdarshan.com/",
-        "support_url.txt": "https://iitjee.apoorvdarshan.com/#support",
+        "marketing_url.txt": "https://pcm-notes.apoorvdarshan.com/",
+        "support_url.txt": "https://pcm-notes.apoorvdarshan.com/#support",
     }
     files.update(overrides)
     for name, text in files.items():
@@ -777,7 +777,7 @@ class AscCliTests(unittest.TestCase):
             "keywords": {"keywords.txt": "k" * 101},
             "promotional text": {"promotional_text.txt": "p" * 171},
             "description": {"description.txt": "d" * 4001},
-            "http url": {"support_url.txt": "http://iitjee.apoorvdarshan.com"},
+            "http url": {"support_url.txt": "http://pcm-notes.apoorvdarshan.com"},
             "missing description": {"description.txt": ""},
         }
         for label, override in cases.items():
@@ -823,8 +823,8 @@ LISTING_VALUES = {
     "description": "Handwritten notes.",
     "keywords": "jee,neet",
     "promotionalText": "Promo",
-    "marketingUrl": "https://iitjee.apoorvdarshan.com/",
-    "supportUrl": "https://iitjee.apoorvdarshan.com/#support",
+    "marketingUrl": "https://pcm-notes.apoorvdarshan.com/",
+    "supportUrl": "https://pcm-notes.apoorvdarshan.com/#support",
 }
 
 
@@ -919,7 +919,7 @@ class AppInfoClient:
 LIVE_INFO = {
     "name": "PCM Notes: JEE & NEET",
     "subtitle": "Handwritten Exam Revision",
-    "privacyPolicyUrl": "https://iitjee.apoorvdarshan.com/privacy",
+    "privacyPolicyUrl": "https://pcm-notes.apoorvdarshan.com/privacy",
 }
 
 
@@ -1435,7 +1435,7 @@ REPO_WHATS_NEW = "Faster chapter search."
 APP_INFO_VALUES = {
     "name": "PCM Notes: JEE & NEET",
     "subtitle": "Handwritten Exam Revision",
-    "privacyPolicyUrl": "https://iitjee.apoorvdarshan.com/privacy",
+    "privacyPolicyUrl": "https://pcm-notes.apoorvdarshan.com/privacy",
 }
 
 

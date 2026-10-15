@@ -10,6 +10,13 @@
   },
   "routes": [
     {
+      "pattern": "pcm-notes.apoorvdarshan.com",
+      "custom_domain": true
+    },
+    // The site's old address. A Cloudflare Redirect Rule on the zone sends it to
+    // pcm-notes.apoorvdarshan.com with a 301 before it reaches this Worker; the
+    // custom domain stays so its DNS record does.
+    {
       "pattern": "iitjee.apoorvdarshan.com",
       "custom_domain": true
     }

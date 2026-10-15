@@ -67,9 +67,9 @@ This file records the 1.0 submission. The live listing is now kept in `store/met
 
     PCM Notes is an independent revision resource. It is not affiliated with or endorsed by IITs, NTA, JEE, or NEET. Always compare important information with the current official syllabus and trusted textbooks.
 
-    Support: https://iitjee.apoorvdarshan.com/#support
-    Privacy Policy: https://iitjee.apoorvdarshan.com/privacy.html
-    Terms of Use: https://iitjee.apoorvdarshan.com/terms.html
+    Support: https://pcm-notes.apoorvdarshan.com/#support
+    Privacy Policy: https://pcm-notes.apoorvdarshan.com/privacy.html
+    Terms of Use: https://pcm-notes.apoorvdarshan.com/terms.html
     Contact: ad13dtu@gmail.com
 
 ## What's New (v1.0)
@@ -96,15 +96,15 @@ This file records the 1.0 submission. The live listing is now kept in `store/met
 
 ## Privacy URL
 
-    https://iitjee.apoorvdarshan.com/privacy.html
+    https://pcm-notes.apoorvdarshan.com/privacy.html
 
 ## Support URL
 
-    https://iitjee.apoorvdarshan.com/#support
+    https://pcm-notes.apoorvdarshan.com/#support
 
 ## Marketing URL
 
-    https://iitjee.apoorvdarshan.com/
+    https://pcm-notes.apoorvdarshan.com/
 
 ## In-App Purchases
 

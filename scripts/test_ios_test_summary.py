@@ -23,7 +23,7 @@ def bundle(kind: str, *cases: dict) -> dict:
 
 
 def plan(*bundles: dict) -> list[dict]:
-    return [{"nodeType": "Test Plan", "name": "iitjee", "children": list(bundles)}]
+    return [{"nodeType": "Test Plan", "name": "PCMNotes", "children": list(bundles)}]
 
 
 class SummaryTests(unittest.TestCase):

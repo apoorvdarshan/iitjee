@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 import Testing
-@testable import iitjee
+@testable import PCMNotes
 
 /// App Store identity, privacy declarations, appearance and legal pages.
 @MainActor
@@ -51,21 +51,21 @@ struct AppConfigurationTests {
     }
 
     @Test func testControlsOnlyActForTestLaunches() {
-        #expect(TestEnvironment.tipPurchaser(arguments: ["iitjee"], environment: [:]) == nil)
+        #expect(TestEnvironment.tipPurchaser(arguments: ["PCMNotes"], environment: [:]) == nil)
         #expect(TestEnvironment.isHostingTests(["XCTestConfigurationFilePath": "/tmp/x.xctestconfiguration"]))
         #expect(!TestEnvironment.isHostingTests(["HOME": "/Users/test"]))
-        #expect(TestEnvironment.tipPurchaser(arguments: ["iitjee"], environment: ["XCTestBundlePath": "/x"]) is LocalTipPurchasing)
+        #expect(TestEnvironment.tipPurchaser(arguments: ["PCMNotes"], environment: ["XCTestBundlePath": "/x"]) is LocalTipPurchasing)
     }
 
     @Test func uiTestLaunchArgumentsChooseTheTipCatalogAndOutcome() async throws {
         let scripted = try #require(TestEnvironment.tipPurchaser(
-            arguments: ["iitjee", "--ui-testing", "--ui-testing-tips=unavailable", "--ui-testing-tip-outcome=failed"],
+            arguments: ["PCMNotes", "--ui-testing", "--ui-testing-tips=unavailable", "--ui-testing-tip-outcome=failed"],
             environment: [:]
         ))
         #expect(await scripted.loadOffers(for: TipProductID.allCases).isEmpty)
         #expect(await scripted.purchase(.small) == .failed)
 
-        let standard = try #require(TestEnvironment.tipPurchaser(arguments: ["iitjee", "--ui-testing"], environment: [:]))
+        let standard = try #require(TestEnvironment.tipPurchaser(arguments: ["PCMNotes", "--ui-testing"], environment: [:]))
         #expect(await standard.loadOffers(for: TipProductID.allCases).count == 4)
         #expect(await standard.purchase(.small) == .purchased)
     }

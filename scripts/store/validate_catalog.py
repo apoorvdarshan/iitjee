@@ -16,8 +16,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 PRODUCTS = ROOT / "store" / "catalog" / "products.json"
-TIP_STORE = ROOT / "ios" / "iitjee" / "iitjee" / "TipStore.swift"
-STOREKIT = ROOT / "ios" / "iitjee" / "PCMNotes.storekit"
+TIP_STORE = ROOT / "ios" / "PCMNotes" / "PCMNotes" / "TipStore.swift"
+STOREKIT = ROOT / "ios" / "PCMNotes" / "PCMNotes.storekit"
 BUNDLE_ID = "com.apoorvdarshan.iitjee"
 GROUPS = ("subscriptions", "consumables", "tips")
 # products.json type -> StoreKit configuration "type"

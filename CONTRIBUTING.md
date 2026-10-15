@@ -57,7 +57,7 @@ submit note pages or artwork.
 ### Development setup
 
 - **iOS app:** Xcode 26.6 or newer with an iOS 17.6 or newer simulator. Open
-  `ios/iitjee/iitjee.xcodeproj`, choose the **iitjee** scheme, and run. The first
+  `ios/PCMNotes/PCMNotes.xcodeproj`, choose the **PCMNotes** scheme, and run. The first
   build converts the note images into 91 chapter PDFs, which takes a few minutes;
   later builds reuse them.
 - **Website:** Node.js. `npm install`, then `npm run build` writes the site to
@@ -89,8 +89,8 @@ add a test that fails without the fix.
 
 | What changed | Tests to add or update | Run them |
 |---|---|---|
-| App logic | Swift Testing unit tests in `ios/iitjee/iitjeeTests/` | `bash scripts/test-ios.sh` |
-| User-visible flows | XCTest UI tests in `ios/iitjee/iitjeeUITests/` | `bash scripts/test-ios.sh` |
+| App logic | Swift Testing unit tests in `ios/PCMNotes/PCMNotesTests/` | `bash scripts/test-ios.sh` |
+| User-visible flows | XCTest UI tests in `ios/PCMNotes/PCMNotesUITests/` | `bash scripts/test-ios.sh` |
 | Release tooling | `scripts/store/test_ios_release.py` | `python3 -m unittest -v scripts/store/test_ios_release.py` |
 | Test-result checker | `scripts/test_ios_test_summary.py` | `python3 -m unittest scripts/test_ios_test_summary.py` |
 | Parsers of untrusted input | A fuzz target in `fuzz/` | `python3 -m unittest discover -s fuzz -p 'test_*.py'` |

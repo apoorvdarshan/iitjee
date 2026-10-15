@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 ROOT = Path(__file__).resolve().parents[2]
-PBXPROJ = ROOT / "ios" / "iitjee" / "iitjee.xcodeproj" / "project.pbxproj"
+PBXPROJ = ROOT / "ios" / "PCMNotes" / "PCMNotes.xcodeproj" / "project.pbxproj"
 METADATA_DIR = ROOT / "store" / "metadata"
 BUNDLE_ID = "com.apoorvdarshan.iitjee"
 # Release tags are v<MARKETING_VERSION> exactly, e.g. v1.0.1 for MARKETING_VERSION 1.0.1.

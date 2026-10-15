@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ios/iitjee/iitjee/Assets.xcassets/AppIcon.appiconset/AppIcon.png" alt="PCM Notes" width="160" height="160" />
+  <img src="ios/PCMNotes/PCMNotes/Assets.xcassets/AppIcon.appiconset/AppIcon.png" alt="PCM Notes" width="160" height="160" />
 </p>
 
 <h1 align="center">PCM Notes</h1>
@@ -76,8 +76,8 @@ RevenueCat Purchases is the only third-party iOS runtime dependency. It wraps St
 
 ## 🚀 Build and run
 
-1. Open `ios/iitjee/iitjee.xcodeproj` in Xcode.
-2. Select the **iitjee** scheme.
+1. Open `ios/PCMNotes/PCMNotes.xcodeproj` in Xcode.
+2. Select the **PCMNotes** scheme.
 3. Choose an iPhone or iPad running **iOS 17.6+**.
 4. Build and run.
 
@@ -140,9 +140,9 @@ upload twice.
 ## 🔗 Links and support
 
 - **App Store:** [Download PCM Notes for iPhone and iPad](https://apps.apple.com/us/app/pcm-notes-jee-neet/id6792598227)
-- **Website:** [iitjee.apoorvdarshan.com](https://iitjee.apoorvdarshan.com/)
-- **Privacy Policy:** [iitjee.apoorvdarshan.com/privacy.html](https://iitjee.apoorvdarshan.com/privacy.html)
-- **Terms of Use:** [iitjee.apoorvdarshan.com/terms.html](https://iitjee.apoorvdarshan.com/terms.html)
+- **Website:** [pcm-notes.apoorvdarshan.com](https://pcm-notes.apoorvdarshan.com/)
+- **Privacy Policy:** [pcm-notes.apoorvdarshan.com/privacy.html](https://pcm-notes.apoorvdarshan.com/privacy.html)
+- **Terms of Use:** [pcm-notes.apoorvdarshan.com/terms.html](https://pcm-notes.apoorvdarshan.com/terms.html)
 - **Email support:** [ad13dtu@gmail.com](mailto:ad13dtu@gmail.com?subject=PCM%20Notes%20Support)
 - **X:** [@apoorvdarshan](https://x.com/apoorvdarshan)
 - **Instagram:** [@apoorvcodes](https://www.instagram.com/apoorvcodes/)

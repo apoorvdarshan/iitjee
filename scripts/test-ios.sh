@@ -10,10 +10,10 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
 
-derived_data="${IOS_TEST_DERIVED_DATA:-$HOME/Library/Developer/Xcode/DerivedData/iitjee-simulator-tests}"
+derived_data="${IOS_TEST_DERIVED_DATA:-$HOME/Library/Developer/Xcode/DerivedData/PCMNotes-simulator-tests}"
 packages="${IOS_TEST_PACKAGES:-$derived_data/SourcePackages}"
 results="${IOS_TEST_RESULTS:-$derived_data/TestResults/$(date -u +%Y%m%dT%H%M%SZ)-$$}"
-ipad_only="iitjeeUITests/iPadReaderUITests"
+ipad_only="PCMNotesUITests/iPadReaderUITests"
 mkdir -p "$results"
 for bundle in Build iPhone iPad; do
   if [[ -e "$results/$bundle.xcresult" ]]; then
@@ -75,8 +75,8 @@ ipad_id="$(xcrun simctl create 'PCM Notes CI iPad' "$ipad_type" "$runtime")"
 echo "Simulators: iPhone $iphone_type ($iphone_id), iPad $ipad_type ($ipad_id) on $runtime"
 
 common=(
-  -project ios/iitjee/iitjee.xcodeproj
-  -scheme iitjee
+  -project ios/PCMNotes/PCMNotes.xcodeproj
+  -scheme PCMNotes
   -configuration Debug
   -derivedDataPath "$derived_data"
   -clonedSourcePackagesDirPath "$packages"

@@ -17,7 +17,7 @@ Please include:
 - what the vulnerability is and what an attacker could do with it;
 - steps to reproduce, ideally a minimal proof of concept;
 - the affected component and version: the app version from **About** in the app
-  (or `MARKETING_VERSION` in `ios/iitjee/iitjee.xcodeproj/project.pbxproj`), the
+  (or `MARKETING_VERSION` in `ios/PCMNotes/PCMNotes.xcodeproj/project.pbxproj`), the
   website page, or the workflow or script;
 - whether you would like to be credited, and under what name.
 
@@ -42,7 +42,7 @@ problem, and do not disclose it publicly until a fix has been released.
 
 Only the latest version on the App Store receives security fixes. The `main`
 branch tracks the next release. The website at
-[iitjee.apoorvdarshan.com](https://iitjee.apoorvdarshan.com/) is always served
+[pcm-notes.apoorvdarshan.com](https://pcm-notes.apoorvdarshan.com/) is always served
 from `main`.
 
 ## Scope
@@ -55,7 +55,7 @@ In scope:
 - the website: the static pages, `script.js` and the Cloudflare Workers
   static-asset configuration in `wrangler.jsonc`;
 - the build, test and release tooling: the offline-notes generator in
-  `ios/iitjee/BuildTools/`, the scripts in `scripts/` and `fuzz/`, and the GitHub
+  `ios/PCMNotes/BuildTools/`, the scripts in `scripts/` and `fuzz/`, and the GitHub
   Actions workflows in `.github/workflows/`, including handling of App Store
   Connect credentials.
 

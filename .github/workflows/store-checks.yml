@@ -12,9 +12,9 @@ on:
       - 'store/**'
       - 'requirements-store.txt'
       - 'RELEASE_NOTES.md'
-      - 'ios/iitjee/iitjee.xcodeproj/project.pbxproj'
-      - 'ios/iitjee/PCMNotes.storekit'
-      - 'ios/iitjee/iitjee/TipStore.swift'
+      - 'ios/PCMNotes/PCMNotes.xcodeproj/project.pbxproj'
+      - 'ios/PCMNotes/PCMNotes.storekit'
+      - 'ios/PCMNotes/PCMNotes/TipStore.swift'
       - '.github/workflows/ios-release.yml'
       - '.github/workflows/store-checks.yml'
   push:
@@ -25,9 +25,9 @@ on:
       - 'store/**'
       - 'requirements-store.txt'
       - 'RELEASE_NOTES.md'
-      - 'ios/iitjee/iitjee.xcodeproj/project.pbxproj'
-      - 'ios/iitjee/PCMNotes.storekit'
-      - 'ios/iitjee/iitjee/TipStore.swift'
+      - 'ios/PCMNotes/PCMNotes.xcodeproj/project.pbxproj'
+      - 'ios/PCMNotes/PCMNotes.storekit'
+      - 'ios/PCMNotes/PCMNotes/TipStore.swift'
       - '.github/workflows/ios-release.yml'
       - '.github/workflows/store-checks.yml'
   workflow_dispatch:
@@ -52,9 +52,9 @@ jobs:
           sparse-checkout: |
             /scripts/
             /store/
-            /ios/iitjee/iitjee.xcodeproj/project.pbxproj
-            /ios/iitjee/PCMNotes.storekit
-            /ios/iitjee/iitjee/TipStore.swift
+            /ios/PCMNotes/PCMNotes.xcodeproj/project.pbxproj
+            /ios/PCMNotes/PCMNotes.storekit
+            /ios/PCMNotes/PCMNotes/TipStore.swift
             /requirements-store.txt
             /RELEASE_NOTES.md
 
