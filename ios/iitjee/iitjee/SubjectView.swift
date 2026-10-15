@@ -1,9 +1,12 @@
+import StoreKit
 import SwiftUI
 
 struct SubjectScene: View {
     let subject: SubjectArea
 
     @State private var selectedChapter: Chapter?
+    @State private var goodSession = false
+    @Environment(\.requestReview) private var requestReview
 
     var body: some View {
         NavigationStack {
@@ -13,10 +16,19 @@ struct SubjectScene: View {
             )
         }
         .tint(subject.accent)
-        .fullScreenCover(item: $selectedChapter) { chapter in
-            ChapterReaderView(subject: subject, chapter: chapter)
+        .fullScreenCover(item: $selectedChapter, onDismiss: askForRatingAfterGoodSession) { chapter in
+            ChapterReaderView(subject: subject, chapter: chapter, goodSession: $goodSession)
                 .id(chapter.id)
         }
+    }
+
+    /// Back on the chapter list after a good reading session, request the App Store
+    /// rating prompt when `ReviewPrompt` allows it.
+    private func askForRatingAfterGoodSession() {
+        defer { goodSession = false }
+        guard goodSession, ReviewPrompt.shouldAutoRequest() else { return }
+        ReviewPrompt.recordRequest()
+        requestReview()
     }
 }
 

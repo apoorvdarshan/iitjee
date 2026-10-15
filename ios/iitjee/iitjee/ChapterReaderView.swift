@@ -25,15 +25,19 @@ private enum PDFReadingLayout: String, CaseIterable, Identifiable {
 struct ChapterReaderView: View {
     let subject: SubjectArea
     let chapter: Chapter
+    /// Set when this visit counts as a good reading session (see `ReviewPrompt`).
+    @Binding var goodSession: Bool
 
     @State private var currentPage: Int
     @State private var renderedPageCount = 0
+    @State private var pagesViewed: Set<Int> = []
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
 
-    init(subject: SubjectArea, chapter: Chapter) {
+    init(subject: SubjectArea, chapter: Chapter, goodSession: Binding<Bool> = .constant(false)) {
         self.subject = subject
         self.chapter = chapter
+        _goodSession = goodSession
 
         let storedPage = UserDefaults.standard.integer(
             forKey: chapter.readingProgressKey(for: subject)
@@ -66,6 +70,14 @@ struct ChapterReaderView: View {
                 newPage,
                 forKey: chapter.readingProgressKey(for: subject)
             )
+        }
+        .onChange(of: currentPage, initial: true) { _, newPage in
+            pagesViewed.insert(newPage)
+            // In a two-page spread the last page shows beside the one before it.
+            let reachedEnd = renderedPageCount > 0 && newPage >= renderedPageCount - 1
+            if ReviewPrompt.isGoodSession(pagesViewed: pagesViewed.count, reachedEnd: reachedEnd) {
+                goodSession = true
+            }
         }
     }
 

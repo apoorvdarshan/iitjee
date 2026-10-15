@@ -12,7 +12,6 @@ struct SupportView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.requestReview) private var requestReview
     @Environment(\.openURL) private var openURL
-    @AppStorage(ReviewPrompt.lastRequestKey) private var lastReviewRequest: Double = 0
 
     var body: some View {
         ZStack {
@@ -167,9 +166,9 @@ struct SupportView: View {
     /// Shows Apple's in-app rating prompt, or the App Store review page when the
     /// prompt was already requested recently (see `ReviewPrompt`).
     private func rate() {
-        let now = Date()
-        if ReviewPrompt.shouldRequestInAppPrompt(lastRequest: lastReviewRequest, now: now) {
-            lastReviewRequest = now.timeIntervalSince1970
+        let lastRequest = UserDefaults.standard.double(forKey: ReviewPrompt.Key.lastRequest)
+        if ReviewPrompt.shouldRequestInAppPrompt(lastRequest: lastRequest, now: Date()) {
+            ReviewPrompt.recordRequest()
             requestReview()
         } else {
             openURL(appStoreReview)
@@ -227,20 +226,6 @@ private struct NotebookActionRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityHint("Opens an external link")
-    }
-}
-
-/// When the Rate button uses Apple's in-app rating prompt. iOS shows that prompt at
-/// most three times a year and may silently skip it, so after one request the
-/// button opens the App Store review page instead until `interval` has passed;
-/// the button always visibly does something.
-enum ReviewPrompt {
-    static let lastRequestKey = "support.lastReviewRequest"
-    static let interval: TimeInterval = 122 * 24 * 60 * 60
-
-    /// `lastRequest` is seconds since 1970, or 0 when the prompt was never requested.
-    static func shouldRequestInAppPrompt(lastRequest: Double, now: Date) -> Bool {
-        lastRequest <= 0 || now.timeIntervalSince1970 - lastRequest >= interval
     }
 }
 
