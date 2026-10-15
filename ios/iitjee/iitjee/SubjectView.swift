@@ -5,7 +5,6 @@ struct SubjectScene: View {
     let subject: SubjectArea
 
     @State private var selectedChapter: Chapter?
-    @State private var goodSession = false
     @Environment(\.requestReview) private var requestReview
 
     var body: some View {
@@ -16,19 +15,22 @@ struct SubjectScene: View {
             )
         }
         .tint(subject.accent)
-        .fullScreenCover(item: $selectedChapter, onDismiss: askForRatingAfterGoodSession) { chapter in
-            ChapterReaderView(subject: subject, chapter: chapter, goodSession: $goodSession)
+        .fullScreenCover(item: $selectedChapter) { chapter in
+            ChapterReaderView(subject: subject, chapter: chapter, onClose: askForRating)
                 .id(chapter.id)
         }
     }
 
-    /// Back on the chapter list after a good reading session, request the App Store
-    /// rating prompt when `ReviewPrompt` allows it.
-    private func askForRatingAfterGoodSession() {
-        defer { goodSession = false }
+    /// After a good reading session, request the App Store rating prompt when
+    /// `ReviewPrompt` allows it, once the reader has finished closing and the
+    /// chapter list is showing.
+    private func askForRating(afterGoodSession goodSession: Bool) {
         guard goodSession, ReviewPrompt.shouldAutoRequest() else { return }
         ReviewPrompt.recordRequest()
-        requestReview()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(700))
+            requestReview()
+        }
     }
 }
 
