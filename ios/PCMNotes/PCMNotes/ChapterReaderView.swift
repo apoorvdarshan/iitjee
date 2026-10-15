@@ -402,7 +402,7 @@ private struct LocalPDFView: UIViewRepresentable {
         if context.coordinator.loadedLayout != readingLayout {
             context.coordinator.loadedLayout = readingLayout
             configure(pdfView, for: readingLayout)
-            refit(pdfView, coordinator: context.coordinator)
+            refit(pdfView)
         }
 
         guard
@@ -413,7 +413,6 @@ private struct LocalPDFView: UIViewRepresentable {
         let targetIndex = min(max(currentPage - 1, 0), max(document.pageCount - 1, 0))
         if document.index(for: visiblePage) != targetIndex,
            let targetPage = document.page(at: targetIndex) {
-            context.coordinator.requestedPage = targetIndex + 1
             pdfView.go(to: targetPage)
         }
     }
@@ -438,7 +437,7 @@ private struct LocalPDFView: UIViewRepresentable {
 
         let targetIndex = min(max(currentPage - 1, 0), max(document.pageCount - 1, 0))
 
-        refit(pdfView, coordinator: coordinator, targetIndex: targetIndex)
+        refit(pdfView, targetIndex: targetIndex)
     }
 
     private func configure(_ pdfView: PDFView, for layout: PDFReadingLayout) {
@@ -454,7 +453,7 @@ private struct LocalPDFView: UIViewRepresentable {
         pdfView.autoScales = true
     }
 
-    private func refit(_ pdfView: PDFView, coordinator: Coordinator, targetIndex: Int? = nil) {
+    private func refit(_ pdfView: PDFView, targetIndex: Int? = nil) {
         let fallbackIndex = min(
             max(currentPage - 1, 0),
             max((pdfView.document?.pageCount ?? 1) - 1, 0)
@@ -467,23 +466,16 @@ private struct LocalPDFView: UIViewRepresentable {
                 pdfView.autoScales = true
             }
 
-            let index = targetIndex ?? fallbackIndex
-            if let targetPage = pdfView.document?.page(at: index) {
-                coordinator.requestedPage = index + 1
+            if let targetPage = pdfView.document?.page(at: targetIndex ?? fallbackIndex) {
                 pdfView.go(to: targetPage)
             }
         }
     }
 
-    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+    final class Coordinator: NSObject {
         var parent: LocalPDFView
         var loadedURL: URL?
         var loadedLayout: PDFReadingLayout?
-        /// The page the reader last sent the PDF view to. PDFKit can report pages it
-        /// passed on the way after the jump has finished (a quick slide to page 9 came
-        /// back to page 7 on CI), so until the view reports this page, or the reader
-        /// scrolls or zooms the PDF, the pages it reports are ignored.
-        var requestedPage: Int?
         private var pageObserver: NSObjectProtocol?
 
         init(parent: LocalPDFView) {
@@ -496,58 +488,27 @@ private struct LocalPDFView: UIViewRepresentable {
                 object: pdfView,
                 queue: .main
             ) { [weak self, weak pdfView] _ in
-                // Read the view when this runs, not when the notification was posted.
-                DispatchQueue.main.async { [weak self, weak pdfView] in
-                    guard let self, let pdfView else { return }
-                    syncPage(from: pdfView)
+                guard
+                    let self,
+                    let pdfView,
+                    let document = pdfView.document,
+                    let page = pdfView.currentPage
+                else { return }
+
+                let visiblePage = document.index(for: page) + 1
+                let documentPageCount = document.pageCount
+
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+
+                    if parent.currentPage != visiblePage {
+                        parent.currentPage = visiblePage
+                    }
+                    if parent.pageCount != documentPageCount {
+                        parent.pageCount = documentPageCount
+                    }
                 }
             }
-
-            for gesture in [UIPanGestureRecognizer(), UIPinchGestureRecognizer()] {
-                gesture.addTarget(self, action: #selector(readerMovedPDF(_:)))
-                gesture.cancelsTouchesInView = false
-                gesture.delegate = self
-                pdfView.addGestureRecognizer(gesture)
-            }
-        }
-
-        private func syncPage(from pdfView: PDFView) {
-            guard
-                let document = pdfView.document,
-                let page = pdfView.currentPage
-            else { return }
-
-            if parent.pageCount != document.pageCount {
-                parent.pageCount = document.pageCount
-            }
-
-            let visiblePage = document.index(for: page) + 1
-            if let requestedPage {
-                guard shows(requestedPage, visiblePage: visiblePage) else { return }
-                self.requestedPage = nil
-            }
-            if parent.currentPage != visiblePage {
-                parent.currentPage = visiblePage
-            }
-        }
-
-        /// Whether the view reporting `visiblePage` shows `page`: the same page, or in the
-        /// two-page layout the same spread (page 1 alone, then 2-3, 4-5, ...).
-        private func shows(_ page: Int, visiblePage: Int) -> Bool {
-            page == visiblePage || (parent.readingLayout == .spread && page / 2 == visiblePage / 2)
-        }
-
-        @objc private func readerMovedPDF(_ gesture: UIGestureRecognizer) {
-            if gesture.state == .began {
-                requestedPage = nil
-            }
-        }
-
-        func gestureRecognizer(
-            _ gestureRecognizer: UIGestureRecognizer,
-            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
-        ) -> Bool {
-            true
         }
 
         func stopObserving() {
