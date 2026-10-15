@@ -46,8 +46,9 @@
 # never dropped.
 #
 # Export compliance: the app declares ITSAppUsesNonExemptEncryption = NO in its
-# build settings. Every run that builds checks it in the project (gates) before
-# anything is built and in the archived app's Info.plist after the archive.
+# build settings. Every run that builds checks it in each configuration of the
+# app target (gates) before anything is built and in the archived app's
+# Info.plist after the archive.
 #
 # Release notes: RELEASE_NOTES.md feeds only the GitHub Release (generated notes
 # when the tag has no section or the file is missing; an empty or repeated

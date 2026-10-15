@@ -231,33 +231,79 @@ class ExportComplianceTests(unittest.TestCase):
     YES = "\t\t\t\tINFOPLIST_KEY_ITSAppUsesNonExemptEncryption = YES;\n"
     CODE = "\t\t\t\tINFOPLIST_KEY_ITSEncryptionExportComplianceCode = ABC123;\n"
 
-    def check(self, settings: str) -> str:
+    @staticmethod
+    def configuration(name: str, bundle_id: str, extra: str = "") -> str:
+        """One XCBuildConfiguration block, laid out the way Xcode writes it."""
+        return (
+            f"\t\tAAA{name}{len(bundle_id)} /* {name} */ = {{\n"
+            "\t\t\tisa = XCBuildConfiguration;\n"
+            "\t\t\tbuildSettings = {\n"
+            "\t\t\t\tLD_RUNPATH_SEARCH_PATHS = (\n"
+            "\t\t\t\t\t\"$(inherited)\",\n"
+            "\t\t\t\t);\n"
+            f"\t\t\t\tPRODUCT_BUNDLE_IDENTIFIER = {bundle_id};\n"
+            f"{extra}"
+            "\t\t\t};\n"
+            f"\t\t\tname = {name};\n"
+            "\t\t};\n"
+        )
+
+    def check(self, debug: str, release: str, others: str = "") -> str:
+        app = ios_release.BUNDLE_ID
+        text = "/* project */\n" + self.configuration("Debug", app, debug) + self.configuration("Release", app, release)
         with tempfile.TemporaryDirectory() as tmp:
             pbx = Path(tmp) / "project.pbxproj"
-            pbx.write_text("/* project */\n" + settings)
+            pbx.write_text(text + others)
             return ios_release.check_export_compliance(pbx)
 
     def test_the_app_declares_no_non_exempt_encryption(self) -> None:
         self.assertEqual(ios_release.check_export_compliance(), "NO")
-        # Debug and Release of the app target both carry it.
-        self.assertEqual(ios_release.PBXPROJ.read_text().count(self.NO), 2)
+        configurations = ios_release.app_build_configurations()
+        self.assertEqual(sorted(configurations), ["Debug", "Release"])
+        for name, settings in configurations.items():
+            with self.subTest(name=name):
+                self.assertEqual(settings["INFOPLIST_KEY_ITSAppUsesNonExemptEncryption"], "NO")
+                self.assertEqual(settings["INFOPLIST_KEY_CFBundleDisplayName"], "PCM Notes")
 
     def test_no_in_every_configuration_passes(self) -> None:
-        self.assertEqual(self.check(self.NO * 2), "NO")
+        self.assertEqual(self.check(self.NO, self.NO), "NO")
 
-    def test_missing_declaration_fails_before_the_build(self) -> None:
+    def test_a_configuration_without_the_key_fails_before_the_build(self) -> None:
+        # A Debug-only value would leave the Release build that ships without it.
+        with self.assertRaisesRegex(ios_release.ReleaseError, "Release configuration does not declare export compliance"):
+            self.check(self.NO, "")
+        with self.assertRaisesRegex(ios_release.ReleaseError, "Debug configuration does not declare export compliance"):
+            self.check("", self.NO)
+
+    def test_a_value_on_another_target_does_not_count_for_the_app(self) -> None:
+        tests = "".join(self.configuration(name, ios_release.BUNDLE_ID + "Tests", self.NO) for name in ("Debug", "Release"))
         with self.assertRaisesRegex(ios_release.ReleaseError, "does not declare export compliance"):
-            self.check("\t\t\t\tINFOPLIST_KEY_CFBundleDisplayName = \"PCM Notes\";\n")
+            self.check("", "", tests)
+        self.assertEqual(self.check(self.NO, self.NO, tests.replace("= NO;", "= YES;")), "NO")
 
-    def test_yes_needs_the_compliance_code(self) -> None:
-        with self.assertRaisesRegex(ios_release.ReleaseError, "needs INFOPLIST_KEY_ITSEncryptionExportComplianceCode"):
-            self.check(self.YES)
-        self.assertEqual(self.check(self.YES + self.CODE), "YES")
+    def test_yes_needs_the_compliance_code_in_that_configuration(self) -> None:
+        with self.assertRaisesRegex(ios_release.ReleaseError,
+                                    "YES in the Release configuration needs INFOPLIST_KEY_ITSEncryptionExportComplianceCode"):
+            self.check(self.YES + self.CODE, self.YES)
+        self.assertEqual(self.check(self.YES + self.CODE, self.YES + self.CODE), "YES")
 
     def test_mixed_or_unknown_values_fail(self) -> None:
-        for settings in (self.NO + self.YES, "INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = maybe;\n"):
-            with self.subTest(settings=settings), self.assertRaisesRegex(ios_release.ReleaseError, "must be NO or YES"):
-                self.check(settings)
+        with self.assertRaisesRegex(ios_release.ReleaseError, "in every app configuration alike"):
+            self.check(self.NO, self.YES + self.CODE)
+        with self.assertRaisesRegex(ios_release.ReleaseError, "must be NO or YES"):
+            self.check(self.NO, "\t\t\t\tINFOPLIST_KEY_ITSAppUsesNonExemptEncryption = maybe;\n")
+
+    def test_missing_or_duplicate_app_configurations_fail(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            pbx = Path(tmp) / "project.pbxproj"
+            pbx.write_text("/* project */\n" + self.configuration("Release", ios_release.BUNDLE_ID + "Tests", self.NO))
+            with self.assertRaisesRegex(ios_release.ReleaseError, "could not find the Debug and Release configurations"):
+                ios_release.check_export_compliance(pbx)
+            pbx.write_text("/* project */\n" + self.configuration("Release", ios_release.BUNDLE_ID, self.NO))
+            with self.assertRaisesRegex(ios_release.ReleaseError, r"found \['Release'\]"):
+                ios_release.check_export_compliance(pbx)
+        with self.assertRaisesRegex(ios_release.ReleaseError, "two Release configurations"):
+            self.check(self.NO, self.NO, self.configuration("Release", ios_release.BUNDLE_ID, self.NO))
 
     def run_gates(self, env: dict[str, str]) -> tuple[int, str]:
         out = io.StringIO()

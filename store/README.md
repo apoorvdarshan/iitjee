@@ -194,10 +194,12 @@ and add `INFOPLIST_KEY_ITSEncryptionExportComplianceCode` with the code App
 Store Connect issues for the app's encryption documentation.
 
 Every run that builds (release or validation) checks it twice:
-`ios_release.py gates` reads the project before anything is built, and
-`ios_release.py export-compliance` reads the archived app's `Info.plist` right
-after the archive. A missing key, mixed or unknown values, or `YES` without the
-code fails the run.
+`ios_release.py gates` reads each configuration (Debug and Release) of the app
+target before anything is built, and `ios_release.py export-compliance` reads
+the archived app's `Info.plist` right after the archive. A key missing from
+either configuration, values that differ or are unknown, or `YES` without the
+code in that configuration fails the run; the test targets' settings never
+count.
 
 ## In-app purchases
 
