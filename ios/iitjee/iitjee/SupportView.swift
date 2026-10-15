@@ -9,6 +9,9 @@ struct SupportView: View {
     private let instagramProfile = URL(string: "https://www.instagram.com/apoorvcodes/")!
     private let appStoreListing = URL(string: "https://apps.apple.com/app/id6792598227")!
     private let appStoreReview = URL(string: "https://apps.apple.com/app/id6792598227?action=write-review")!
+    private let sourceRepository = URL(string: "https://github.com/apoorvdarshan/iitjee")!
+    private let bugReport = URL(string: "https://github.com/apoorvdarshan/iitjee/issues/new?template=bug_report.yml")!
+    private let featureRequest = URL(string: "https://github.com/apoorvdarshan/iitjee/issues/new?template=feature_request.yml")!
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.requestReview) private var requestReview
     @Environment(\.openURL) private var openURL
@@ -95,6 +98,41 @@ struct SupportView: View {
                     destination: supportEmail
                 )
                 .accessibilityIdentifier("support.email")
+
+                NotebookActionRow(
+                    title: "Report a bug",
+                    detail: "Open an issue on GitHub",
+                    symbol: "ladybug",
+                    color: AppPalette.support,
+                    destination: bugReport
+                )
+                .accessibilityIdentifier("support.bug")
+
+                NotebookActionRow(
+                    title: "Request a feature",
+                    detail: "Suggest an idea on GitHub",
+                    symbol: "lightbulb",
+                    color: AppPalette.support,
+                    destination: featureRequest
+                )
+                .accessibilityIdentifier("support.feature")
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
+                DoodleSectionTitle(
+                    title: "Open source",
+                    color: .primary,
+                    annotation: "MIT licence"
+                )
+
+                NotebookActionRow(
+                    title: "Star on GitHub",
+                    detail: "apoorvdarshan/iitjee · the app's source code",
+                    symbol: "chevron.left.forwardslash.chevron.right",
+                    color: .primary,
+                    destination: sourceRepository
+                )
+                .accessibilityIdentifier("support.github")
             }
 
             VStack(alignment: .leading, spacing: 0) {
