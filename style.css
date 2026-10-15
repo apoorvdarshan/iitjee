@@ -715,8 +715,7 @@ body[data-subject="mathematics"] {
   bottom: 0;
 }
 
-.ink-link i,
-.ink-link .link-glyph {
+.ink-link i {
   color: var(--link-color, var(--support));
   text-align: center;
 }
@@ -745,12 +744,12 @@ body[data-subject="mathematics"] {
   --link-color: var(--ink);
 }
 
-.link-kofi {
-  --link-color: #b93654;
+.link-instagram {
+  --link-color: var(--pink);
 }
 
-.link-trust {
-  --link-color: var(--chemistry);
+.link-kofi {
+  --link-color: #b93654;
 }
 
 .plain-note {

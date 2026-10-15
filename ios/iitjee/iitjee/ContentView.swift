@@ -27,6 +27,7 @@ private enum AppTab: Hashable {
 
 struct ContentView: View {
     @State private var selection: AppTab = .physics
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage(AppAppearance.storageKey) private var storedAppearance = AppAppearance.system.rawValue
 
     private var appearance: AppAppearance {
@@ -72,6 +73,11 @@ struct ContentView: View {
         .tint(selection.accent)
         .persistentTabBar()
         .preferredColorScheme(appearance.colorScheme)
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            if phase == .active {
+                ReviewPrompt.recordAppOpen()
+            }
+        }
     }
 }
 

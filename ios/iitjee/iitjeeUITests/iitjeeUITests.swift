@@ -208,16 +208,26 @@ final class iitjeeUITests: XCTestCase {
 
         app.openTab("Support")
 
-        let studyEmail = app.descendants(matching: .any)["support.email.study"]
-        let creatorEmail = app.descendants(matching: .any)["support.email.creator"]
+        let email = app.descendants(matching: .any)["support.email"]
         let xProfile = app.descendants(matching: .any)["support.x"]
+        let instagramProfile = app.descendants(matching: .any)["support.instagram"]
+        let rate = app.descendants(matching: .any)["support.rate"]
+        let bugReport = app.descendants(matching: .any)["support.bug"]
+        let featureRequest = app.descendants(matching: .any)["support.feature"]
+        let sourceCode = app.descendants(matching: .any)["support.github"]
+        let share = app.descendants(matching: .any)["support.share"]
 
-        XCTAssertTrue(studyEmail.waitForExistence(timeout: stepTimeout))
-        XCTAssertTrue(creatorEmail.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(email.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(xProfile.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(instagramProfile.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(rate.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(bugReport.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(featureRequest.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(sourceCode.waitForExistence(timeout: stepTimeout))
+        XCTAssertTrue(share.waitForExistence(timeout: stepTimeout))
         XCTAssertTrue(app.staticTexts["ad13dtu@gmail.com"].exists)
-        XCTAssertTrue(app.staticTexts["apoorvdarshan@gmail.com"].exists)
         XCTAssertTrue(app.staticTexts["@apoorvdarshan"].exists)
+        XCTAssertTrue(app.staticTexts["@apoorvcodes"].exists)
         XCTAssertTrue(app.descendants(matching: .any)["tip.disclosure"].waitForExistence(timeout: stepTimeout))
 
         let prices = ["small": "Small Tip, ₹49", "medium": "Chai Tip, ₹99",
