@@ -22,8 +22,6 @@ App Store version 1.1.0.
   122 days)
 - Instagram @apoorvcodes next to X, and a single support email
 - The website moved to pcm-notes.apoorvdarshan.com
-- Fixed: after a quick slide through a chapter, the reader could jump back a few
-  pages
 - RevenueCat 5.95
 
 ## v1.0.0

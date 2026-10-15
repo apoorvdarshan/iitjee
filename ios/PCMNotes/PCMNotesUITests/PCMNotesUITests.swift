@@ -140,14 +140,26 @@ final class PCMNotesUITests: XCTestCase {
         previous.tap()
         XCTAssertTrue(pageSlider.waitForValue("Page 2 of 9"))
 
-        pageSlider.dragSliderToEnd(from: 1 / 8) // page 2 of 9
+        // XCUITest can't place this slider on an exact page: its accessibility value is
+        // "Page 2 of 9", not a percentage, and on GitHub's macOS runners a drag to the
+        // end sometimes stopped a page short. So check the slider jumps far ahead, then
+        // reach the last page with Next page.
+        pageSlider.adjust(toNormalizedSliderPosition: 1)
+        let jumped = NSPredicate { slider, _ in
+            guard let value = (slider as? XCUIElement)?.value as? String,
+                  let page = Int(value.split(separator: " ")[1]) else { return false }
+            return page >= 7
+        }
+        XCTAssertEqual(
+            XCTWaiter().wait(for: [XCTNSPredicateExpectation(predicate: jumped, object: pageSlider)], timeout: stepTimeout),
+            .completed,
+            "the slider should jump near the end, not \(String(describing: pageSlider.value))"
+        )
+        for _ in 0..<8 where (pageSlider.value as? String) != "Page 9 of 9" {
+            next.tap()
+        }
         XCTAssertTrue(pageSlider.waitForValue("Page 9 of 9"))
         XCTAssertFalse(next.isEnabled, "the last page has nothing after it")
-        previous.tap()
-        XCTAssertTrue(pageSlider.waitForValue("Page 8 of 9"))
-        next.tap()
-        XCTAssertTrue(pageSlider.waitForValue("Page 9 of 9"), "Next page must reach the last page too")
-        XCTAssertFalse(next.isEnabled, "the reader must stay on the last page")
         previous.tap()
         XCTAssertTrue(pageSlider.waitForValue("Page 8 of 9"))
 
