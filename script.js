@@ -42,14 +42,26 @@ function initializeTheme() {
   applyTheme(localStorage.getItem("theme") || "system");
 }
 
+// Only known subjects and chapters reach URLs and the page: inputs from the query
+// string or localStorage are looked up in chapterData, and the stored strings are
+// used from then on, never the raw values.
+function knownSubject(value) {
+  return Object.keys(chapterData).find((name) => name === value);
+}
+
+function knownChapter(subject, value) {
+  return subject ? chapterData[subject].find((name) => name === value) : undefined;
+}
+
 // Navigation Functions
 function navigateToSubject(subject) {
-  window.location.href = `/${subject}`;
+  const known = knownSubject(subject);
+  window.location.href = known ? `/${known}` : "/";
 }
 
 function goBack() {
-  const subject = localStorage.getItem("currentSubject");
-  window.location.href = chapterData[subject] ? `/${subject}` : "/";
+  const subject = knownSubject(localStorage.getItem("currentSubject"));
+  window.location.href = subject ? `/${subject}` : "/";
 }
 
 
@@ -223,10 +235,10 @@ function openChapter(subject, chapterName) {
 // Gallery Functions
 function loadGallery() {
   const params = new URLSearchParams(window.location.search);
-  const subject = params.get("subject") || localStorage.getItem("currentSubject");
-  const chapter = params.get("chapter") || localStorage.getItem("currentChapter");
+  const subject = knownSubject(params.get("subject") || localStorage.getItem("currentSubject"));
+  const chapter = knownChapter(subject, params.get("chapter") || localStorage.getItem("currentChapter"));
 
-  if (!subject || !chapter || !chapterData[subject]?.includes(chapter)) {
+  if (!subject || !chapter) {
     window.location.href = "/";
     return;
   }
@@ -418,13 +430,13 @@ function getImageCount(subject, chapter) {
 
 // Navigation helper
 function navigateToSubjectPage(subject) {
-  window.location.href = `/${subject}`;
+  navigateToSubject(subject);
 }
 
 // PDF Download Function
 async function downloadChapterPDF() {
-  const subject = localStorage.getItem("currentSubject");
-  const chapter = localStorage.getItem("currentChapter");
+  const subject = knownSubject(localStorage.getItem("currentSubject"));
+  const chapter = knownChapter(subject, localStorage.getItem("currentChapter"));
 
   if (!subject || !chapter) {
     alert("Error: Chapter information not found");

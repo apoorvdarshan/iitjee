@@ -13,9 +13,6 @@ const subjects = ["physics", "chemistry", "mathematics"];
 
 // Create a single diagonal watermark tile as SVG
 function createWatermarkTileSVG() {
-  // Calculate rotated text dimensions
-  const textWidth = WATERMARK_TEXT.length * (FONT_SIZE * 0.55);
-
   return Buffer.from(`
     <svg width="${TILE_WIDTH}" height="${TILE_HEIGHT}">
       <defs>
