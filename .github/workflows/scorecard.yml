@@ -1,6 +1,6 @@
 # OpenSSF Scorecard: checks the repository's security practices (branch protection,
 # pinned dependencies, token permissions, SAST, fuzzing and more), publishes the
-# results to https://scorecard.dev/viewer/?uri=github.com/apoorvdarshan/iitjee for
+# results to https://scorecard.dev/viewer/?uri=github.com/apoorvdarshan/pcm-notes for
 # the README badge, and uploads the findings to code scanning.
 name: OpenSSF Scorecard
 

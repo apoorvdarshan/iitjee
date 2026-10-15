@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Report a security vulnerability
-    url: https://github.com/apoorvdarshan/iitjee/security/advisories/new
+    url: https://github.com/apoorvdarshan/pcm-notes/security/advisories/new
     about: Report vulnerabilities privately, never in a public issue. See SECURITY.md.
   - name: Email the maintainer
     url: mailto:ad13dtu@gmail.com?subject=PCM%20Notes

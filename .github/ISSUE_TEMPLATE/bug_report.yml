@@ -6,8 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a problem. Please check [existing issues](https://github.com/apoorvdarshan/iitjee/issues?q=is%3Aissue) first.
-        Security vulnerabilities belong in [private vulnerability reporting](https://github.com/apoorvdarshan/iitjee/security/advisories/new), not here.
+        Thanks for reporting a problem. Please check [existing issues](https://github.com/apoorvdarshan/pcm-notes/issues?q=is%3Aissue) first.
+        Security vulnerabilities belong in [private vulnerability reporting](https://github.com/apoorvdarshan/pcm-notes/security/advisories/new), not here.
   - type: dropdown
     id: area
     attributes:

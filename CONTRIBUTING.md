@@ -6,7 +6,7 @@ the notes and code changes are all welcome. Everyone taking part follows the
 
 ## Reporting bugs
 
-Open a [bug report](https://github.com/apoorvdarshan/iitjee/issues/new?template=bug_report.yml).
+Open a [bug report](https://github.com/apoorvdarshan/pcm-notes/issues/new?template=bug_report.yml).
 Please include:
 
 - what you did, step by step, so someone else can reproduce it;
@@ -15,7 +15,7 @@ Please include:
   or the browser for a website problem;
 - a screenshot or screen recording, if it helps.
 
-Search [existing issues](https://github.com/apoorvdarshan/iitjee/issues?q=is%3Aissue)
+Search [existing issues](https://github.com/apoorvdarshan/pcm-notes/issues?q=is%3Aissue)
 first; adding detail to an existing report is more useful than a duplicate. Issues
 stay public and searchable after they are closed.
 
@@ -31,7 +31,7 @@ rather than sending replacement pages.
 
 ## Requesting features
 
-Open a [feature request](https://github.com/apoorvdarshan/iitjee/issues/new?template=feature_request.yml)
+Open a [feature request](https://github.com/apoorvdarshan/pcm-notes/issues/new?template=feature_request.yml)
 describing the problem you want solved, not only a solution. Requests are read and
 answered, but PCM Notes stays a focused, offline, account-free reader, so not every
 idea will fit.
@@ -111,7 +111,7 @@ Pull requests run, depending on the files changed:
   vulnerabilities.
 
 Security alerts from CodeQL, fuzzing or Dependabot are fixed before a release.
-[OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/apoorvdarshan/iitjee)
+[OpenSSF Scorecard](https://scorecard.dev/viewer/?uri=github.com/apoorvdarshan/pcm-notes)
 checks the repository's security practices every week.
 
 ## Releases

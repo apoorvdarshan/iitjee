@@ -17,7 +17,7 @@
 
 <p align="center">
   <a href="https://www.bestpractices.dev/projects/15501"><img src="https://www.bestpractices.dev/projects/15501/badge" alt="OpenSSF Best Practices" /></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/apoorvdarshan/iitjee"><img src="https://api.scorecard.dev/projects/github.com/apoorvdarshan/iitjee/badge" alt="OpenSSF Scorecard" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/apoorvdarshan/pcm-notes"><img src="https://api.scorecard.dev/projects/github.com/apoorvdarshan/pcm-notes/badge" alt="OpenSSF Scorecard" /></a>
 </p>
 
 ---

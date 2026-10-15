@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thanks for the idea. A clear description of the problem helps more than a solution alone.
-        Please check [existing issues](https://github.com/apoorvdarshan/iitjee/issues?q=is%3Aissue) first.
+        Please check [existing issues](https://github.com/apoorvdarshan/pcm-notes/issues?q=is%3Aissue) first.
   - type: dropdown
     id: area
     attributes:

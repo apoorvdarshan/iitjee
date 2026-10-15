@@ -6,7 +6,7 @@ Please report security vulnerabilities in PCM Notes **privately**, so they can b
 fixed before they are disclosed.
 
 **Preferred:** GitHub's
-[private vulnerability reporting](https://github.com/apoorvdarshan/iitjee/security/advisories/new).
+[private vulnerability reporting](https://github.com/apoorvdarshan/pcm-notes/security/advisories/new).
 The report is visible only to the maintainer.
 
 **Alternative:** email **ad13dtu@gmail.com**
