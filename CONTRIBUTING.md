@@ -105,7 +105,8 @@ Pull requests run, depending on the files changed:
 
 - **iOS tests:** unit and UI tests on iPhone and iPad simulators;
 - **Store release checks:** offline tests of the release tooling;
-- **CodeQL:** static analysis of the Swift, Python, JavaScript and workflow code;
+- **CodeQL:** static analysis of the Python, JavaScript and workflow code (the
+  Swift app is analysed weekly and for each release tag);
 - **Fuzzing:** the fuzz targets in `fuzz/` with Atheris;
 - **Dependency review:** blocks newly added dependencies with known high-severity
   vulnerabilities.
