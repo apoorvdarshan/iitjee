@@ -18,19 +18,18 @@ import urllib.parse
 import zlib
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from unittest import mock
+import unittest.mock as mock
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 
 import asc_release  # noqa: E402
-import ios_release  # noqa: E402
 import print_gates  # noqa: E402
 import redact_logs  # noqa: E402
 import release_notes  # noqa: E402
 import validate_catalog  # noqa: E402
-from ios_release import ReleaseError, resolve_gates  # noqa: E402
+import ios_release  # noqa: E402
 
 ROOT = HERE.parents[1]
 TAG = "v1.0.1"
@@ -49,7 +48,7 @@ FLAG_NAMES = {"UPLOAD_LISTING", "UPLOAD_WHATS_NEW", "UPLOAD_SCREENSHOTS", "SUBMI
 
 
 def gates(env: dict[str, str], *, event: str = "push", ref: str = TAG) -> dict:
-    return resolve_gates(env, event=event, ref_name=ref, marketing_version=VERSION)
+    return ios_release.resolve_gates(env, event=event, ref_name=ref, marketing_version=VERSION)
 
 
 def quiet(fn, *args, **kwargs):
@@ -97,9 +96,9 @@ class GateTests(unittest.TestCase):
 
     def test_invalid_values_are_rejected_even_when_master_is_off(self) -> None:
         for name in ("IOS_RELEASE_AUTOMATION", "IOS_SUBMIT_REVIEW", "IOS_UPLOAD_WHATS_NEW", "IOS_UPLOAD_SCREENSHOTS"):
-            with self.subTest(name=name), self.assertRaisesRegex(ReleaseError, name):
+            with self.subTest(name=name), self.assertRaisesRegex(ios_release.ReleaseError, name):
                 gates({name: "maybe"})
-        with self.assertRaisesRegex(ReleaseError, "IOS_UPLOAD_BUILD"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "IOS_UPLOAD_BUILD"):
             gates({"IOS_RELEASE_AUTOMATION": "false", "IOS_UPLOAD_BUILD": "enabled"})
 
     def test_switch_values_are_case_and_space_insensitive(self) -> None:
@@ -117,7 +116,7 @@ class GateTests(unittest.TestCase):
             {"IOS_BUILD_WAIT_MINUTES": "999"},
             {"IOS_BUILD_WAIT_MINUTES": "-30"},
         ):
-            with self.subTest(env=env), self.assertRaises(ReleaseError):
+            with self.subTest(env=env), self.assertRaises(ios_release.ReleaseError):
                 gates(env)
         result = gates({"IOS_BUILD_POLL_SECONDS": "45", "IOS_BUILD_WAIT_MINUTES": "90"})
         self.assertEqual((result["poll_seconds"], result["wait_minutes"]), (45, 90))
@@ -126,27 +125,27 @@ class GateTests(unittest.TestCase):
 
     def test_submit_requires_this_runs_build(self) -> None:
         env = {"IOS_RELEASE_AUTOMATION": "true", "IOS_SUBMIT_REVIEW": "true"}
-        with self.assertRaisesRegex(ReleaseError, "IOS_UPLOAD_BUILD"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "IOS_UPLOAD_BUILD"):
             gates(env)
 
     def test_public_release_requires_submit(self) -> None:
         env = {"IOS_RELEASE_AUTOMATION": "true", "IOS_UPLOAD_BUILD": "true", "IOS_PUBLIC_RELEASE": "true"}
-        with self.assertRaisesRegex(ReleaseError, "IOS_SUBMIT_REVIEW"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "IOS_SUBMIT_REVIEW"):
             gates(env)
 
     def test_tag_must_equal_marketing_version_exactly(self) -> None:
         self.assertEqual(gates({}, ref="v1.0.1")["marketing_version"], VERSION)
         for tag in ("v1.0.2", "v1.0", "v1.0.1.0", "v1.0.1-beta", "v01.0.1"):
-            with self.subTest(tag=tag), self.assertRaisesRegex(ReleaseError, "does not match"):
+            with self.subTest(tag=tag), self.assertRaisesRegex(ios_release.ReleaseError, "does not match"):
                 gates({}, ref=tag)
         for tag in ("ios-v1.0.1", "1.0.1", "release-1.0.1"):
-            with self.subTest(tag=tag), self.assertRaisesRegex(ReleaseError, r"v\* tag"):
+            with self.subTest(tag=tag), self.assertRaisesRegex(ios_release.ReleaseError, r"v\* tag"):
                 gates({}, ref=tag)
 
     def test_historical_tag_style_no_longer_matches(self) -> None:
         # v1.0.0 was pushed for MARKETING_VERSION 1.0; the rule is now exact.
-        with self.assertRaisesRegex(ReleaseError, "needs v1.0"):
-            resolve_gates({}, event="push", ref_name="v1.0.0", marketing_version="1.0")
+        with self.assertRaisesRegex(ios_release.ReleaseError, "needs v1.0"):
+            ios_release.resolve_gates({}, event="push", ref_name="v1.0.0", marketing_version="1.0")
 
     def test_manual_run_validates_only(self) -> None:
         result = gates(ALL_ON, event="workflow_dispatch", ref="main")
@@ -158,29 +157,29 @@ class GateTests(unittest.TestCase):
             self.assertFalse(result[key], key)
 
     def test_manual_run_still_rejects_invalid_switches(self) -> None:
-        with self.assertRaisesRegex(ReleaseError, "IOS_UPLOAD_LISTING"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "IOS_UPLOAD_LISTING"):
             gates({"IOS_UPLOAD_LISTING": "sure"}, event="workflow_dispatch", ref="main")
 
     def test_manual_run_can_validate_a_future_version(self) -> None:
-        result = resolve_gates({}, event="workflow_dispatch", ref_name="main",
+        result = ios_release.resolve_gates({}, event="workflow_dispatch", ref_name="main",
                                marketing_version="1.0", validation_version="1.0.1")
         self.assertEqual(result["mode"], "validate")
         self.assertEqual(result["marketing_version"], "1.0.1")
         self.assertFalse(result["asc"])
-        default = resolve_gates({}, event="workflow_dispatch", ref_name="main", marketing_version="1.0")
+        default = ios_release.resolve_gates({}, event="workflow_dispatch", ref_name="main", marketing_version="1.0")
         self.assertEqual(default["marketing_version"], "1.0")
 
     def test_version_override_is_rejected_for_releases_and_bad_values(self) -> None:
-        with self.assertRaisesRegex(ReleaseError, "manual validation"):
-            resolve_gates({}, event="push", ref_name=TAG, marketing_version=VERSION, validation_version="1.0.2")
+        with self.assertRaisesRegex(ios_release.ReleaseError, "manual validation"):
+            ios_release.resolve_gates({}, event="push", ref_name=TAG, marketing_version=VERSION, validation_version="1.0.2")
         for bad in ("1.x", "v1.0.1", "1.0.1.2", "1.0.1 beta", "١.٠"):
-            with self.subTest(bad=bad), self.assertRaisesRegex(ReleaseError, "must look like"):
-                resolve_gates({}, event="workflow_dispatch", ref_name="main",
+            with self.subTest(bad=bad), self.assertRaisesRegex(ios_release.ReleaseError, "must look like"):
+                ios_release.resolve_gates({}, event="workflow_dispatch", ref_name="main",
                               marketing_version=VERSION, validation_version=bad)
 
     def test_other_events_are_refused(self) -> None:
         for event in ("pull_request", "schedule", ""):
-            with self.subTest(event=event), self.assertRaisesRegex(ReleaseError, "unsupported event"):
+            with self.subTest(event=event), self.assertRaisesRegex(ios_release.ReleaseError, "unsupported event"):
                 gates({}, event=event)
 
     def test_project_versions_are_consistent(self) -> None:
@@ -189,7 +188,7 @@ class GateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             pbx = Path(tmp) / "project.pbxproj"
             pbx.write_text("MARKETING_VERSION = 1.0;\nMARKETING_VERSION = 1.1;\n")
-            with self.assertRaisesRegex(ReleaseError, "identical"):
+            with self.assertRaisesRegex(ios_release.ReleaseError, "identical"):
                 ios_release.single_project_value("MARKETING_VERSION", pbx)
 
     def test_cli_writes_outputs_for_the_workflow(self) -> None:
@@ -326,39 +325,39 @@ class WaitForBuildTests(unittest.TestCase):
     def test_times_out_without_using_another_build(self) -> None:
         client = SequenceClient([{"data": [build_row(state="PROCESSING")], "included": [pre_row()]}])
         clock = FakeClock(STARTED)
-        with self.assertRaisesRegex(ReleaseError, "timed out"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "timed out"):
             wait(client, clock, minutes=10)
         self.assertLessEqual(clock.time, STARTED + 10 * 60 + 30)
 
     def test_ready_build_after_the_deadline_is_still_a_timeout(self) -> None:
         client = SequenceClient([{"data": [build_row()], "included": [pre_row()]}])
         clock = FakeClock(STARTED + 121 * 60)  # job started after the 120-minute budget
-        with self.assertRaisesRegex(ReleaseError, "timed out"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "timed out"):
             wait(client, clock)
         self.assertEqual(client.paths, [], "must not poll once the budget is spent")
 
     def test_processing_failure_stops(self) -> None:
         for state in ("FAILED", "INVALID"):
             client = SequenceClient([{"data": [build_row(state=state)], "included": [pre_row()]}])
-            with self.subTest(state=state), self.assertRaisesRegex(ReleaseError, state):
+            with self.subTest(state=state), self.assertRaisesRegex(ios_release.ReleaseError, state):
                 wait(client, FakeClock(STARTED))
 
     def test_expired_build_is_rejected(self) -> None:
         client = SequenceClient([{"data": [build_row(expired=True)], "included": [pre_row()]}])
-        with self.assertRaisesRegex(ReleaseError, "expired"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "expired"):
             wait(client, FakeClock(STARTED))
 
     def test_ambiguous_match_stops(self) -> None:
         client = SequenceClient(
             [{"data": [build_row("B1"), build_row("B2")], "included": [pre_row()]}]
         )
-        with self.assertRaisesRegex(ReleaseError, "ambiguous"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "ambiguous"):
             wait(client, FakeClock(STARTED))
 
     def test_older_upload_is_never_substituted(self) -> None:
         old = build_row(uploaded=STARTED - 3600)
         client = SequenceClient([{"data": [old], "included": [pre_row()]}])
-        with self.assertRaisesRegex(ReleaseError, "older build"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "older build"):
             wait(client, FakeClock(STARTED))
 
     def test_a_build_without_an_upload_date_is_never_used(self) -> None:
@@ -367,7 +366,7 @@ class WaitForBuildTests(unittest.TestCase):
         for missing in (None, ""):
             client = SequenceClient([{"data": [build_row(uploaded=missing)], "included": [pre_row()]}])
             clock = FakeClock(STARTED)
-            with self.subTest(uploaded=missing), self.assertRaisesRegex(ReleaseError, "timed out"):
+            with self.subTest(uploaded=missing), self.assertRaisesRegex(ios_release.ReleaseError, "timed out"):
                 wait(client, clock, minutes=10)
             self.assertGreater(len(client.paths), 1, "it keeps polling until the deadline")
 
@@ -380,12 +379,12 @@ class WaitForBuildTests(unittest.TestCase):
 
     def test_an_unreadable_upload_date_stops(self) -> None:
         client = SequenceClient([{"data": [build_row(uploaded="yesterday")], "included": [pre_row()]}])
-        with self.assertRaisesRegex(ReleaseError, "unreadable upload date"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "unreadable upload date"):
             wait(client, FakeClock(STARTED))
 
     def test_failed_processing_stops_even_without_an_upload_date(self) -> None:
         client = SequenceClient([{"data": [build_row(state="FAILED", uploaded=None)], "included": [pre_row()]}])
-        with self.assertRaisesRegex(ReleaseError, "FAILED"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "FAILED"):
             wait(client, FakeClock(STARTED))
 
     def test_other_versions_and_platforms_are_ignored(self) -> None:
@@ -404,7 +403,7 @@ class WaitForBuildTests(unittest.TestCase):
 
     def test_build_from_another_app_is_a_mismatch(self) -> None:
         client = SequenceClient([{"data": [build_row(app="OTHER")], "included": [pre_row()]}])
-        with self.assertRaisesRegex(ReleaseError, "another app"):
+        with self.assertRaisesRegex(ios_release.ReleaseError, "another app"):
             wait(client, FakeClock(STARTED))
 
     def test_transient_errors_are_retried_and_others_raise(self) -> None:
@@ -515,7 +514,9 @@ class TokenRefreshTests(unittest.TestCase):
             from cryptography.hazmat.primitives import serialization
             from cryptography.hazmat.primitives.asymmetric import ec
         except ImportError:  # pragma: no cover - CI installs requirements-store.txt
-            self.skipTest("PyJWT[crypto] is not installed (pip install --require-hashes -r requirements-store.txt)")
+            raise unittest.SkipTest(
+                "PyJWT[crypto] is not installed (pip install --require-hashes -r requirements-store.txt)"
+            ) from None
         key = ec.generate_private_key(ec.SECP256R1())
         pem = key.private_bytes(
             serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()
@@ -1352,7 +1353,7 @@ class TransientErrorTests(unittest.TestCase):
             asc_release.AscHttpError(409, "conflict"),
             urllib.error.HTTPError("https://x", 404, "missing", {}, None),
             ValueError("bad"),
-            ReleaseError("mismatch"),
+            ios_release.ReleaseError("mismatch"),
             SystemExit(1),
         ]
         for exc in transient:
@@ -1904,7 +1905,7 @@ class PrintGatesTests(unittest.TestCase):
                 shown, on = print_gates.describe("X")
                 try:
                     expected = ios_release.parse_switch("X", raw)
-                except ReleaseError:
+                except ios_release.ReleaseError:
                     self.assertTrue(shown.startswith("INVALID"))
                 else:
                     self.assertEqual(on, expected)
